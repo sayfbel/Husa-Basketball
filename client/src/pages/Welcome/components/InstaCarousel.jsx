@@ -1,32 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../css/carousel.css';
 
+// Import News Images
+import newsImg1 from '../../../assets/images/news/573250808_17894544573357067_6940532935089663788_n..jpg';
+import newsImg2 from '../../../assets/images/news/575224628_17895474390357067_2343543371764802627_n..jpg';
+import newsImg3 from '../../../assets/images/news/582739586_17895581448357067_8347811714654289535_n..jpg';
+import newsImg4 from '../../../assets/images/news/585212662_17899357755357067_6311429234753411450_n..jpg';
+import newsImg5 from '../../../assets/images/news/613133289_17902414716357067_395244513126613799_n..jpg';
+
 const InstaCarousel = () => {
-    // Player data
-    const players = [
+    // News Data
+    const newsItems = [
         {
-            name: "Anas El Mahboul",
-            number: 10,
-            image: "https://images.unsplash.com/photo-1546519638-68e109498fe5?q=80&w=2090&auto=format&fit=crop",
-            position: "Point Guard"
+            id: 1,
+            title: "Crucial Victory on the Road",
+            date: "Feb 07, 2026",
+            description: "HUSA Basketball secures a vital win away from home, showcasing resilience and tactical discipline in the final quarter.",
+            image: newsImg1,
+            tag: "Match Report"
         },
         {
-            name: "Karim Gourari",
-            number: 23,
-            image: "https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2090&auto=format&fit=crop",
-            position: "Forward"
+            id: 2,
+            title: "Playoff Intensity Rising",
+            date: "Feb 05, 2026",
+            description: "As the regular season winds down, the intensity heats up. The team is focused on securing the best possible seed.",
+            image: newsImg2,
+            tag: "Season Update"
         },
         {
-            name: "Mohamed Choua",
-            number: 15,
-            image: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2069&auto=format&fit=crop",
-            position: "Center"
+            id: 3,
+            title: "Training Camp Insights",
+            date: "Feb 02, 2026",
+            description: "Behind the scenes at our high-performance training center. See how the players prepare for the upcoming challenges.",
+            image: newsImg3,
+            tag: "Inside Access"
         },
         {
-            name: "Yassine Mahsini",
-            number: 4,
-            image: "https://images.unsplash.com/photo-1628779238951-be2c9f2a59f4?q=80&w=2070&auto=format&fit=crop",
-            position: "Shooting Guard"
+            id: 4,
+            title: "Community Outreach Day",
+            date: "Jan 28, 2026",
+            description: "Giving back to Agadir. Our players visited local schools to inspire the next generation of athletes.",
+            image: newsImg4,
+            tag: "Community"
+        },
+        {
+            id: 5,
+            title: "New tactical approaches",
+            date: "Jan 25, 2026",
+            description: "Coach outlines the strategic shifts for the second half of the season to counter defensive adjustments.",
+            image: newsImg5,
+            tag: "Team News"
         }
     ];
 
@@ -52,15 +75,15 @@ const InstaCarousel = () => {
     }, []);
 
     const nextSlide = () => {
-        setCurrentIndex((prev) => (prev + 1) % players.length);
+        setCurrentIndex((prev) => (prev + 1) % newsItems.length);
     };
 
     const prevSlide = () => {
-        setCurrentIndex((prev) => (prev - 1 + players.length) % players.length);
+        setCurrentIndex((prev) => (prev - 1 + newsItems.length) % newsItems.length);
     };
 
     useEffect(() => {
-        const interval = setInterval(nextSlide, 5000);
+        const interval = setInterval(nextSlide, 6000); // Slightly longer for reading news
         return () => clearInterval(interval);
     }, []);
 
@@ -69,18 +92,10 @@ const InstaCarousel = () => {
     };
 
     // Robust Pixel-Based Centering
-    // Slide consumes 60% (desktop) or 85% (mobile) of container width AND is capped at 600px in CSS
     const effectiveWidth = dimensions.width;
-
-    // Calculate what the CSS is doing
     const rawSlideWidth = effectiveWidth * (dimensions.isMobile ? 0.85 : 0.60);
-    // Apply the max-width constraint from CSS (600px)
     const slideWidthPx = Math.min(rawSlideWidth, 600);
-
-    // Gap to center the slide: (ContainerWidth - SlideWidth) / 2
     const centerOffsetPx = (effectiveWidth - slideWidthPx) / 2;
-
-    // Total shift: Offset - (N * SlideWidth)
     const translateX = centerOffsetPx - (currentIndex * slideWidthPx);
 
     return (
@@ -90,15 +105,18 @@ const InstaCarousel = () => {
                     className="carousel-track"
                     style={{ transform: `translateX(${translateX}px)` }}
                 >
-                    {players.map((player, index) => (
-                        <div className={getSlideClass(index)} key={index}>
-                            <div className="player-card-content">
-                                <img src={player.image} alt={player.name} className="carousel-image" />
-                                <div className="player-overlay">
-                                    <div className="player-number">{player.number}</div>
-                                    <div className="player-info">
-                                        <h3>{player.name}</h3>
-                                        <p>{player.position}</p>
+                    {newsItems.map((news, index) => (
+                        <div className={getSlideClass(index)} key={news.id}>
+                            <div className="news-card-content">
+                                <img src={news.image} alt={news.title} className="carousel-image" />
+                                <div className="news-overlay">
+                                    <div className="news-header">
+                                        <span className="news-tag">{news.tag}</span>
+                                        <span className="news-date">{news.date}</span>
+                                    </div>
+                                    <div className="news-info">
+                                        <h3>{news.title}</h3>
+                                        <p>{news.description}</p>
                                     </div>
                                 </div>
                             </div>

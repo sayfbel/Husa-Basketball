@@ -34,8 +34,15 @@ const Navbar = () => {
                     <li><Link to="/history">History</Link></li>
                     <li><Link to="/news">News</Link></li>
                     <li><Link to="/squad">Squad</Link></li>
-                    <li><Link to="/join">Join Team</Link></li>
-                    <li><Link to="/contact">Contact</Link></li>
+                    <li className="dropdown-wrapper">
+                        <Link to="/contact" className="contact-btn">Contact</Link>
+                        <div className="dropdown-card">
+                            <Link to="/reservation">Kids Reservation</Link>
+                            <Link to="/training">Training Center</Link>
+                            <Link to="/join">Join Team</Link>
+                            <Link to="/fans">Fan Support</Link>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </nav>

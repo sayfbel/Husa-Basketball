@@ -1,5 +1,678 @@
 .fan-page {
-    padding: var(--section-padding);
-    padding-top: 8rem !important;
-    padding-bottom: 8rem !important;
+    /* Base styles */
+    --primary-color: #DB0A40;
+    /* Example: HUSA Red? */
+    --accent-color: #FFFFFF;
+    --dark-bg: #111111;
+    --card-bg: #1A1A1A;
+    --text-color: #EAEAEA;
+    --secondary-text: #AAAAAA;
+
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    padding-top: 0;
+    /* Reset from previous */
+    padding-bottom: 4rem;
+    min-height: 100vh;
+}
+
+/* Fan Hero Section */
+.fan-hero {
+    height: 60vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../../../assets/images/players/582739586_17895581448357067_8347811714654289535_n..jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    /* Parallax-like effect */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.fan-hero h1 {
+    font-size: 5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--accent-color);
+    margin: 0;
+    letter-spacing: 2px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.fan-hero p {
+    font-size: 1.5rem;
+    color: var(--secondary-text);
+    margin-top: 1rem;
+    font-weight: 300;
+}
+
+/* Section Title Styling */
+.section-title {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    position: relative;
+    padding-left: 1rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Store Products Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 5rem;
+}
+
+/* Fashion Store Product Card */
+.product-card {
+    background: transparent;
+    border-radius: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Subtle border */
+    background: rgba(20, 20, 20, 0.4);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.product-image-container {
+    position: relative;
+    width: 100%;
+    padding-top: 125%;
+    /* Taller aspect ratio (4:5) for fashion */
+    background: #1a1a1a;
+    /* Placeholder bg */
+    overflow: hidden;
+}
+
+.product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Ensure whole t-shirt is visible */
+    object-position: center;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0.9;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.08);
+    opacity: 1;
+}
+
+.product-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover .product-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.btn-buy {
+    background: white;
+    color: black;
+    padding: 10px 24px;
+    font-weight: 700;
+    border: none;
+    border-radius: 2px;
+    /* Sharper corners for fashion look */
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+.btn-buy:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.product-info {
+    padding: 1.2rem 1rem;
+    text-align: center;
+    background: rgba(10, 10, 10, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.product-info h3 {
+    font-size: 1rem;
+    font-weight: 400;
+    /* Lighter weight for premium feel */
+    margin: 0 0 0.5rem 0;
+    color: #dadada;
+    /* Slightly muted white */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: 'Oswald', sans-serif;
+    /* Or stick to global font but style it */
+}
+
+.product-info .price {
+    display: block;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+/* Match & Map Grid */
+.match-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+@media (max-width: 992px) {
+    .match-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Match Section Styling (Premium Design) */
+.match-card {
+    background: linear-gradient(145deg, #1e1e1e, #141414);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Dynamic Accent Line */
+.match-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary-color), #ff4757, var(--primary-color));
+    background-size: 200% 100%;
+    animation: gradientMove 3s linear infinite;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+.match-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 2;
+}
+
+.team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.team:hover {
+    transform: scale(1.05);
+}
+
+.team-logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+}
+
+.team-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-color);
+    text-align: center;
+}
+
+/* VS Styling */
+.vs-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.vs-text {
+    font-size: 3rem;
+    font-weight: 900;
+    font-style: italic;
+    background: linear-gradient(to bottom, #fff, #aaa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.match-time-info {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    color: var(--secondary-text);
+    font-size: 1.1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 2rem;
+    margin-top: auto;
+}
+
+.time-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.time-item i {
+    color: var(--primary-color);
+}
+
+/* Responsive Adjustments for Match Card */
+@media (max-width: 768px) {
+    .match-content {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .team {
+        flex-direction: row;
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0 1rem;
+    }
+
+    .team.away {
+        flex-direction: row-reverse;
+    }
+
+    .team-logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .team-name {
+        font-size: 1.2rem;
+        flex: 1;
+    }
+
+    .vs-container {
+        margin: 1rem 0;
+        height: auto;
+    }
+
+    .vs-text {
+        font-size: 2rem;
+    }
+
+    .match-time-info {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+}
+
+
+/* Map Styling */
+.map-card {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100%;
+    /* Match height if grid aligns */
+}
+
+.location-text {
+    color: var(--secondary-text);
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.map-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.map-container iframe {
+    filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(85%);
+    /* Dark Mode Map Hack */
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Ticket Section Styling */
+.ticket-section {
+    margin-top: 5rem;
+    padding-bottom: 2rem;
+}
+
+.ticket-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+}
+
+.ticket-visual {
+    background: linear-gradient(135deg, #eee, #fff);
+    width: 100%;
+    max-width: 800px;
+    height: 300px;
+    border-radius: 12px;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.5s ease;
+}
+
+.ticket-visual:hover {
+    transform: rotateX(5deg) translateY(-10px);
+}
+
+/* Left Side of Ticket */
+.ticket-left {
+    flex: 3;
+    background: #DB0A40;
+    /* HUSA Red */
+    color: white;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    clip-path: polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%);
+    /* Slight jagged edge on right if desired, or simpler */
+    /* But standard rect is fine too for modern look */
+}
+
+/* Background Pattern */
+.ticket-bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 1rem;
+}
+
+.ticket-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.ticket-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.t-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.t-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    background: white;
+    border-radius: 50%;
+    padding: 4px;
+}
+
+.t-name {
+    font-weight: 800;
+    font-size: 1.5rem;
+}
+
+.t-vs {
+    font-size: 1.2rem;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.ticket-info-row {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.info-item .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.info-item .value {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Right Side (Stub) */
+.ticket-right {
+    flex: 1;
+    background: white;
+    color: black;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 2px dashed #ccc;
+    /* Perforation */
+    padding: 1rem;
+}
+
+/* Semi-circles for ticket holes */
+.ticket-right::before,
+.ticket-right::after {
+    content: '';
+    position: absolute;
+    left: -10px;
+    width: 20px;
+    height: 20px;
+    background: var(--card-bg);
+    /* Match page background */
+    border-radius: 50%;
+}
+
+.ticket-right::before {
+    top: -10px;
+}
+
+.ticket-right::after {
+    bottom: -10px;
+}
+
+.ticket-price-container {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.ticket-price-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #555;
+    text-transform: uppercase;
+}
+
+.ticket-price-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--primary-color);
+}
+
+/* Barcode Simulation */
+.barcode-container {
+    width: 80%;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.barcode {
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(90deg,
+            #000,
+            #000 2px,
+            #fff 2px,
+            #fff 4px,
+            #000 4px,
+            #000 5px,
+            #fff 5px,
+            #fff 8px);
+}
+
+/* Responsive Ticket */
+@media (max-width: 768px) {
+    .ticket-visual {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .ticket-left {
+        clip-path: none;
+    }
+
+    .ticket-right {
+        border-left: none;
+        border-top: 2px dashed #ccc;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 1.5rem;
+    }
+
+    .ticket-right::before {
+        left: -10px;
+        top: -10px;
+        /* Adjust for column layout if needed, or hide */
+        display: none;
+    }
+
+    .ticket-right::after {
+        display: none;
+    }
+
+    .barcode-container {
+        width: 100px;
+        height: 40px;
+    }
+
+    .ticket-price-value {
+        font-size: 2rem;
+    }
+}
+
+/* Ticket Contact Info */
+.contact-for-tikite {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    z-index: 10;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    backdrop-filter: blur(5px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contact-for-tikite::before {
+    content: 'TICKET INFO:';
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    font-weight: 800;
 }
