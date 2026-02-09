@@ -1,0 +1,5 @@
+.reservation-page {
+    padding: var(--section-padding);
+    padding-top: 8rem !important;
+    padding-bottom: 8rem !important;
+}

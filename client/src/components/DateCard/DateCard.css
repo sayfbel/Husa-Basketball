@@ -1,0 +1,199 @@
+/* Wrapper for the DateCard */
+.date-wrapper {
+    width: 100%;
+    position: relative;
+    font-family: "Inter", sans-serif;
+}
+
+/* Label above the selector */
+.date-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #8f8f8f;
+    text-transform: uppercase;
+}
+
+/* Selected item box (Main display) */
+.date-box {
+    background: linear-gradient(180deg, #141414, #0f0f0f);
+    border-radius: 14px;
+    padding: 16px 18px;
+    color: #fff;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.3s;
+    user-select: none;
+}
+
+.date-box:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.date-box .icon {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Dropdown Calendar Container */
+.calendar-dropdown {
+    position: absolute;
+    width: 100%;
+    min-width: 280px;
+    background: #0f0f0f;
+    border-radius: 14px;
+    margin-top: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
+    overflow: hidden;
+    z-index: 20;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.date-wrapper.active .calendar-dropdown {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Calendar Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.calendar-title {
+    transition: color 0.2s;
+}
+
+.calendar-title:hover {
+    color: #e10600;
+    /* Subtle highlight to show it's clickable */
+}
+
+.calendar-nav-btn {
+    background: transparent;
+    border: none;
+    color: #8f8f8f;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.calendar-nav-btn .material-icons-outlined {
+    font-size: 20px;
+}
+
+.calendar-nav-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Base Calendar Grid */
+.calendar-grid {
+    display: grid;
+    gap: 4px;
+    text-align: center;
+}
+
+/* Days View */
+.days-grid {
+    grid-template-columns: repeat(7, 1fr);
+}
+
+/* Months / Years View */
+.months-grid,
+.years-grid {
+    grid-template-columns: repeat(3, 1fr);
+    /* 3 columns for better spacing */
+    gap: 8px;
+}
+
+/* Grid Items (Months/Years) */
+.calendar-item {
+    padding: 12px 0;
+    cursor: pointer;
+    color: #dcdcdc;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.calendar-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.calendar-item.selected {
+    background: linear-gradient(90deg, #e10600, #8b0000);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Day Names */
+.calendar-day-name {
+    color: #8f8f8f;
+    font-size: 11px;
+    padding: 8px 0;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+/* Day Cells */
+.calendar-day {
+    padding: 8px 0;
+    cursor: pointer;
+    color: #dcdcdc;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.calendar-day.empty {
+    cursor: default;
+    pointer-events: none;
+}
+
+.calendar-day.selected {
+    background: linear-gradient(90deg, #e10600, #8b0000);
+    color: #fff;
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    border: 1px solid #e10600;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

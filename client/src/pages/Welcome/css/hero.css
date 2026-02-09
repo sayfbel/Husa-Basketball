@@ -1,0 +1,45 @@
+/* hero.css */
+.hero-wrapper {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: var(--section-padding);
+    z-index: 1;
+}
+
+.hero-title {
+    font-size: 5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 50px rgba(227, 24, 55, 0.5);
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--accent-color);
+    /* Gold */
+    margin-bottom: 3rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+}

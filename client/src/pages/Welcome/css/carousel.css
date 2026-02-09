@@ -1,0 +1,178 @@
+/* carousel.css */
+.carousel-container {
+    width: 100%;
+    max-width: 1200px;
+    /* Constrain max width */
+    margin: 3rem auto;
+    position: relative;
+    padding: 0 1rem;
+    overflow: hidden;
+    /* Prevent horizontal scrollbar on page */
+}
+
+.carousel-track-wrapper {
+    width: 100%;
+    /* overflow: visible; Let neighbors be seen within the container padding layout */
+    /* Actually better to hide overflow outside this container to keep page neat */
+    overflow: visible;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    gap: 0;
+    will-change: transform;
+}
+
+.carousel-slide {
+    flex: 0 0 60%;
+    /* Fixed percentage width relative to container */
+    max-width: 600px;
+    /* Max width for large screens */
+    height: 500px;
+    position: relative;
+    transform: scale(0.85);
+    /* Smaller inactive slides */
+    transition: all 0.5s ease;
+    opacity: 0.5;
+    z-index: 1;
+}
+
+/* On mobile, make slides wider */
+@media (max-width: 768px) {
+    .carousel-slide {
+        flex: 0 0 85%;
+        height: 400px;
+    }
+}
+
+.carousel-slide.active-slide {
+    transform: scale(1);
+    opacity: 1;
+    z-index: 10;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.5));
+}
+
+.player-card-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Player Overlay Styles */
+.player-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent 50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+}
+
+.player-number {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 6rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.05);
+    line-height: 1;
+    font-family: sans-serif;
+    z-index: 1;
+    transition: transform 0.5s ease;
+}
+
+.active-slide .player-number {
+    color: rgba(227, 24, 55, 0.15);
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.player-info {
+    position: relative;
+    z-index: 2;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.5s ease 0.2s;
+}
+
+.active-slide .player-info {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.player-info h3 {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.player-info p {
+    color: var(--accent-color);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.carousel-controls {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 20;
+    padding: 0 10px;
+}
+
+.carousel-btn {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.carousel-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .player-number {
+        font-size: 4rem;
+    }
+
+    .player-info h3 {
+        font-size: 1.5rem;
+    }
+}

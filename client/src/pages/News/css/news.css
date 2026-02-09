@@ -1,0 +1,12 @@
+.news-page {
+    padding: var(--section-padding);
+    padding-top: 8rem !important;
+    padding-bottom: 8rem !important;
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}

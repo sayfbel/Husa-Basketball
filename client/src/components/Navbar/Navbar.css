@@ -1,0 +1,139 @@
+/* Navbar.css */
+.navbar {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: var(--container-width);
+    z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    /* Smooth ease-out */
+    border-radius: 16px;
+    padding: 0.5rem 0;
+
+    /* Default State: Clean & Open */
+    background: rgba(0, 0, 0, 0.0);
+    backdrop-filter: blur(0px);
+    border: 1px solid transparent;
+}
+
+.navbar.scrolled {
+    /* Scrolled State: Fashion/Floating Capsule */
+    top: 1rem;
+    width: auto;
+    /* Shrink to fit content? Or just slightly smaller fixed width */
+    min-width: 600px;
+    /* Ensure enough space */
+    width: 80%;
+    /* Slightly narrower */
+    max-width: 1000px;
+
+    background: rgba(10, 10, 10, 0.75);
+    /* High fashion dark */
+    backdrop-filter: blur(20px);
+    /* Heavy frost */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    border-radius: 50px;
+    /* Full pill shape */
+}
+
+.nav-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 2.5rem !important;
+    width: 100%;
+}
+
+.logo {
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo span {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+}
+
+.navbar-logo-img {
+    height: 40px;
+    width: auto;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Nav Links */
+.nav-links {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    list-style: none;
+}
+
+.nav-links a {
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+}
+
+.nav-links a:hover {
+    color: white;
+}
+
+/* Fashion Dot Indicator on Hover */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 4px;
+    height: 4px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+}
+
+.nav-links a:hover::after {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .navbar {
+        width: 95%;
+        top: 1rem;
+    }
+
+    .navbar.scrolled {
+        width: 95%;
+        border-radius: 12px;
+        /* Less pill-like on mobile for content space */
+    }
+
+    .nav-links {
+        display: none;
+        /* Add valid hamburger menu later if needed */
+    }
+}

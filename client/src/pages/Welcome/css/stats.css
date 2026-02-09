@@ -1,0 +1,48 @@
+/* stats.css */
+.stats-bar {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(17, 17, 17, 0.8);
+    backdrop-filter: blur(15px);
+    padding: 2rem;
+    margin-top: -3rem;
+    /* Overlap hero */
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.welcome-page>.stats-bar {
+    padding: 2rem !important;
+}
+
+.stat-box {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(227, 24, 55, 0.3);
+}
+
+.stat-label {
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .stats-bar {
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: -5rem;
+    }
+}

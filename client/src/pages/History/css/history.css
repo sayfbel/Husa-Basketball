@@ -1,0 +1,327 @@
+/* history.css */
+/* ...previous styles... */
+
+.history-page {
+    padding-top: 8rem !important;
+    padding-bottom: 8rem !important;
+    padding: var(--section-padding);
+}
+
+.history-title {
+    font-size: 5rem;
+    /* Larger, more impactful */
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    color: white;
+    letter-spacing: -2px;
+    background: linear-gradient(to right, #fff, #999);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.history-intro {
+    max-width: 800px;
+    margin: 0 auto 6rem auto;
+    text-align: center;
+}
+
+.history-intro p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #ccc;
+    font-weight: 300;
+    text-align: center;
+    /* Editorial style */
+}
+
+/* History Tables Section */
+.history-tables-section {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Updated stacked layout */
+.history-content-card {
+    background: #0a0a0a;
+    /* Darker, richer */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    /* Sharp, fashion edges */
+    padding: 0;
+    /* Remove default padding for full bleed feel */
+    margin-bottom: 6rem;
+    /* More breathing room */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative line */
+.history-content-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-color);
+}
+
+.history-header {
+    background: #111;
+    padding: 3rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.season-title-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.season-year-display {
+    font-size: 4rem;
+    font-weight: 900;
+    color: white;
+    /* Clean white */
+    line-height: 0.9;
+    margin: 0;
+    letter-spacing: -2px;
+}
+
+.season-league-title {
+    font-size: 1.2rem;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 0.5rem;
+}
+
+.season-note {
+    background: transparent;
+    color: var(--primary-color);
+    padding: 0.5rem 0;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    border-radius: 0;
+}
+
+/* Table Styles - Minimalist Fashion */
+.table-wrapper {
+    overflow-x: auto;
+    padding: 3rem;
+}
+
+.table-wrapper h4,
+.playoffs-section h4 {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    border: none;
+    padding-left: 0;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    /* Ensure geometric font */
+}
+
+.history-table th {
+    text-align: left;
+    padding: 1rem 0.5rem;
+    background: transparent;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-table td {
+    padding: 1.5rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: #aaa;
+    font-weight: 300;
+}
+
+.husa-row {
+    background: transparent;
+    border-left: none;
+}
+
+.husa-row td {
+    color: white;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(227, 24, 55, 0.3);
+}
+
+/* Matches Grid - Editorial List */
+.playoffs-section {
+    padding: 0 3rem 3rem 3rem;
+}
+
+.stage-group {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 3rem;
+    border: none;
+}
+
+.stage-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    opacity: 1;
+    letter-spacing: -1px;
+}
+
+.matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.match-row {
+    display: flex;
+    /* Changed to flex for card look */
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.5rem;
+    border-radius: 0;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #0f0f0f;
+    min-height: 140px;
+    position: relative;
+    overflow: hidden;
+}
+
+.match-row:hover {
+    background: #141414;
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+}
+
+.match-date {
+    color: #666;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+}
+
+.match-teams {
+    color: white;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    /* Stack teams */
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.team-husa {
+    color: white;
+}
+
+.vs {
+    display: none;
+    /* Hide VS for cleaner look */
+}
+
+.match-score {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    font-weight: 900;
+    color: white;
+    font-size: 1.5rem;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    opacity: 0.2;
+    /* Watermark style */
+    transition: opacity 0.3s;
+}
+
+.match-row:hover .match-score {
+    opacity: 1;
+}
+
+.match-result {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.match-row.win .match-result {
+    background: #4cd137;
+    color: black;
+}
+
+.match-row.loss .match-result {
+    background: #e84118;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .history-title {
+        font-size: 3rem;
+    }
+
+    .history-intro p {
+        border-left: none;
+        padding-left: 0;
+        text-align: center;
+    }
+
+    .history-content-card {
+        padding: 0;
+    }
+
+    .history-header,
+    .table-wrapper,
+    .playoffs-section {
+        padding: 1.5rem;
+    }
+
+    .season-year-display {
+        font-size: 3rem;
+    }
+
+    .matches-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table-wrapper {
+        padding-bottom: 1rem;
+    }
+}

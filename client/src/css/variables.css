@@ -1,0 +1,19 @@
+:root {
+    /* HUSA Basketball Identity Colors */
+    --primary-color: #E31837;
+    --secondary-color: #111111;
+    --accent-color: #FFD700;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+
+    /* Glassmorphism Variables */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 10px;
+
+    --font-family: 'Poppins', sans-serif;
+
+    /* Spacing */
+    --section-padding: 8rem 2rem;
+    --container-width: 1200px;
+}

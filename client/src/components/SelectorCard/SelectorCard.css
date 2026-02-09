@@ -1,0 +1,101 @@
+/* Wrapper for the SelectorCard */
+.select-wrapper {
+    width: 100%;
+    position: relative;
+    font-family: "Inter", sans-serif;
+    /* Ensure font is applied if available */
+}
+
+/* Label above the selector */
+.select-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #8f8f8f;
+    text-transform: uppercase;
+}
+
+/* Selected item box (Main display) */
+.select-box {
+    background: linear-gradient(180deg, #141414, #0f0f0f);
+    border-radius: 14px;
+    padding: 16px 18px;
+    color: #fff;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* Subtle border */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.select-box:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    /* Hover effect */
+}
+
+/* Arrow icon */
+/* Arrow icon */
+.select-box .material-icons-outlined {
+    font-size: 20px;
+    transition: transform 0.3s;
+}
+
+/* Rotate arrow when active */
+.select-wrapper.active .select-box .material-icons-outlined {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Options Container */
+.options {
+    position: absolute;
+    width: 100%;
+    background: #0f0f0f;
+    border-radius: 14px;
+    margin-top: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
+    /* Hidden by default */
+    overflow: hidden;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    /* Added subtle shadow for depth */
+}
+
+/* Show options when active */
+.select-wrapper.active .options {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Individual Option Style */
+.option {
+    padding: 14px 18px;
+    cursor: pointer;
+    color: #dcdcdc;
+    font-size: 15px;
+    transition: background 0.25s, color 0.25s;
+}
+
+/* Hover and Active State for Option */
+.option:hover,
+.option.selected {
+    background: linear-gradient(90deg, #e10600, #8b0000);
+    /* User's gradient */
+    color: #fff;
+}
+
+/* Optional Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
