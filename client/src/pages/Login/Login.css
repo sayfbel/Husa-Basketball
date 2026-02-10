@@ -1,0 +1,339 @@
+/* Fashion-Forward Login Design */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    color: white;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background Accents */
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(219, 10, 64, 0.15) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: 0;
+}
+
+.login-container::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    filter: blur(60px);
+    z-index: 0;
+}
+
+.login-card {
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 4rem 3rem 3rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    width: 420px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 10;
+    overflow: visible;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.login-card:hover {
+    border-color: rgba(219, 10, 64, 0.3);
+    transform: translateY(-5px);
+}
+
+.login-card h2 {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.login-card p {
+    color: #888;
+    margin-bottom: 2.5rem;
+    font-size: 0.95rem;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.form-group {
+    margin-bottom: 1.8rem;
+    text-align: left;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.8rem;
+    color: #aaa;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color, #DB0A40);
+    box-shadow: 0 0 0 3px rgba(219, 10, 64, 0.15);
+    background: rgba(0, 0, 0, 0.5);
+    outline: none;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-color, #DB0A40);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    margin-top: 1rem;
+    box-shadow: 0 10px 20px rgba(219, 10, 64, 0.2);
+}
+
+.btn-login:hover {
+    background: #ff0e4b;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(219, 10, 64, 0.3);
+}
+
+.btn-login:active {
+    transform: translateY(1px);
+}
+
+.error-message {
+    background: rgba(219, 10, 64, 0.1);
+    color: #ff4d6d;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    border: 1px solid rgba(219, 10, 64, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card.animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* User Avatar Circle - Premium Style */
+.user-avatar-circle {
+    width: 110px;
+    height: 110px;
+    margin: -90px auto 2rem auto;
+    /* Popped out more */
+    border-radius: 50%;
+    background: #111;
+    border: 4px solid var(--primary-color, #DB0A40);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23333"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50%;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Bouncy pop */
+    z-index: 20;
+}
+
+.login-card:hover .user-avatar-circle {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(219, 10, 64, 0.25);
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.avatar-img.active {
+    opacity: 1;
+}
+
+.avatar-img.default {
+    opacity: 0.4;
+    padding: 15%;
+    filter: invert(1);
+    /* Make default icon white */
+}
+
+.login-card {
+    background: #1a1a1a;
+    padding: 3rem 3rem 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 400px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    /* Ensure visible overflow for avatar */
+    overflow: visible;
+}
+
+.login-card h2 {
+    color: var(--primary-color, #DB0A40);
+    margin-bottom: 0.5rem;
+}
+
+.login-card p {
+    color: #aaa;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #252525;
+    color: white;
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color, #DB0A40);
+    outline: none;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-color, #DB0A40);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-login:hover {
+    background: #ff2e63;
+}
+
+.error-message {
+    background: rgba(255, 0, 0, 0.1);
+    color: #fa5252;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.login-card.animate-fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* User Avatar Circle */
+.user-avatar-circle {
+    width: 100px;
+    height: 100px;
+    margin: -60px auto 1rem auto;
+    /* Pull it up out of the card slightly */
+    border-radius: 50%;
+    background: #252525;
+    border: 3px solid var(--primary-color, #DB0A40);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60%;
+    transition: all 0.3s ease;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.avatar-img.active {
+    opacity: 1;
+}
+
+.login-card {
+    margin-top: 30px;
+    /* Make space for the popped out avatar */
+}

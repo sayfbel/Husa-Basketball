@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'editor') DEFAULT 'admin',
+    role VARCHAR(50) DEFAULT 'Player', 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -99,5 +99,15 @@ CREATE TABLE IF NOT EXISTS fan_messages (
     message TEXT NOT NULL,
     photo_url VARCHAR(255),
     is_approved BOOLEAN DEFAULT FALSE, -- Moderation
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Contact Messages
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255),
+    message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

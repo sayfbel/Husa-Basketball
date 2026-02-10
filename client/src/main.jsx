@@ -7,10 +7,14 @@ import App from './App.jsx'
 import './css/variables.css'
 import './css/global.css'
 
+import { NotificationProvider } from './components/Notification/Notification.jsx'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <BrowserRouter>
-            <App />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NotificationProvider>
+                <App />
+            </NotificationProvider>
         </BrowserRouter>
     </React.StrictMode>,
 )

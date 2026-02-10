@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../css/carousel.css';
 
 // Import News Images
-import newsImg1 from '../../../assets/images/news/573250808_17894544573357067_6940532935089663788_n..jpg';
-import newsImg2 from '../../../assets/images/news/575224628_17895474390357067_2343543371764802627_n..jpg';
-import newsImg3 from '../../../assets/images/news/582739586_17895581448357067_8347811714654289535_n..jpg';
-import newsImg4 from '../../../assets/images/news/585212662_17899357755357067_6311429234753411450_n..jpg';
-import newsImg5 from '../../../assets/images/news/613133289_17902414716357067_395244513126613799_n..jpg';
+// Import News Images (remapped to available assets)
+import newsImg1 from '../../../assets/images/victory_post.jpg';
+import newsImg2 from '../../../assets/images/match_post.jpg';
+// Reusing images for demonstration as originals are missing
+import newsImg3 from '../../../assets/images/victory_post.jpg';
+import newsImg4 from '../../../assets/images/match_post.jpg';
+import newsImg5 from '../../../assets/images/575224628_17895474390357067_2343543371764802627_n..jpg';
 
 const InstaCarousel = () => {
     // News Data

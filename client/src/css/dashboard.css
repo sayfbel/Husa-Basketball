@@ -1,0 +1,680 @@
+/* Shared Premium Dashboard Layout */
+:root {
+    --dash-bg: #0a0a0a;
+    --dash-card-bg: rgba(20, 20, 20, 0.4);
+    --dash-border: rgba(255, 255, 255, 0.08);
+    --dash-primary: #DB0A40;
+}
+
+.dashboard-container {
+    padding-top: 6rem !important;
+    min-height: 100vh;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+}
+
+.dashboard-header {
+    margin-bottom: 3rem;
+    position: relative;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.dashboard-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.dashboard-header-info {
+    flex: 1;
+}
+
+.dashboard-header h1 {
+    font-size: 3.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    background: linear-gradient(to right, #fff, #888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+/* Dashboard Navigation */
+.dashboard-nav {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.dash-link {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.dash-link:hover {
+    color: #fff;
+}
+
+.dash-link.active {
+    color: var(--dash-primary);
+    border-bottom-color: var(--dash-primary);
+}
+
+.coach-tag~.dashboard-nav .dash-link.active {
+    border-bottom-color: #ff3131;
+    color: #ff3131;
+}
+
+/* Specific for coach */
+
+.role-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ccc;
+    backdrop-filter: blur(5px);
+}
+
+.role-tag.player-tag {
+    border-color: var(--dash-primary);
+    color: var(--dash-primary);
+    box-shadow: 0 0 15px rgba(219, 10, 64, 0.2);
+}
+
+.role-tag.coach-tag {
+    border-color: #ff3131;
+    color: #ff3131;
+    box-shadow: 0 0 15px rgba(255, 49, 49, 0.2);
+}
+
+.role-tag.president-tag {
+    border-color: #FFD700;
+    color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.dashboard-card {
+    background: var(--dash-card-bg);
+    border: 1px solid var(--dash-border);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-card h2 {
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.7;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.5rem;
+}
+
+/* Strategy Specific Layout Improvements */
+.section-header-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.section-header-row .role-tag {
+    padding: 8px 18px;
+    border-color: #ff3131;
+    color: #ff3131;
+    box-shadow: 0 0 15px rgba(255, 49, 49, 0.15);
+}
+
+.section-header-row h1 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    color: #fff;
+    margin: 0;
+}
+
+.section-header-row p {
+    color: #888;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    max-width: 600px;
+    margin: 0;
+    margin-top: 5px;
+}
+
+/* Stat Items Premium Look */
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.stat-item span {
+    font-size: 0.9rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-item strong {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.status-active {
+    color: #4cd137;
+    text-shadow: 0 0 10px rgba(76, 209, 55, 0.3);
+}
+
+.match-info {
+    color: var(--dash-primary);
+    font-weight: 700;
+}
+
+/* Tactic List */
+.tactics-list {
+    margin-top: 1rem;
+}
+
+.tactic {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.tactic:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(5px);
+}
+
+.tactics-card .tactic {
+    border-left-color: #ff3131;
+}
+
+.president-tag .tactic {
+    border-left-color: #FFD700;
+}
+
+/* Fallback specific */
+
+/* Player Card Styles */
+.players-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+.player-card {
+    padding: 0;
+    overflow: hidden;
+    background: rgba(30, 30, 30, 0.6);
+    text-align: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.player-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    border-color: var(--dash-primary);
+}
+
+.player-card-image {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    background: #000;
+}
+
+.player-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.player-card:hover img {
+    opacity: 1;
+}
+
+.player-number {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--dash-primary);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.player-card-info {
+    padding: 1rem;
+}
+
+.player-card-info h3 {
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-pos {
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.8rem;
+}
+
+.player-stats-mini {
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 0.8rem;
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+/* Strategy & Tactics Board */
+.strategy-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.strategy-card {
+    background: var(--dash-card-bg);
+    border: 1px solid var(--dash-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+}
+
+.strategy-card h2 {
+    color: var(--dash-primary);
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.court-board {
+    position: relative;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1a1a1a;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Court Drawing Overrides */
+.basketball-court-svg {
+    width: 100%;
+    display: block;
+    background: #1a1a1a;
+}
+
+/* Player Tokens */
+.player-token {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: white;
+    color: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    cursor: grab;
+    border: 2px solid #333;
+}
+
+.player-token.p-offense {
+    background: var(--dash-primary);
+    color: white;
+    border-color: white;
+}
+
+.player-token.p-defense {
+    background: #111;
+    color: white;
+    border-color: white;
+}
+
+.player-token.p-ball {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 1.5rem;
+    /* Larger emoji */
+}
+
+/* Strategy Controls */
+.tactic-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #151515;
+    padding: 1rem;
+    border-radius: 0 0 16px 16px;
+    border-top: 1px solid var(--dash-border);
+    margin-top: -5px;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.tools-group {
+    display: flex;
+    gap: 0.5rem;
+    background: #222;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.tool-btn {
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: #333;
+    color: #fff;
+}
+
+.tool-btn.active {
+    background: var(--dash-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(219, 10, 64, 0.4);
+}
+
+/* Strategy Bench */
+.strategy-bench {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    background-color: var(--secondary-bg);
+    padding: 1rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--dash-border);
+}
+
+.bench-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.bench-separator {
+    width: 1px;
+    height: 30px;
+    background-color: var(--dash-border);
+}
+
+.bench-token {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.bench-token:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bench-token.t-offense {
+    background: var(--dash-primary);
+    /* Red */
+    color: white;
+}
+
+.bench-token.t-defense {
+    background: white;
+    color: var(--dash-primary);
+    border: 2px solid var(--dash-primary);
+}
+
+.bench-token.t-ball {
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+}
+
+.timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.frame-btn {
+    background: none;
+    border: 1px solid var(--dash-border);
+    color: #888;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.frame-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: white;
+}
+
+.play-btn {
+    width: 44px;
+    height: 44px;
+    background: white;
+    border: none;
+    color: black;
+}
+
+.play-btn:hover {
+    background: #f0f0f0;
+    transform: scale(1.05);
+}
+
+.frame-counter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.frame-counter span {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+/* Drawing Paths */
+.drawing-layer {
+    pointer-events: none;
+    /* Let clicks pass through unless drawing */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    /* Below tokens (z=10 when dragging, z=1 usually) */
+}
+
+.drawing-layer.active {
+    pointer-events: auto;
+    /* Capture clicks when in draw mode */
+}
+
+.drawing-path {
+    fill: none;
+    stroke: #fcd34d;
+    /* Yellow chalk */
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.8;
+}
+
+.save-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.control-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.btn-reset {
+    background: #333;
+    color: #ccc;
+}
+
+.btn-save {
+    background: var(--dash-primary);
+    color: white;
+}
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.live-indicator {
+    background: rgba(76, 209, 55, 0.2);
+    color: #4cd137;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border: 1px solid rgba(76, 209, 55, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.7;
+    }
+}
+
+/* Custom Scrollbar for Match Squad Lists */
+.full-custom-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.full-custom-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.full-custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.full-custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--dash-primary);
+}
