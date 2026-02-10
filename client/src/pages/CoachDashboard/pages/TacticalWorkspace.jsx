@@ -355,7 +355,15 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                         style={{ position: 'relative', width: '20px', height: '20px', fontSize: '0.6rem', transform: 'none', top: 'auto', left: 'auto' }}>
                                         {token.label}
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', color: '#ccc' }}>{token.label}</span>
+                                    <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                                        {token.type === 'offense' ? (
+                                            token.label == '1' ? 'Point Guard (1)' :
+                                                token.label == '2' ? 'Shooting Guard (2)' :
+                                                    token.label == '3' ? 'Small Forward (3)' :
+                                                        token.label == '4' ? 'Power Forward (4)' :
+                                                            token.label == '5' ? 'Center (5)' : token.label
+                                        ) : token.label}
+                                    </span>
                                 </div>
                                 <button
                                     onClick={() => removeToken(token.id)}

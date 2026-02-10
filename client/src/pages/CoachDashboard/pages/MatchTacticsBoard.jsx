@@ -62,7 +62,7 @@ const MiniCourtPreview = ({ tactic }) => {
     );
 };
 
-const MatchTacticsBoard = ({ summonedPlayers, strategies, showNotification }) => {
+const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotification, onStrategyLoaded }) => {
     const { currentUser } = useAuth();
     const [mode, setMode] = useState('move');
     const [frames, setFrames] = useState([{
@@ -143,53 +143,143 @@ const MatchTacticsBoard = ({ summonedPlayers, strategies, showNotification }) =>
     };
 
     // --- Strategy Loading ---
-    const loadStrategy = (strategy) => {
-        if (!strategy.data || strategy.data.length === 0) return;
+    const getNumericPosition = (posStr) => {
+        if (!posStr) return '0';
+        const lower = posStr.toLowerCase();
+        if (lower.includes('point') || lower.includes('guard 1')) return '1';
+        if (lower.includes('shooting') || lower.includes('guard 2')) return '2';
+        if (lower.includes('small') || lower.includes('forward 3')) return '3';
+        if (lower.includes('power') || lower.includes('forward 4')) return '4';
+        if (lower.includes('center') || lower.includes('5')) return '5';
+        return '0';
+    };
 
-        // We want to map the generic Offense tokens (1-5) to our Summoned Players (index 0-4)
-        const strategyFrame = strategy.data[0];
-        const strategyTokens = strategyFrame.tokens || [];
+    const loadStrategy = (originalStrategy) => {
+        if (!originalStrategy.data || originalStrategy.data.length === 0) return;
 
-        // Filter out generic offense tokens
-        const offenseTokens = strategyTokens.filter(t => t.type === 'offense');
+        // Deep clone to avoid mutating the original
+        const strategy = JSON.parse(JSON.stringify(originalStrategy));
 
-        // Create new real-player tokens
-        const newRealTokens = [];
+        // 1. Establish Mapping based on Frame 0 (The Setup)
+        const setupFrame = strategy.data[0];
+        const setupTokens = setupFrame.tokens || [];
 
-        offenseTokens.forEach((ot, idx) => {
-            if (idx < summonedPlayers.length) {
-                const player = summonedPlayers[idx];
-                newRealTokens.push({
-                    id: `token-${Date.now()}-${idx}`,
-                    playerId: player.id,
-                    name: player.name,
-                    number: player.jersey_number,
-                    photo: player.photo_url,
-                    type: 'player',
-                    x: ot.x,
-                    y: ot.y
-                });
+        // Filter offense tokens to map
+        const offenseTokens = setupTokens.filter(t => t.type === 'offense');
+
+        // Pool of players to assign. Prioritize starters if available.
+        let availableStarters = [];
+        let availableReserves = [];
+
+        // Filter out starters and reserves based on the passed 'starters' prop (array of IDs)
+        if (starters && starters.length > 0) {
+            availableStarters = summonedPlayers.filter(p => starters.includes(p.id));
+            availableReserves = summonedPlayers.filter(p => !starters.includes(p.id));
+        } else {
+            // Fallback if no starters selected (shouldn't happen in this flow but safe to have)
+            availableStarters = [...summonedPlayers];
+        }
+
+        // Mapping: OriginalTokenID -> AssignedPlayer
+        const tokenPlayerMap = {};
+
+        // Phase 1: Starters - Exact Position Match
+        // We iterate through tokens and try to find a perfect match in our starters pool.
+        offenseTokens.forEach(t => {
+            const desiredPos = String(t.label);
+            const matchIndex = availableStarters.findIndex(p => getNumericPosition(p.position) === desiredPos);
+
+            if (matchIndex !== -1) {
+                tokenPlayerMap[t.id] = availableStarters[matchIndex];
+                availableStarters.splice(matchIndex, 1);
             }
         });
 
-        // Add ball if exists
-        const ballToken = strategyTokens.find(t => t.type === 'ball');
-        if (ballToken) {
-            newRealTokens.push({ ...ballToken, id: `ball-${Date.now()}` });
-        }
+        // Phase 2: Starters - Force Fill Remaining Spots
+        // If we still have starters left (e.g. user has 3 PGs in starting 5 but system needs C),
+        // we force these starters into the remaining empty spots.
+        offenseTokens.forEach(t => {
+            if (!tokenPlayerMap[t.id] && availableStarters.length > 0) {
+                tokenPlayerMap[t.id] = availableStarters[0];
+                availableStarters.shift();
+            }
+        });
 
-        // Reset frames to start fresh with this setup
-        // Note: We only import the setup (Frame 0 positions), not the full animation, 
-        // because we are applying it to real players now. 
-        // If we wanted full animation, we'd need to map EVERY frame. 
-        // For now, let's just set the initial positions.
-        setFrames([{
-            tokens: newRealTokens,
-            paths: strategyFrame.paths || []
-        }]);
+        // Phase 3: Reserves - Exact Position Match
+        // Only if we run out of starters (e.g. user only picked 4 starters??), we look at reserves.
+        offenseTokens.forEach(t => {
+            if (!tokenPlayerMap[t.id]) {
+                const desiredPos = String(t.label);
+                const matchIndex = availableReserves.findIndex(p => getNumericPosition(p.position) === desiredPos);
+                if (matchIndex !== -1) {
+                    tokenPlayerMap[t.id] = availableReserves[matchIndex];
+                    availableReserves.splice(matchIndex, 1);
+                }
+            }
+        });
+
+        // Phase 4: Reserves - Fill Remaining
+        offenseTokens.forEach(t => {
+            if (!tokenPlayerMap[t.id] && availableReserves.length > 0) {
+                tokenPlayerMap[t.id] = availableReserves[0];
+                availableReserves.shift();
+            }
+        });
+
+        // 2. Reconstruct ALL frames using the mapping
+        const newFrames = strategy.data.map(frame => {
+            const newTokens = (frame.tokens || []).map(t => {
+                // If this token maps to a player, transform it
+                if (tokenPlayerMap[t.id]) {
+                    const player = tokenPlayerMap[t.id];
+                    return {
+                        id: `token-${t.id}-mapped`, // Consistent ID derived from original
+                        playerId: player.id,
+                        name: player.name,
+                        number: player.jersey_number,
+                        photo: player.photo_url,
+                        type: 'player', // Transform 'offense' -> 'player'
+                        x: t.x,
+                        y: t.y,
+                        label: t.label // Keep original label (number) or use player number? Keeping label helps internally, but UI uses photo.
+                    };
+                }
+                // Otherwise (Defense, Ball, Unmapped Offense), keep as is
+                // We might want to give specific IDs to ball to ensure uniqueness if needed
+                if (t.type === 'ball') {
+                    return { ...t, id: `ball-${t.id || 'gen'}` };
+                }
+                return t;
+            });
+
+            return {
+                tokens: newTokens,
+                paths: frame.paths || []
+            };
+
+        });
+
+        // 3. Update State
+        setFrames(newFrames);
         setCurrentFrameIndex(0);
         setShowLoadDropdown(false);
+
+        if (showNotification) {
+            const totalOffense = offenseTokens.length;
+            const mappedCount = Object.keys(tokenPlayerMap).length;
+
+            if (mappedCount < totalOffense) {
+                showNotification(`Loaded ${newFrames.length} frames. Matched ${mappedCount}/${totalOffense} players.`, 'info');
+            } else {
+                showNotification(`Strategy loaded successfully (${newFrames.length} frames).`, 'success');
+            }
+        }
+
+        if (typeof onStrategyLoaded === 'function') {
+            onStrategyLoaded(strategy.id);
+        }
     };
+
 
     // --- Mouse Handlers (Same as Workspace) ---
     const handleTokenMouseDown = (e, id) => {
@@ -416,6 +506,7 @@ const MatchTacticsBoard = ({ summonedPlayers, strategies, showNotification }) =>
                     <div className="full-custom-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                         {summonedPlayers.map(player => {
                             const onCourt = isPlayerOnCourt(player.id);
+                            const isStarter = starters && starters.includes(player.id);
                             return (
                                 <div
                                     key={player.id}
@@ -425,18 +516,21 @@ const MatchTacticsBoard = ({ summonedPlayers, strategies, showNotification }) =>
                                         alignItems: 'center',
                                         gap: '10px',
                                         padding: '8px',
-                                        background: onCourt ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255,255,255,0.03)',
-                                        border: onCourt ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                        background: onCourt ? 'rgba(76, 209, 55, 0.1)' : (isStarter ? 'rgba(252, 211, 77, 0.05)' : 'rgba(255,255,255,0.03)'),
+                                        border: isStarter ? '1px solid #fcd34d' : (onCourt ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.05)'),
                                         borderRadius: '8px',
                                         cursor: onCourt ? 'default' : 'pointer',
-                                        opacity: onCourt ? 0.6 : 1
+                                        opacity: onCourt ? 0.6 : 1,
+                                        boxShadow: isStarter ? '0 0 5px rgba(252, 211, 77, 0.2)' : 'none'
                                     }}
                                 >
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#000' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#000', border: isStarter ? '1px solid #fcd34d' : 'none' }}>
                                         <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
                                     <div style={{ overflow: 'hidden' }}>
-                                        <div style={{ fontSize: '0.85rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</div>
+                                        <div style={{ fontSize: '0.85rem', color: isStarter ? '#fcd34d' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: isStarter ? '600' : 'normal' }}>
+                                            {player.name} {isStarter && '★'}
+                                        </div>
                                         <div style={{ fontSize: '0.75rem', color: '#666' }}>#{player.jersey_number}</div>
                                     </div>
                                     {onCourt && <div style={{ marginLeft: 'auto', width: '8px', height: '8px', borderRadius: '50%', background: '#4cd137' }}></div>}

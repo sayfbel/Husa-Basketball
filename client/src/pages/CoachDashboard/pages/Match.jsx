@@ -7,11 +7,21 @@ import '../../../css/dashboard.css';
 const Match = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
     const [players, setPlayers] = useState([]);
-    const [selectedPlayers, setSelectedPlayers] = useState([]); // Array of player IDs
+
+    // Match State
     const [matches, setMatches] = useState([]);
     const [loadingMatches, setLoadingMatches] = useState(false);
+    const [activeMatch, setActiveMatch] = useState(null); // The match currently being managed
     const [error, setError] = useState(null);
+
+    // Squad State
+    const [selectedPlayers, setSelectedPlayers] = useState([]); // Array of player IDs (The Squad)
+    const [starters, setStarters] = useState([]); // Array of player IDs (The First 5)
+    const [isSquadConfirmed, setIsSquadConfirmed] = useState(false);
+
+    // Strategy State
     const [fullCourtStrategies, setFullCourtStrategies] = useState([]);
+    const [activeStrategyId, setActiveStrategyId] = useState(null);
 
     useEffect(() => {
         fetchPlayers();
@@ -54,7 +64,22 @@ const Match = () => {
         }
     };
 
+    // --- Actions ---
+
+    const handleSelectMatch = (match) => {
+        setActiveMatch(match);
+        // Reset state for new match
+        setSelectedPlayers([]);
+        setStarters([]);
+        setIsSquadConfirmed(false);
+        setActiveStrategyId(null);
+        showNotification(`Managing squad for vs ${match.home.includes('HUSA') ? match.away : match.home}`, 'info');
+        // Scroll to squad section
+        document.getElementById('squad-section')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     const handleSummon = (playerId) => {
+        if (isSquadConfirmed) return;
         if (selectedPlayers.length >= 12) {
             showNotification("You can only select 12 players for the match squad.", "warning");
             return;
@@ -63,22 +88,72 @@ const Match = () => {
     };
 
     const handleDismiss = (playerId) => {
+        if (isSquadConfirmed) return;
         setSelectedPlayers(prev => prev.filter(id => id !== playerId));
+        if (starters.includes(playerId)) {
+            setStarters(prev => prev.filter(id => id !== playerId));
+        }
+    };
+
+    const handleConfirmSquad = () => {
+        if (selectedPlayers.length === 0) {
+            showNotification("Please select at least one player.", "warning");
+            return;
+        }
+        setIsSquadConfirmed(true);
+        showNotification("Squad confirmed. Now select your Starting 5.", "success");
+    };
+
+    const handleEditSquad = () => {
+        setIsSquadConfirmed(false);
+        setStarters([]);
+    };
+
+    const toggleStarter = (playerId) => {
+        if (starters.includes(playerId)) {
+            setStarters(prev => prev.filter(id => id !== playerId));
+        } else {
+            if (starters.length >= 5) {
+                showNotification("Create your Starting 5 (Max 5 players).", "warning");
+                return;
+            }
+            setStarters(prev => [...prev, playerId]);
+        }
+    };
+
+    const handleSaveMatchSetup = async () => {
+        if (!activeMatch) return;
+
+        try {
+            const payload = {
+                matchData: activeMatch, // Pass the full scraped object
+                matchId: null, // Scraped matches don't have our IDs initially
+                squad: selectedPlayers,
+                starters: starters,
+                strategyId: activeStrategyId // Passed from Tactics Board if integrated, or null
+            };
+
+            const res = await axios.post('http://localhost:5000/api/matches/save', payload);
+            showNotification("Match setup saved successfully!", "success");
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to save match setup.", "error");
+        }
     };
 
     const availablePlayers = players.filter(p => !selectedPlayers.includes(p.id));
     const summonedPlayers = players.filter(p => selectedPlayers.includes(p.id));
 
-    const PlayerCard = ({ player, action, actionLabel, variant }) => (
+    const PlayerCard = ({ player, action, actionIcon, variant, isStarter }) => (
         <div
-            onClick={() => action(player.id)}
-            className="player-card-interactive"
+            onClick={() => action && action(player.id)}
+            className={`player-card-interactive ${isStarter ? 'starter-glow' : ''}`}
             style={{
                 position: 'relative',
-                background: variant === 'summoned'
+                background: variant === 'summoned' || variant === 'starter'
                     ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.15) 0%, rgba(20, 20, 20, 0.8) 100%)'
                     : 'rgba(255,255,255,0.03)',
-                border: variant === 'summoned' ? '1px solid rgba(219, 10, 64, 0.4)' : '1px solid rgba(255,255,255,0.08)',
+                border: isStarter ? '2px solid #fcd34d' : (variant === 'summoned' ? '1px solid rgba(219, 10, 64, 0.4)' : '1px solid rgba(255,255,255,0.08)'),
                 borderRadius: '12px',
                 padding: '1rem',
                 cursor: 'pointer',
@@ -88,30 +163,12 @@ const Match = () => {
                 alignItems: 'center',
                 textAlign: 'center',
                 gap: '0.8rem',
-                height: '100%',
-                boxShadow: variant === 'summoned' ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
-                overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
-                if (variant === 'summoned') {
-                    e.currentTarget.style.borderColor = '#DB0A40';
-                } else {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                }
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = variant === 'summoned' ? '0 4px 12px rgba(0,0,0,0.2)' : 'none';
-                if (variant === 'summoned') {
-                    e.currentTarget.style.borderColor = 'rgba(219, 10, 64, 0.4)';
-                } else {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                }
+                minHeight: '180px',
+                boxShadow: isStarter ? '0 0 15px rgba(252, 211, 77, 0.2)' : 'none',
+                opacity: (isSquadConfirmed && variant === 'available') ? 0.5 : 1
             }}
         >
-            {/* Action Badge (Absolute) */}
+            {/* Action Badge */}
             <div style={{
                 position: 'absolute',
                 top: '8px',
@@ -119,8 +176,8 @@ const Match = () => {
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
-                background: variant === 'summoned' ? '#DB0A40' : 'rgba(255,255,255,0.1)',
-                color: '#fff',
+                background: isStarter ? '#fcd34d' : (variant === 'summoned' ? '#DB0A40' : 'rgba(255,255,255,0.1)'),
+                color: isStarter ? '#000' : '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -130,10 +187,10 @@ const Match = () => {
                 fontSize: '1.2rem',
                 lineHeight: 1
             }}>
-                {actionLabel === '+' ? '+' : '−'}
+                {actionIcon}
             </div>
 
-            {/* Jersey Number Badge (Absolute) */}
+            {/* Jersey Number */}
             <div style={{
                 position: 'absolute',
                 top: '8px',
@@ -149,15 +206,35 @@ const Match = () => {
                 #{player.jersey_number}
             </div>
 
+            {/* Starter Label */}
+            {isStarter && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#fcd34d',
+                    color: '#000',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    fontSize: '0.65rem',
+                    fontWeight: 'bold',
+                    zIndex: 2,
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                }}>
+                    STARTER
+                </div>
+            )}
+
             {/* Player Image */}
             <div style={{
                 width: '80px',
                 height: '80px',
                 borderRadius: '50%',
                 padding: '3px',
-                background: variant === 'summoned'
-                    ? 'linear-gradient(45deg, #DB0A40, #ff4d4d)'
-                    : 'linear-gradient(45deg, #444, #666)',
+                background: isStarter
+                    ? 'linear-gradient(45deg, #fcd34d, #f59e0b)'
+                    : (variant === 'summoned' ? 'linear-gradient(45deg, #DB0A40, #ff4d4d)' : 'linear-gradient(45deg, #444, #666)'),
                 marginTop: '0.5rem'
             }}>
                 <div style={{
@@ -177,11 +254,11 @@ const Match = () => {
                 </div>
             </div>
 
-            {/* Info Section */}
+            {/* Info */}
             <div style={{ width: '100%' }}>
                 <h4 style={{
                     margin: '0 0 4px 0',
-                    fontSize: '1rem',
+                    fontSize: '0.95rem',
                     color: '#fff',
                     fontWeight: '600',
                     whiteSpace: 'nowrap',
@@ -190,26 +267,22 @@ const Match = () => {
                 }}>
                     {player.name}
                 </h4>
-                <div style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>
                     {player.position}
                 </div>
-                {player.height && (
-                    <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '4px' }}>
-                        {player.height}
-                    </div>
-                )}
             </div>
         </div>
     );
 
     return (
         <div className="dashboard-grid-vertical" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* 2. Scraped Matches Table */}
-            <div className="dashboard-card" style={{ padding: '1.5rem', minHeight: '300px' }}>
+
+            {/* 1. Schedule & Match Selection */}
+            <div className="dashboard-card" style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#fff' }}>HUSA Schedule</h2>
-                        <p style={{ color: '#888', fontSize: '0.9rem', margin: '5px 0 0 0' }}>Live data from FRMBB (Groupe -3-)</p>
+                        <h2 style={{ margin: 0, color: '#fff' }}>Match Schedule</h2>
+                        <p style={{ color: '#888', fontSize: '0.9rem', margin: '5px 0 0 0' }}>Select a match to manage the squad and strategy.</p>
                     </div>
                     <button
                         onClick={fetchScrapedMatches}
@@ -224,149 +297,210 @@ const Match = () => {
                             fontSize: '0.85rem'
                         }}
                     >
-                        {loadingMatches ? 'Syncing...' : 'Refresh Data'}
+                        {loadingMatches ? 'Syncing...' : 'Refresh Schedule'}
                     </button>
                 </div>
 
-                {loadingMatches ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
-                        <div className="spinner" style={{ width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#DB0A40', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
-                        <p>Connecting to federation server...</p>
-                    </div>
-                ) : error ? (
-                    <div style={{ padding: '2rem', background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.2)', borderRadius: '8px', color: '#ff4d4d', textAlign: 'center' }}>
-                        {error}
-                        <br />
-                        <button onClick={fetchScrapedMatches} style={{ marginTop: '1rem', background: 'transparent', border: '1px solid #ff4d4d', color: '#ff4d4d', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Try Again</button>
-                    </div>
-                ) : matches.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: '#555', fontStyle: 'italic', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-                        No HUSA matches found in the current schedule.
-                    </div>
-                ) : (
+                {matches.length > 0 ? (
                     <div className="table-responsive" style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                             <thead>
                                 <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc', fontWeight: '600' }}>Date</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc', fontWeight: '600' }}>Time</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc', fontWeight: '600' }}>Match</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', color: '#ccc', fontWeight: '600' }}>Score</th>
-                                    <th style={{ padding: '12px', textAlign: 'right', color: '#ccc', fontWeight: '600' }}>Venue</th>
+                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc' }}>Match Details</th>
+                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc' }}>Date</th>
+                                    <th style={{ padding: '12px', textAlign: 'right', color: '#ccc' }}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {matches && matches.map((match, idx) => {
+                                {matches.map((match, idx) => {
                                     const isHome = match.home.includes('HUSA') || match.home.includes('Hassania');
-                                    // Highlight row if contains HUSA (which all should)
+                                    const isActive = activeMatch === match; // Simple object reference check for scraped data
                                     return (
                                         <tr key={idx} style={{
                                             borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                            background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
-                                            transition: 'background 0.2s'
-                                        }} className="match-row">
-                                            <td style={{ padding: '12px', color: '#fff' }}>{match.date}</td>
-                                            <td style={{ padding: '12px', color: '#888' }}>{match.time}</td>
+                                            background: isActive ? 'rgba(219, 10, 64, 0.1)' : 'transparent'
+                                        }}>
                                             <td style={{ padding: '12px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ color: isHome ? '#DB0A40' : '#fff', fontWeight: isHome ? '700' : '400' }}>{match.home}</span>
-                                                    <span style={{ color: '#555', fontSize: '0.8rem' }}>vs</span>
-                                                    <span style={{ color: !isHome ? '#DB0A40' : '#fff', fontWeight: !isHome ? '700' : '400' }}>{match.away}</span>
+                                                    <span style={{ fontWeight: isHome ? '700' : '400', color: isHome ? '#DB0A40' : '#fff' }}>{match.home}</span>
+                                                    <span style={{ color: '#555' }}>vs</span>
+                                                    <span style={{ fontWeight: !isHome ? '700' : '400', color: !isHome ? '#DB0A40' : '#fff' }}>{match.away}</span>
                                                 </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>{match.venue}</div>
                                             </td>
-                                            <td style={{ padding: '12px', textAlign: 'center' }}>
-                                                <span style={{
-                                                    background: match.score && match.score !== '-' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '4px',
-                                                    color: '#fff',
-                                                    fontFamily: 'monospace'
-                                                }}>
-                                                    {match.score || '-'}
-                                                </span>
+                                            <td style={{ padding: '12px', color: '#aaa' }}>
+                                                <div>{match.date}</div>
+                                                <div style={{ fontSize: '0.8rem' }}>{match.time}</div>
                                             </td>
-                                            <td style={{ padding: '12px', textAlign: 'right', color: '#888' }}>{match.venue}</td>
+                                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                                                <button
+                                                    onClick={() => handleSelectMatch(match)}
+                                                    style={{
+                                                        background: isActive ? '#DB0A40' : 'transparent',
+                                                        border: isActive ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                                                        color: '#fff',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: isActive ? 'bold' : 'normal',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {isActive ? 'Managing' : 'Select'}
+                                                </button>
+                                            </td>
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
                     </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matches found.</div>
                 )}
             </div>
-            {/* 1. Squad Selection Section */}
-            <div className="dashboard-card" style={{ padding: '1.5rem' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <h2 style={{ margin: 0, color: '#fff' }}>Match Day Squad</h2>
-                    <p style={{ color: '#888', fontSize: '0.9rem', margin: '5px 0 0 0' }}>Manage the 12-man roster for the upcoming game.</p>
-                </div>
 
-                <div className="squad-builder-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-
-                    {/* Available Players Column */}
-                    <div className="list-column">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ fontSize: '1rem', color: '#aaa', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Available Pool</h3>
-                            <span style={{ fontSize: '0.8rem', color: '#666' }}>{availablePlayers.length} Players</span>
+            {/* 2. Squad Management Section (Only visible if match selected) */}
+            {activeMatch && (
+                <div id="squad-section" className="dashboard-card animate-fade-in" style={{ padding: '1.5rem', border: '1px solid rgba(219, 10, 64, 0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div>
+                            <h2 style={{ margin: 0, color: '#fff' }}>Squad & Lineup</h2>
+                            <p style={{ color: '#DB0A40', margin: '4px 0 0 0', fontWeight: 'bold' }}>
+                                vs {activeMatch.home.includes('HUSA') ? activeMatch.away : activeMatch.home}
+                            </p>
                         </div>
-                        <div className="players-list-scroll full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', maxHeight: '500px', padding: '1rem', overflowY: 'auto', paddingRight: '5px' }}>
-                            {availablePlayers.map(player => (
-                                <PlayerCard
-                                    key={player.id}
-                                    player={player}
-                                    action={handleSummon}
-                                    actionLabel="+"
-                                    variant="available"
-                                />
-                            ))}
-                            {availablePlayers.length === 0 && <p style={{ textAlign: 'center', color: '#555', fontStyle: 'italic', padding: '1rem', gridColumn: '1/-1' }}>All players summoned.</p>}
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            {!isSquadConfirmed ? (
+                                <button
+                                    onClick={handleConfirmSquad}
+                                    style={{
+                                        background: '#DB0A40',
+                                        color: '#fff',
+                                        border: 'none',
+                                        padding: '10px 24px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 4px 12px rgba(219, 10, 64, 0.4)'
+                                    }}
+                                >
+                                    Confirm Squad ({selectedPlayers.length})
+                                </button>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <span style={{ color: '#4cd137', fontWeight: 'bold', fontSize: '0.9rem' }}>Squad Locked</span>
+                                    <button
+                                        onClick={handleEditSquad}
+                                        style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={handleSaveMatchSetup}
+                                        style={{
+                                            background: '#fcd34d',
+                                            color: '#000',
+                                            border: 'none',
+                                            padding: '10px 24px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 4px 12px rgba(252, 211, 77, 0.3)'
+                                        }}
+                                    >
+                                        Save All
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Summoned Players Column */}
-                    <div className="list-column">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ fontSize: '1rem', color: '#DB0A40', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Summoned Squad</h3>
-                            <div style={{
-                                background: summonedPlayers.length === 12 ? '#DB0A40' : 'rgba(219, 10, 64, 0.2)',
-                                padding: '2px 8px',
-                                borderRadius: '4px',
-                                color: summonedPlayers.length === 12 ? '#fff' : '#DB0A40',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold'
-                            }}>
-                                {summonedPlayers.length} / 12
+                    <div className="squad-builder-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+
+                        {/* LEFT: Player Selection (Hidden if confirmed to focus on starters?) No, let's keep it visible but dimmed if confirmed */}
+                        <div className="list-column" style={{ opacity: isSquadConfirmed ? 0.4 : 1, pointerEvents: isSquadConfirmed ? 'none' : 'auto', transition: 'opacity 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#aaa' }}>Available Pool</h3>
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>{availablePlayers.length}</span>
+                            </div>
+                            <div className="players-grid full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+                                {availablePlayers.map(p => (
+                                    <PlayerCard
+                                        key={p.id}
+                                        player={p}
+                                        action={handleSummon}
+                                        actionIcon="+"
+                                        variant="available"
+                                    />
+                                ))}
                             </div>
                         </div>
-                        <div className="players-list-scroll full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', maxHeight: '500px', overflowY: 'auto', padding: '1rem' }}>
-                            {summonedPlayers.map(player => (
-                                <PlayerCard
-                                    key={player.id}
-                                    player={player}
-                                    action={handleDismiss}
-                                    actionLabel="−"
-                                    variant="summoned"
-                                />
-                            ))}
-                            {summonedPlayers.length === 0 && <p style={{ textAlign: 'center', color: '#555', fontStyle: 'italic', padding: '1rem', gridColumn: '1/-1' }}>No players selected yet.</p>}
+
+                        {/* RIGHT: Summoned & Starters */}
+                        <div className="list-column">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>
+                                        {isSquadConfirmed ? "Select Starting 5" : "Summoned Squad"}
+                                    </h3>
+                                    {isSquadConfirmed && <span style={{ fontSize: '0.75rem', color: '#fcd34d' }}>Click to toggle starter status</span>}
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <div style={{ background: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', color: '#fff' }}>
+                                        Total: {selectedPlayers.length}/12
+                                    </div>
+                                    {isSquadConfirmed && (
+                                        <div style={{ background: starters.length === 5 ? '#fcd34d' : '#333', color: starters.length === 5 ? '#000' : '#fcd34d', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                            Starters: {starters.length}/5
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="players-grid full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+                                {summonedPlayers.map(p => (
+                                    <PlayerCard
+                                        key={p.id}
+                                        player={p}
+                                        // If confirmed, action is toggleStarter. If not, action is dismiss.
+                                        action={isSquadConfirmed ? toggleStarter : handleDismiss}
+                                        actionIcon={isSquadConfirmed ? (starters.includes(p.id) ? '★' : '☆') : '−'}
+                                        variant="summoned"
+                                        isStarter={starters.includes(p.id)}
+                                    />
+                                ))}
+                                {summonedPlayers.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#555', fontStyle: 'italic', padding: '2rem' }}>Add players from the pool.</p>}
+                            </div>
                         </div>
+
+                    </div>
+                </div>
+            )}
+
+            {/* 3. Strategy Board (Only if squad is confirmed) */}
+            {isSquadConfirmed && summonedPlayers.length > 0 && (
+                <div className="animate-slide-up">
+                    <div className="section-header-row" style={{ marginTop: '3rem', marginBottom: '1rem' }}>
+                        <div className="role-tag coach-tag">System</div>
+                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Strategy Board</h2>
                     </div>
 
+                    <MatchTacticsBoard
+                        summonedPlayers={summonedPlayers}
+                        starters={starters}
+                        strategies={fullCourtStrategies}
+                        showNotification={showNotification}
+                        // Optional: Pass function to let board notify parent of active strategy
+                        onStrategyLoaded={(id) => setActiveStrategyId(id)}
+                    />
                 </div>
-            </div>
-
-
-
-            {/* 3. Match Tactics Board */}
-            {summonedPlayers.length > 0 && (
-                <MatchTacticsBoard
-                    summonedPlayers={summonedPlayers}
-                    strategies={fullCourtStrategies}
-                    showNotification={showNotification}
-                />
             )}
         </div>
     );
 };
+
 
 export default Match;

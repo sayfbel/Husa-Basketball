@@ -34,7 +34,18 @@ CREATE TABLE IF NOT EXISTS matches (
     location VARCHAR(255),
     competition VARCHAR(255),
     season VARCHAR(20),
+    strategy_id VARCHAR(36), -- Link to a tactical system
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Match Lineups (Linking Players to Matches)
+CREATE TABLE IF NOT EXISTS match_lineups (
+    match_id VARCHAR(36) NOT NULL,
+    player_id VARCHAR(36) NOT NULL,
+    is_starter BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (match_id, player_id),
+    FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
 );
 
 -- Players/Squad
