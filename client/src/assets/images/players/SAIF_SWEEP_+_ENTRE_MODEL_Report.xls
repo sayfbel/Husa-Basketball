@@ -1,0 +1,1102 @@
+
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta http-equiv="content-type" content="text/vnd.ms-excel; charset=UTF-8">
+                <style>
+                    body { background-color: #121212; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
+                    table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+                    th, td { border: 1px solid #444; padding: 10px; text-align: left; vertical-align: middle; }
+                    th { background-color: #1e1e21; color: #4ade80; font-weight: bold; border-bottom: 2px solid #4ade80; }
+                    tr.even { background-color: #18181b; }
+                    tr.odd { background-color: #121212; }
+                    .main-title { font-size: 24px; font-weight: bold; margin: 20px 0; color: #ffffff; text-align: center; background: #0c9227; padding: 15px; }
+                    .header { font-size: 18px; font-weight: bold; margin: 20px 0; color: #60a5fa; border-left: 5px solid #60a5fa; padding-left: 10px; }
+                    .month-title { font-size: 22px; font-weight: bold; margin-top: 40px; margin-bottom: 10px; color: #ffffff; background-color: #1e1e21; padding: 10px; border-left: 5px solid #4ade80; }
+                    .win { color: #4ade80; font-weight: bold; }
+                    .loss { color: #f87171; font-weight: bold; }
+                    .be { color: #fbbf24; }
+                </style>
+            </head>
+            <body>
+                <div class="main-title">SAIF SWEEP + ENTRE MODEL</div>
+
+                <div class="header">Collection Info (System Data)</div>
+                <table id="collection-info">
+                    <tr><th>Field</th><th>Value</th></tr>
+                    <tr><td>Name</td><td>SAIF SWEEP + ENTRE MODEL</td></tr>
+                    <tr><td>Start Date</td><td>2023-01-01T00:00:00.000Z</td></tr>
+                    <tr><td>End Date</td><td>2026-02-01T00:00:00.000Z</td></tr>
+                    <tr><td>Type</td><td>rr</td></tr>
+                </table>
+                
+                <div class="header">Performance Overview</div>
+                <table>
+                    <tr><th>Metric</th><th>Value</th><th>Metric</th><th>Value</th></tr>
+                    <tr class="even">
+                        <td>Win Rate</td><td>35.6%</td>
+                        <td>Total Trades</td><td>74</td>
+                    </tr>
+                    <tr class="odd">
+                        <td>Net Wins</td><td class="win">16</td>
+                        <td>Net Losses</td><td class="loss">29</td>
+                    </tr>
+                     <tr class="even">
+                        <td>Profit Factor</td><td>2.02</td>
+                        <td>Expectancy</td><td>0.66R</td>
+                    </tr>
+                     <tr class="odd">
+                        <td>Max Win Streak</td><td class="win">4</td>
+                        <td>Max Loss Streak</td><td class="loss">8</td>
+                    </tr>
+                </table>
+
+                
+                <div class="month-title">April 2023</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Pair</th>
+                            <th>Type</th>
+                            <th>Result</th>
+                            <th>RR</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Time</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="even">
+                                <td>2023-04-13</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-04-12</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-04-11</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-04-10</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>4.32</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-04-07</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-04-06</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-04-05</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-04-04</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-04-03</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            
+                <div class="month-title">March 2023</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Pair</th>
+                            <th>Type</th>
+                            <th>Result</th>
+                            <th>RR</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Time</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="even">
+                                <td>2023-03-31</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-30</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-29</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>3.26</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-28</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-27</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>6.61</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-24</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-23</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-22</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-21</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>11.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-20</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-17</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-16</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-15</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-14</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>4.50</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-13</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-10</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-09</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-08</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-07</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-06</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-03</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-03-02</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-03-01</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            
+                <div class="month-title">February 2023</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Pair</th>
+                            <th>Type</th>
+                            <th>Result</th>
+                            <th>RR</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Time</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="even">
+                                <td>2023-02-28</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-27</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-24</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-23</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-22</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-21</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-20</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-17</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-16</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>3.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-15</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-14</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-13</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-10</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>3.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-09</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-08</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-07</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-06</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-03</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>4.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-02-02</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-02-01</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            
+                <div class="month-title">January 2023</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Pair</th>
+                            <th>Type</th>
+                            <th>Result</th>
+                            <th>RR</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Time</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="even">
+                                <td>2023-01-31</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-30</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>5.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-27</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-26</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-25</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-24</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.50</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-23</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>1.52</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-20</td>
+                                <td>EUR/USD</td>
+                                <td>Buy</td>
+                                <td class="win">Win</td>
+                                <td>2.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-19</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-18</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-17</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-16</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-13</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-12</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>1.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-11</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-10</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-09</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-06</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-05</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>1.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-04</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="even">
+                                <td>2023-01-03</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="loss">Loss</td>
+                                <td>-</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                            <tr class="odd">
+                                <td>2023-01-02</td>
+                                <td>EURUSD</td>
+                                <td>Buy</td>
+                                <td class="be">BE</td>
+                                <td>1.00</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>0.00000000</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            
+            </body>
+            </html>
+        

@@ -14,7 +14,8 @@ import {
     Trash2,
     Save,
     X,
-    FolderOpen // For loading strategies
+    FolderOpen, // For loading strategies
+    Shield
 } from 'lucide-react';
 
 const MiniCourtPreview = ({ tactic }) => {
@@ -78,6 +79,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
     // Strategy Load State
     const [showLoadDropdown, setShowLoadDropdown] = useState(false);
+    const [selectedStrategyId, setSelectedStrategyId] = useState(null);
 
     // Interactive State
     const [draggingId, setDraggingId] = useState(null);
@@ -155,6 +157,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     };
 
     const loadStrategy = (originalStrategy) => {
+        setSelectedStrategyId(originalStrategy.id); // Set selected state
         if (!originalStrategy.data || originalStrategy.data.length === 0) return;
 
         // Deep clone to avoid mutating the original
@@ -169,60 +172,51 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
         // Pool of players to assign. Prioritize starters if available.
         let availableStarters = [];
-        let availableReserves = [];
 
-        // Filter out starters and reserves based on the passed 'starters' prop (array of IDs)
+        // Filter out starters based on the passed 'starters' prop (array of IDs)
         if (starters && starters.length > 0) {
-            availableStarters = summonedPlayers.filter(p => starters.includes(p.id));
-            availableReserves = summonedPlayers.filter(p => !starters.includes(p.id));
-        } else {
-            // Fallback if no starters selected (shouldn't happen in this flow but safe to have)
+            // Robust ID comparison (handle number vs string)
+            const starterIds = starters.map(id => String(id));
+            availableStarters = summonedPlayers.filter(p => starterIds.includes(String(p.id)));
+        }
+
+        // If no starters found (or empty), fallback to summoned players to ensure we have SOMEONE
+        if (availableStarters.length === 0) {
             availableStarters = [...summonedPlayers];
         }
+
+        // Clone for consumption in Phase 1 & 2
+        let assignmentPool = [...availableStarters];
 
         // Mapping: OriginalTokenID -> AssignedPlayer
         const tokenPlayerMap = {};
 
         // Phase 1: Starters - Exact Position Match
-        // We iterate through tokens and try to find a perfect match in our starters pool.
         offenseTokens.forEach(t => {
             const desiredPos = String(t.label);
-            const matchIndex = availableStarters.findIndex(p => getNumericPosition(p.position) === desiredPos);
+            const matchIndex = assignmentPool.findIndex(p => getNumericPosition(p.position) === desiredPos);
 
             if (matchIndex !== -1) {
-                tokenPlayerMap[t.id] = availableStarters[matchIndex];
-                availableStarters.splice(matchIndex, 1);
+                tokenPlayerMap[t.id] = assignmentPool[matchIndex];
+                assignmentPool.splice(matchIndex, 1);
             }
         });
 
-        // Phase 2: Starters - Force Fill Remaining Spots
-        // If we still have starters left (e.g. user has 3 PGs in starting 5 but system needs C),
-        // we force these starters into the remaining empty spots.
-        offenseTokens.forEach(t => {
-            if (!tokenPlayerMap[t.id] && availableStarters.length > 0) {
-                tokenPlayerMap[t.id] = availableStarters[0];
-                availableStarters.shift();
-            }
-        });
-
-        // Phase 3: Reserves - Exact Position Match
-        // Only if we run out of starters (e.g. user only picked 4 starters??), we look at reserves.
+        // Phase 2: Fill Remaining Spots
         offenseTokens.forEach(t => {
             if (!tokenPlayerMap[t.id]) {
-                const desiredPos = String(t.label);
-                const matchIndex = availableReserves.findIndex(p => getNumericPosition(p.position) === desiredPos);
-                if (matchIndex !== -1) {
-                    tokenPlayerMap[t.id] = availableReserves[matchIndex];
-                    availableReserves.splice(matchIndex, 1);
+                if (assignmentPool.length > 0) {
+                    // Use remaining unassigned starters
+                    tokenPlayerMap[t.id] = assignmentPool[0];
+                    assignmentPool.shift();
+                } else if (availableStarters.length > 0) {
+                    // RECYCLE: If we ran out of unique starters, reuse players from the start.
+                    // This ensures we NEVER show the original strategy players.
+                    // We cycle through availableStarters simply.
+                    // Find a starter that hasn't been used 'too much' (optional) or just use index 0.
+                    // For now, simpler is better: pick the first one again or random.
+                    tokenPlayerMap[t.id] = availableStarters[0];
                 }
-            }
-        });
-
-        // Phase 4: Reserves - Fill Remaining
-        offenseTokens.forEach(t => {
-            if (!tokenPlayerMap[t.id] && availableReserves.length > 0) {
-                tokenPlayerMap[t.id] = availableReserves[0];
-                availableReserves.shift();
             }
         });
 
@@ -241,13 +235,16 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                         type: 'player', // Transform 'offense' -> 'player'
                         x: t.x,
                         y: t.y,
-                        label: t.label // Keep original label (number) or use player number? Keeping label helps internally, but UI uses photo.
+                        label: t.label
                     };
                 }
-                // Otherwise (Defense, Ball, Unmapped Offense), keep as is
-                // We might want to give specific IDs to ball to ensure uniqueness if needed
+                // If it was an offense token but failed to map (should imply 0 availableStarters), 
+                // we should probably NOT return it as is if it has specific player info.
+                // But generally safe to fallback to original checks.
+
                 if (t.type === 'ball') {
-                    return { ...t, id: `ball-${t.id || 'gen'}` };
+                    // Ensure unique ID for ball
+                    return { ...t, id: `ball-${Date.now()}-${t.id}` };
                 }
                 return t;
             });
@@ -256,7 +253,6 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                 tokens: newTokens,
                 paths: frame.paths || []
             };
-
         });
 
         // 3. Update State
@@ -430,70 +426,119 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     return (
         <div className="dashboard-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
             {/* Header */}
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h2 style={{ margin: 0, color: '#fff' }}>Tactical Board</h2>
-                    <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>Plan your plays with the active squad</p>
+            {/* Header */}
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: '#fff' }}>Tactical Board</h2>
+                        <p style={{ margin: '4px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Plan your plays with the active squad</p>
+                    </div>
                 </div>
-                <div style={{ position: 'relative' }}>
-                    <button
-                        onClick={() => setShowLoadDropdown(!showLoadDropdown)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
-                    >
-                        <FolderOpen size={16} /> Load System
-                    </button>
-                    {showLoadDropdown && (
-                        <div className="full-custom-scroll" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: '360px', zIndex: 100, boxShadow: '0 10px 40px rgba(0,0,0,0.7)', maxHeight: '400px', overflowY: 'auto' }}>
-                            {strategies.filter(s => s.type === 'full').length === 0 ? (
-                                <div style={{ padding: '2rem', color: '#888', textAlign: 'center', fontSize: '0.9rem', fontStyle: 'italic' }}>
-                                    No full court systems found.
-                                    <br /><span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Create one in the Strategy page.</span>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '10px' }}>
-                                    {strategies.filter(s => s.type === 'full').map(s => (
-                                        <div
-                                            key={s.id}
-                                            onClick={() => loadStrategy(s)}
-                                            style={{
-                                                position: 'relative',
-                                                height: '100px',
-                                                background: '#222',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                overflow: 'hidden',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'scale(1.02)';
+
+                {/* Systems Archive Strip */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Shield size={16} color="#DB0A40" /> Full Court Systems
+                            </h3>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#666' }}>Archive of 5v5 transition and offensive systems.</p>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#888', fontStyle: 'italic' }}>
+                            {strategies.filter(s => s.type === 'full').length} Systems Available
+                        </div>
+                    </div>
+
+                    <div className="full-custom-scroll" style={{ display: 'flex', gap: '15px', overflowX: 'auto', padding: '10px' }}>
+                        {strategies.filter(s => s.type === 'full').length === 0 ? (
+                            <div style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem', width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                                No full court systems created yet. Go to Strategy page to build your playbook.
+                            </div>
+                        ) : (
+                            strategies.filter(s => s.type === 'full').map(s => {
+                                const isSelected = s.id === selectedStrategyId;
+                                return (
+                                    <div
+                                        key={s.id}
+                                        onClick={() => loadStrategy(s)}
+                                        style={{
+                                            flex: '0 0 200px',
+                                            height: '120px',
+                                            position: 'relative',
+                                            background: '#222',
+                                            borderRadius: '10px',
+                                            cursor: 'pointer',
+                                            overflow: 'hidden',
+                                            border: isSelected ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)',
+                                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                            boxShadow: isSelected ? '0 0 15px rgba(219, 10, 64, 0.3)' : '0 4px 6px rgba(0,0,0,0.2)',
+                                            transform: isSelected ? 'translateY(-2px)' : 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.transform = 'translateY(-4px)';
                                                 e.currentTarget.style.borderColor = '#DB0A40';
-                                                e.currentTarget.style.zIndex = 2;
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'scale(1)';
+                                                e.currentTarget.style.boxShadow = '0 10px 20px rgba(219, 10, 64, 0.15)';
+                                                e.currentTarget.querySelector('.play-overlay').style.opacity = 1;
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.transform = 'translateY(0)';
                                                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                                                e.currentTarget.style.zIndex = 1;
-                                            }}
-                                        >
-                                            <MiniCourtPreview tactic={s} />
-                                            <div style={{
-                                                position: 'absolute',
-                                                bottom: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                padding: '8px',
-                                                zIndex: 1
-                                            }}>
-                                                <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                                                <div style={{ color: '#aaa', fontSize: '0.7rem' }}>Click to Load</div>
+                                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.2)';
+                                                e.currentTarget.querySelector('.play-overlay').style.opacity = 0;
+                                            }
+                                        }}
+                                    >
+                                        <MiniCourtPreview tactic={s} />
+
+                                        {/* Content Gradient */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            padding: '10px',
+                                            background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 80%, transparent 100%)',
+                                            zIndex: 2,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'flex-end'
+                                        }}>
+                                            <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{s.name}</div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                <span style={{ fontSize: '0.7rem', color: '#aaa', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>5v5 Full</span>
+                                                <span style={{ fontSize: '0.7rem', color: '#666' }}>{(s.data || []).length} Frames</span>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+
+                                        {/* Play Overlay Icon */}
+                                        <div className="play-overlay" style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            width: '40px',
+                                            height: '40px',
+                                            background: 'rgba(219, 10, 64, 0.9)',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            zIndex: 3,
+                                            opacity: 0,
+                                            transition: 'opacity 0.2s',
+                                            color: '#fff',
+                                            boxShadow: '0 0 15px rgba(219, 10, 64, 0.5)'
+                                        }}>
+                                            <FolderOpen size={18} fill="#fff" />
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
 

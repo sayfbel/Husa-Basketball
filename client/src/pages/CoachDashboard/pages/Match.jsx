@@ -4,6 +4,8 @@ import { useNotification } from '../../../components/Notification/Notification.j
 import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
 
+import { Search, User, Users, Shield } from 'lucide-react'; // Added icons
+
 const Match = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
     const [players, setPlayers] = useState([]);
@@ -18,6 +20,7 @@ const Match = () => {
     const [selectedPlayers, setSelectedPlayers] = useState([]); // Array of player IDs (The Squad)
     const [starters, setStarters] = useState([]); // Array of player IDs (The First 5)
     const [isSquadConfirmed, setIsSquadConfirmed] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(""); // Added search term
 
     // Strategy State
     const [fullCourtStrategies, setFullCourtStrategies] = useState([]);
@@ -144,135 +147,7 @@ const Match = () => {
     const availablePlayers = players.filter(p => !selectedPlayers.includes(p.id));
     const summonedPlayers = players.filter(p => selectedPlayers.includes(p.id));
 
-    const PlayerCard = ({ player, action, actionIcon, variant, isStarter }) => (
-        <div
-            onClick={() => action && action(player.id)}
-            className={`player-card-interactive ${isStarter ? 'starter-glow' : ''}`}
-            style={{
-                position: 'relative',
-                background: variant === 'summoned' || variant === 'starter'
-                    ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.15) 0%, rgba(20, 20, 20, 0.8) 100%)'
-                    : 'rgba(255,255,255,0.03)',
-                border: isStarter ? '2px solid #fcd34d' : (variant === 'summoned' ? '1px solid rgba(219, 10, 64, 0.4)' : '1px solid rgba(255,255,255,0.08)'),
-                borderRadius: '12px',
-                padding: '1rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                gap: '0.8rem',
-                minHeight: '180px',
-                boxShadow: isStarter ? '0 0 15px rgba(252, 211, 77, 0.2)' : 'none',
-                opacity: (isSquadConfirmed && variant === 'available') ? 0.5 : 1
-            }}
-        >
-            {/* Action Badge */}
-            <div style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                background: isStarter ? '#fcd34d' : (variant === 'summoned' ? '#DB0A40' : 'rgba(255,255,255,0.1)'),
-                color: isStarter ? '#000' : '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 2,
-                backdropFilter: 'blur(4px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                fontSize: '1.2rem',
-                lineHeight: 1
-            }}>
-                {actionIcon}
-            </div>
 
-            {/* Jersey Number */}
-            <div style={{
-                position: 'absolute',
-                top: '8px',
-                left: '8px',
-                background: 'rgba(0,0,0,0.6)',
-                color: '#fff',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.7rem',
-                fontWeight: 'bold',
-                border: '1px solid rgba(255,255,255,0.1)'
-            }}>
-                #{player.jersey_number}
-            </div>
-
-            {/* Starter Label */}
-            {isStarter && (
-                <div style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#fcd34d',
-                    color: '#000',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    fontSize: '0.65rem',
-                    fontWeight: 'bold',
-                    zIndex: 2,
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
-                }}>
-                    STARTER
-                </div>
-            )}
-
-            {/* Player Image */}
-            <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                padding: '3px',
-                background: isStarter
-                    ? 'linear-gradient(45deg, #fcd34d, #f59e0b)'
-                    : (variant === 'summoned' ? 'linear-gradient(45deg, #DB0A40, #ff4d4d)' : 'linear-gradient(45deg, #444, #666)'),
-                marginTop: '0.5rem'
-            }}>
-                <div style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    background: '#1a1a1a',
-                    position: 'relative'
-                }}>
-                    <img
-                        src={player.photo_url || "/assets/players/default.png"}
-                        alt={player.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => { e.target.onerror = null; e.target.src = "/assets/players/default.png"; }}
-                    />
-                </div>
-            </div>
-
-            {/* Info */}
-            <div style={{ width: '100%' }}>
-                <h4 style={{
-                    margin: '0 0 4px 0',
-                    fontSize: '0.95rem',
-                    color: '#fff',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                }}>
-                    {player.name}
-                </h4>
-                <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase' }}>
-                    {player.position}
-                </div>
-            </div>
-        </div>
-    );
 
     return (
         <div className="dashboard-grid-vertical" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -302,59 +177,103 @@ const Match = () => {
                 </div>
 
                 {matches.length > 0 ? (
-                    <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                            <thead>
-                                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc' }}>Match Details</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#ccc' }}>Date</th>
-                                    <th style={{ padding: '12px', textAlign: 'right', color: '#ccc' }}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {matches.map((match, idx) => {
-                                    const isHome = match.home.includes('HUSA') || match.home.includes('Hassania');
-                                    const isActive = activeMatch === match; // Simple object reference check for scraped data
-                                    return (
-                                        <tr key={idx} style={{
-                                            borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                            background: isActive ? 'rgba(219, 10, 64, 0.1)' : 'transparent'
-                                        }}>
-                                            <td style={{ padding: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontWeight: isHome ? '700' : '400', color: isHome ? '#DB0A40' : '#fff' }}>{match.home}</span>
-                                                    <span style={{ color: '#555' }}>vs</span>
-                                                    <span style={{ fontWeight: !isHome ? '700' : '400', color: !isHome ? '#DB0A40' : '#fff' }}>{match.away}</span>
-                                                </div>
-                                                <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>{match.venue}</div>
-                                            </td>
-                                            <td style={{ padding: '12px', color: '#aaa' }}>
-                                                <div>{match.date}</div>
-                                                <div style={{ fontSize: '0.8rem' }}>{match.time}</div>
-                                            </td>
-                                            <td style={{ padding: '12px', textAlign: 'right' }}>
-                                                <button
-                                                    onClick={() => handleSelectMatch(match)}
-                                                    style={{
-                                                        background: isActive ? '#DB0A40' : 'transparent',
-                                                        border: isActive ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                                                        color: '#fff',
-                                                        padding: '6px 12px',
-                                                        borderRadius: '6px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: isActive ? 'bold' : 'normal',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    {isActive ? 'Managing' : 'Select'}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                    <div className="full-custom-scroll" style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px 0 20px 0' }}>
+                        {matches.map((match, idx) => {
+                            const isHome = match.home.includes('HUSA') || match.home.includes('Hassania');
+                            const isActive = activeMatch === match;
+
+                            // Parse date if possible, otherwise use string
+                            let dateDisplay = match.date;
+                            try {
+                                const d = new Date(match.date);
+                                if (!isNaN(d.getTime())) {
+                                    dateDisplay = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                }
+                            } catch (e) { /* ignore */ }
+
+                            return (
+                                <div
+                                    key={idx}
+                                    onClick={() => handleSelectMatch(match)}
+                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''}`}
+                                    style={{
+                                        flex: '0 0 280px',
+                                        background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e',
+                                        border: isActive ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '16px',
+                                        padding: '1.5rem',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        gap: '1rem',
+                                        boxShadow: isActive ? '0 10px 30px rgba(219, 10, 64, 0.2)' : '0 4px 6px rgba(0,0,0,0.2)',
+                                        transform: isActive ? 'translateY(-4px)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isActive) {
+                                            e.currentTarget.style.transform = 'translateY(-4px)';
+                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                                            e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isActive) {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.2)';
+                                        }
+                                    }}
+                                >
+                                    {/* Date Badge */}
+                                    <div style={{
+                                        alignSelf: 'flex-start',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        padding: '4px 10px',
+                                        borderRadius: '20px',
+                                        fontSize: '0.75rem',
+                                        color: '#aaa',
+                                        border: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        {dateDisplay}
+                                    </div>
+
+                                    {/* Teams */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '1.1rem', fontWeight: isHome ? '800' : '500', color: isHome ? '#fff' : '#ccc' }}>
+                                                {match.home}
+                                            </span>
+                                            {isHome && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DB0A40' }}></div>}
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: 'bold' }}>VS</div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '1.1rem', fontWeight: !isHome ? '800' : '500', color: !isHome ? '#fff' : '#ccc' }}>
+                                                {match.away}
+                                            </span>
+                                            {!isHome && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DB0A40' }}></div>}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Status */}
+                                    <div style={{
+                                        marginTop: 'auto',
+                                        paddingTop: '1rem',
+                                        borderTop: '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '0.8rem', color: isActive ? '#DB0A40' : '#666', fontWeight: '600' }}>
+                                            {isActive ? 'Currently Managing' : 'Click to Manage'}
+                                        </span>
+                                        {isActive && <Shield size={16} color="#DB0A40" />}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matches found.</div>
@@ -363,119 +282,277 @@ const Match = () => {
 
             {/* 2. Squad Management Section (Only visible if match selected) */}
             {activeMatch && (
-                <div id="squad-section" className="dashboard-card animate-fade-in" style={{ padding: '1.5rem', border: '1px solid rgba(219, 10, 64, 0.3)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                        <div>
-                            <h2 style={{ margin: 0, color: '#fff' }}>Squad & Lineup</h2>
-                            <p style={{ color: '#DB0A40', margin: '4px 0 0 0', fontWeight: 'bold' }}>
-                                vs {activeMatch.home.includes('HUSA') ? activeMatch.away : activeMatch.home}
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            {!isSquadConfirmed ? (
-                                <button
-                                    onClick={handleConfirmSquad}
-                                    style={{
-                                        background: '#DB0A40',
-                                        color: '#fff',
-                                        border: 'none',
-                                        padding: '10px 24px',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        boxShadow: '0 4px 12px rgba(219, 10, 64, 0.4)'
-                                    }}
-                                >
-                                    Confirm Squad ({selectedPlayers.length})
-                                </button>
-                            ) : (
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                    <span style={{ color: '#4cd137', fontWeight: 'bold', fontSize: '0.9rem' }}>Squad Locked</span>
-                                    <button
-                                        onClick={handleEditSquad}
-                                        style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={handleSaveMatchSetup}
-                                        style={{
-                                            background: '#fcd34d',
-                                            color: '#000',
-                                            border: 'none',
-                                            padding: '10px 24px',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontWeight: 'bold',
-                                            boxShadow: '0 4px 12px rgba(252, 211, 77, 0.3)'
-                                        }}
-                                    >
-                                        Save All
-                                    </button>
-                                </div>
-                            )}
+                <div id="squad-section" className="dashboard-card animate-fade-in" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(219, 10, 64, 0.3)' }}>
+                    {/* Header */}
+                    <div style={{ padding: '1.5rem', background: 'rgba(219, 10, 64, 0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h2 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Match Preparation</h2>
+                                <p style={{ color: '#aaa', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
+                                    vs <span style={{ color: '#DB0A40', fontWeight: 'bold' }}>{activeMatch.home.includes('HUSA') ? activeMatch.away : activeMatch.home}</span>
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {isSquadConfirmed && (
+                                    <>
+                                        <button
+                                            onClick={handleEditSquad}
+                                            style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                                        >
+                                            Back to Squad
+                                        </button>
+                                        <button
+                                            onClick={handleSaveMatchSetup}
+                                            style={{
+                                                background: '#fcd34d',
+                                                color: '#000',
+                                                border: 'none',
+                                                padding: '10px 24px',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 12px rgba(252, 211, 77, 0.3)'
+                                            }}
+                                        >
+                                            Save Setup
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="squad-builder-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-
-                        {/* LEFT: Player Selection (Hidden if confirmed to focus on starters?) No, let's keep it visible but dimmed if confirmed */}
-                        <div className="list-column" style={{ opacity: isSquadConfirmed ? 0.4 : 1, pointerEvents: isSquadConfirmed ? 'none' : 'auto', transition: 'opacity 0.3s' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#aaa' }}>Available Pool</h3>
-                                <span style={{ fontSize: '0.8rem', color: '#666' }}>{availablePlayers.length}</span>
+                    <div style={{ padding: '2rem' }}>
+                        {/* Stepper */}
+                        <div className="stepper-container">
+                            <div className={`step-item ${!isSquadConfirmed ? 'active' : 'completed'}`}>
+                                <div className="step-circle">1</div>
+                                <div className="step-label">Summon Squad</div>
                             </div>
-                            <div className="players-grid full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
-                                {availablePlayers.map(p => (
-                                    <PlayerCard
-                                        key={p.id}
-                                        player={p}
-                                        action={handleSummon}
-                                        actionIcon="+"
-                                        variant="available"
-                                    />
-                                ))}
+                            <div style={{ width: '100px', height: '2px', background: 'rgba(255,255,255,0.1)', margin: '0 1rem' }}>
+                                <div style={{ height: '100%', width: isSquadConfirmed ? '100%' : '0%', background: '#4cd137', transition: 'all 0.5s' }} />
+                            </div>
+                            <div className={`step-item ${isSquadConfirmed ? 'active' : ''}`}>
+                                <div className="step-circle">2</div>
+                                <div className="step-label">Starting 5</div>
                             </div>
                         </div>
 
-                        {/* RIGHT: Summoned & Starters */}
-                        <div className="list-column">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>
-                                        {isSquadConfirmed ? "Select Starting 5" : "Summoned Squad"}
-                                    </h3>
-                                    {isSquadConfirmed && <span style={{ fontSize: '0.75rem', color: '#fcd34d' }}>Click to toggle starter status</span>}
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <div style={{ background: '#333', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', color: '#fff' }}>
-                                        Total: {selectedPlayers.length}/12
-                                    </div>
-                                    {isSquadConfirmed && (
-                                        <div style={{ background: starters.length === 5 ? '#fcd34d' : '#333', color: starters.length === 5 ? '#000' : '#fcd34d', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                            Starters: {starters.length}/5
+                        {/* STEP 1: SQUAD SELECTION */}
+                        {!isSquadConfirmed && (
+                            <div className="squad-selection-container animate-fade-in">
+                                {/* Left: Player Pool */}
+                                <div className="player-pool-sidebar">
+                                    <div className="pool-search">
+                                        <div style={{ position: 'relative' }}>
+                                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                                            <input
+                                                type="text"
+                                                placeholder="Search players..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                style={{ paddingLeft: '34px' }}
+                                            />
                                         </div>
-                                    )}
+                                    </div>
+                                    <div className="pool-list full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px', padding: '10px' }}>
+                                        {availablePlayers.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
+                                            <div
+                                                key={p.id}
+                                                className="pool-player-card animate-scale-in"
+                                                onClick={() => handleSummon(p.id)}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                    borderRadius: '12px',
+                                                    padding: '1rem 0.5rem',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    textAlign: 'center',
+                                                    position: 'relative',
+                                                    transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                                    e.currentTarget.style.borderColor = '#4cd137';
+                                                    e.currentTarget.style.background = 'rgba(76, 209, 55, 0.05)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                                                }}
+                                            >
+                                                {/* Plus Icon Overlay */}
+                                                <div style={{ position: 'absolute', top: '8px', right: '8px', color: '#4cd137', opacity: 0.5 }}>
+                                                    <Users size={12} />
+                                                </div>
+
+                                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.1)' }}>
+                                                    <img src={p.photo_url || "/assets/players/default.png"} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                </div>
+                                                <div style={{ width: '100%' }}>
+                                                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ')[0]}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ').slice(1).join(' ')}</div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '4px' }}>#{p.jersey_number} • {p.position}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {availablePlayers.length === 0 && <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', color: '#666' }}>No available players.</div>}
+                                    </div>
+                                </div>
+
+                                {/* Right: The Squad Grid */}
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>Summoned Squad ({selectedPlayers.length}/12)</h3>
+                                        {selectedPlayers.length > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    if (selectedPlayers.length === 0) {
+                                                        showNotification("Select players first", "warning");
+                                                        return;
+                                                    }
+                                                    handleConfirmSquad();
+                                                }}
+                                                className="animate-pulse"
+                                                style={{
+                                                    background: '#DB0A40',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    padding: '8px 24px',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                Next: Select Starters &rarr;
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="squad-grid-view full-custom-scroll" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', flex: 1 }}>
+                                        {/* Render 12 Slots */}
+                                        {Array.from({ length: 12 }).map((_, idx) => {
+                                            const player = summonedPlayers[idx];
+                                            return (
+                                                <div key={idx} className={`squad-slot ${player ? 'filled' : ''}`} onClick={() => player && handleDismiss(player.id)}>
+                                                    {player ? (
+                                                        <div className="slot-player-content">
+                                                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', marginBottom: '0.5rem' }}>
+                                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            </div>
+                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', textAlign: 'center', lineHeight: '1.2' }}>{player.name}</div>
+                                                            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>#{player.jersey_number}</div>
+
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '5px',
+                                                                right: '5px',
+                                                                background: 'rgba(0,0,0,0.5)',
+                                                                borderRadius: '50%',
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '0.8rem',
+                                                                opacity: 0
+                                                            }} className="remove-btn">
+                                                                &times;
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span>{idx + 1}</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            <div className="players-grid full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
-                                {summonedPlayers.map(p => (
-                                    <PlayerCard
-                                        key={p.id}
-                                        player={p}
-                                        // If confirmed, action is toggleStarter. If not, action is dismiss.
-                                        action={isSquadConfirmed ? toggleStarter : handleDismiss}
-                                        actionIcon={isSquadConfirmed ? (starters.includes(p.id) ? '★' : '☆') : '−'}
-                                        variant="summoned"
-                                        isStarter={starters.includes(p.id)}
-                                    />
-                                ))}
-                                {summonedPlayers.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#555', fontStyle: 'italic', padding: '2rem' }}>Add players from the pool.</p>}
+                        {/* STEP 2: STARTER SELECTION */}
+                        {isSquadConfirmed && (
+                            <div className="starter-selection-container animate-fade-in">
+                                {/* Top: Court Stage */}
+                                <div className="court-stage">
+                                    {/* SVG Background */}
+                                    <div className="court-bg-svg">
+                                        <svg viewBox="0 0 1000 500" width="100%" height="100%">
+                                            {/* Half Court simplified */}
+                                            <rect width="1000" height="500" fill="#1a1a1a" />
+                                            <path d="M 50,450 L 950,450" stroke="#444" strokeWidth="2" /> {/* Baseline */}
+                                            <path d="M 50,450 L 50,50 L 950,50 L 950,450" fill="none" stroke="#444" strokeWidth="2" />
+                                            <path d="M 200,450 L 200,260 L 800,260 L 800,450" fill="none" stroke="#444" strokeWidth="2" /> {/* Paint */}
+                                            <path d="M 500,260 A 100,100 0 0 1 500,450" fill="none" stroke="#444" strokeWidth="2" /> {/* FT Circle */}
+                                            <path d="M 50,450 A 400,400 0 0 1 950,450" fill="none" stroke="#666" strokeWidth="3" /> {/* 3PT Line */}
+                                        </svg>
+                                    </div>
+
+                                    <div className="starters-slots-container">
+                                        {/* 5 Slots for Starters */}
+                                        {Array.from({ length: 5 }).map((_, idx) => {
+                                            const starterId = starters[idx];
+                                            const starter = players.find(p => p.id === starterId);
+
+                                            // Action: if occupied, click removes it (returns to bench). If empty, nothing (click bench player to add)
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`starter-slot-fancy ${!starter ? 'empty' : ''}`}
+                                                    onClick={() => starter && toggleStarter(starterId)}
+                                                >
+                                                    {starter ? (
+                                                        <>
+                                                            <div style={{ width: '70px', height: '70px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #fcd34d', marginBottom: '10px', boxShadow: '0 0 15px rgba(252, 211, 77, 0.4)' }}>
+                                                                <img src={starter.photo_url || "/assets/players/default.png"} alt={starter.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            </div>
+                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', textAlign: 'center' }}>{starter.name}</div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#fcd34d' }}>#{starter.jersey_number}</div>
+                                                            <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', marginTop: '4px' }}>{starter.position}</div>
+                                                        </>
+                                                    ) : (
+                                                        <div style={{ color: '#fcd34d', opacity: 0.3, fontSize: '2rem' }}>+</div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div style={{ position: 'absolute', top: '20px', left: '0', right: '0', textAlign: 'center', pointerEvents: 'none' }}>
+                                        <h3 style={{ margin: 0, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.8 }}>Starting V</h3>
+                                    </div>
+                                </div>
+
+                                {/* Bottom: Bench */}
+                                <div className="bench-section">
+                                    <h3 style={{ margin: 0, color: '#aaa', fontSize: '1rem', textTransform: 'uppercase' }}>Bench Rotation ({selectedPlayers.filter(id => !starters.includes(id)).length})</h3>
+                                    <div className="bench-carousel full-custom-scroll">
+                                        {summonedPlayers.filter(p => !starters.includes(p.id)).map(p => (
+                                            <div
+                                                key={p.id}
+                                                className="bench-card"
+                                                onClick={() => toggleStarter(p.id)}
+                                            >
+                                                <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', marginBottom: '8px', border: '2px solid rgba(255,255,255,0.1)' }}>
+                                                    <img src={p.photo_url || "/assets/players/default.png"} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#888' }}>#{p.jersey_number}</div>
+                                                <div style={{ fontSize: '0.7rem', color: '#666', textAlign: 'center', textTransform: 'uppercase' }}>{p.position}</div>
+                                            </div>
+                                        ))}
+                                        {summonedPlayers.filter(p => !starters.includes(p.id)).length === 0 && (
+                                            <div style={{ padding: '1rem', color: '#666', fontStyle: 'italic' }}>Everyone is starting? Add more players to squad.</div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
+                        )}
                     </div>
                 </div>
             )}
