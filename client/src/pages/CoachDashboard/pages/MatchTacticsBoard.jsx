@@ -81,6 +81,16 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     const [showLoadDropdown, setShowLoadDropdown] = useState(false);
     const [selectedStrategyId, setSelectedStrategyId] = useState(null);
 
+    // Save Assignment State
+    const [showSaveAssignmentModal, setShowSaveAssignmentModal] = useState(false);
+    const [saveAssignments, setSaveAssignments] = useState({ 1: '', 2: '', 3: '', 4: '', 5: '' }); // Map Pos -> PlayerID
+
+    // Load Assignment State
+    const [showLoadAssignmentModal, setShowLoadAssignmentModal] = useState(false);
+    const [strategyToLoad, setStrategyToLoad] = useState(null); // The strategy waiting to be loaded
+    const [loadAssignments, setLoadAssignments] = useState({ 1: '', 2: '', 3: '', 4: '', 5: '' }); // Map Pos -> PlayerID
+    const [activeSlot, setActiveSlot] = useState(1); // Track which position is being assigned (1-5)
+
     // Interactive State
     const [draggingId, setDraggingId] = useState(null);
     const [currentPath, setCurrentPath] = useState('');
@@ -157,122 +167,86 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     };
 
     const loadStrategy = (originalStrategy) => {
-        setSelectedStrategyId(originalStrategy.id); // Set selected state
+        setSelectedStrategyId(originalStrategy.id);
         if (!originalStrategy.data || originalStrategy.data.length === 0) return;
 
-        // Deep clone to avoid mutating the original
-        const strategy = JSON.parse(JSON.stringify(originalStrategy));
+        // Open Assignment Modal instead of auto-loading
+        setStrategyToLoad(JSON.parse(JSON.stringify(originalStrategy)));
 
-        // 1. Establish Mapping based on Frame 0 (The Setup)
-        const setupFrame = strategy.data[0];
-        const setupTokens = setupFrame.tokens || [];
+        // Pre-fill assignments if possible based on starters or previous logic (optional)
+        // For now, reset to empty to force user selection as requested
+        const initialLoadAssignments = { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
-        // Filter offense tokens to map
-        const offenseTokens = setupTokens.filter(t => t.type === 'offense');
+        // Optional: Auto-select if we can match position names exactly? 
+        // User requested: "user select have to select the players"
+        // So we leave it empty or maybe just pre-fill starters but allow change.
+        // Let's pre-fill with starters 1-5 if they exist in summonedPlayers to be helpful, strictly by index?
+        // No, let's keep it empty to ensure explicit selection.
 
-        // Pool of players to assign. Prioritize starters if available.
-        let availableStarters = [];
+        setLoadAssignments(initialLoadAssignments);
+        setActiveSlot(1);
+        setShowLoadAssignmentModal(true);
+    };
 
-        // Filter out starters based on the passed 'starters' prop (array of IDs)
-        if (starters && starters.length > 0) {
-            // Robust ID comparison (handle number vs string)
-            const starterIds = starters.map(id => String(id));
-            availableStarters = summonedPlayers.filter(p => starterIds.includes(String(p.id)));
-        }
+    const finalizeLoadStrategy = () => {
+        if (!strategyToLoad) return;
 
-        // If no starters found (or empty), fallback to summoned players to ensure we have SOMEONE
-        if (availableStarters.length === 0) {
-            availableStarters = [...summonedPlayers];
-        }
+        // Validate all 5 positions (or at least check if user is OK with empty ones? usually 5v5)
+        // We will map 'offense' tokens with label '1' to the player in loadAssignments['1']
 
-        // Clone for consumption in Phase 1 & 2
-        let assignmentPool = [...availableStarters];
+        const tokenPlayerMap = {}; // Map abstract label '1' -> Player Object
 
-        // Mapping: OriginalTokenID -> AssignedPlayer
-        const tokenPlayerMap = {};
-
-        // Phase 1: Starters - Exact Position Match
-        offenseTokens.forEach(t => {
-            const desiredPos = String(t.label);
-            const matchIndex = assignmentPool.findIndex(p => getNumericPosition(p.position) === desiredPos);
-
-            if (matchIndex !== -1) {
-                tokenPlayerMap[t.id] = assignmentPool[matchIndex];
-                assignmentPool.splice(matchIndex, 1);
-            }
-        });
-
-        // Phase 2: Fill Remaining Spots
-        offenseTokens.forEach(t => {
-            if (!tokenPlayerMap[t.id]) {
-                if (assignmentPool.length > 0) {
-                    // Use remaining unassigned starters
-                    tokenPlayerMap[t.id] = assignmentPool[0];
-                    assignmentPool.shift();
-                } else if (availableStarters.length > 0) {
-                    // RECYCLE: If we ran out of unique starters, reuse players from the start.
-                    // This ensures we NEVER show the original strategy players.
-                    // We cycle through availableStarters simply.
-                    // Find a starter that hasn't been used 'too much' (optional) or just use index 0.
-                    // For now, simpler is better: pick the first one again or random.
-                    tokenPlayerMap[t.id] = availableStarters[0];
+        Object.keys(loadAssignments).forEach(pos => {
+            const playerId = loadAssignments[pos];
+            if (playerId) {
+                const player = summonedPlayers.find(p => p.id === playerId);
+                if (player) {
+                    tokenPlayerMap[pos] = player;
                 }
             }
         });
 
-        // 2. Reconstruct ALL frames using the mapping
-        const newFrames = strategy.data.map(frame => {
+        const newFrames = strategyToLoad.data.map(frame => {
             const newTokens = (frame.tokens || []).map(t => {
-                // If this token maps to a player, transform it
-                if (tokenPlayerMap[t.id]) {
-                    const player = tokenPlayerMap[t.id];
-                    return {
-                        id: `token-${t.id}-mapped`, // Consistent ID derived from original
-                        playerId: player.id,
-                        name: player.name,
-                        number: player.jersey_number,
-                        photo: player.photo_url,
-                        type: 'player', // Transform 'offense' -> 'player'
-                        x: t.x,
-                        y: t.y,
-                        label: t.label
-                    };
-                }
-                // If it was an offense token but failed to map (should imply 0 availableStarters), 
-                // we should probably NOT return it as is if it has specific player info.
-                // But generally safe to fallback to original checks.
+                if (t.type === 'offense') {
+                    const label = String(t.label); // '1', '2', etc.
+                    const player = tokenPlayerMap[label];
 
+                    if (player) {
+                        return {
+                            id: `token-${t.id}-mapped`,
+                            playerId: player.id,
+                            name: player.name,
+                            number: player.jersey_number,
+                            photo: player.photo_url,
+                            type: 'player',
+                            x: t.x,
+                            y: t.y,
+                            label: t.label
+                        };
+                    } else {
+                        // Keep as generic if no player assigned (or maybe return null to remove?)
+                        // Returning generic offense token with no photo
+                        return t;
+                    }
+                }
                 if (t.type === 'ball') {
-                    // Ensure unique ID for ball
                     return { ...t, id: `ball-${Date.now()}-${t.id}` };
                 }
                 return t;
             });
 
-            return {
-                tokens: newTokens,
-                paths: frame.paths || []
-            };
+            return { tokens: newTokens, paths: frame.paths || [] };
         });
 
-        // 3. Update State
         setFrames(newFrames);
         setCurrentFrameIndex(0);
-        setShowLoadDropdown(false);
-
-        if (showNotification) {
-            const totalOffense = offenseTokens.length;
-            const mappedCount = Object.keys(tokenPlayerMap).length;
-
-            if (mappedCount < totalOffense) {
-                showNotification(`Loaded ${newFrames.length} frames. Matched ${mappedCount}/${totalOffense} players.`, 'info');
-            } else {
-                showNotification(`Strategy loaded successfully (${newFrames.length} frames).`, 'success');
-            }
-        }
+        setShowLoadAssignmentModal(false);
+        setStrategyToLoad(null);
+        showNotification(`Strategy loaded with assigned lineup.`, 'success');
 
         if (typeof onStrategyLoaded === 'function') {
-            onStrategyLoaded(strategy.id);
+            onStrategyLoaded(strategyToLoad.id);
         }
     };
 
@@ -407,19 +381,92 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     }, [isPlaying, frames.length]);
 
     // --- Save Logic ---
-    const handleSave = async () => {
+    const handleSaveClick = () => {
+        // Open Initial Save Modal to get Name
+        setTacticName('');
+        setShowSaveModal(true);
+    };
+
+    const proceedToAssignment = () => {
         if (!tacticName.trim()) return;
+
+        // Identify available players on court to populate dropdowns (redundant but good for context)
+        // We will start with empty assignments or pre-fill if we can guess.
+
+        // Try to guess from current tokens on court
+        const tokensOnCourt = frames[0].tokens.filter(t => t.type === 'player');
+        const nextAssignments = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+
+        // Attempt to pre-fill based on position mathing just to be nice caused user asked "have to select"
+        // but pre-filling is better UX. User can change it.
+        tokensOnCourt.forEach(t => {
+            const player = summonedPlayers.find(p => p.id === t.playerId);
+            if (player && player.position) {
+                const posNum = getNumericPosition(player.position);
+                if (posNum !== '0' && !nextAssignments[posNum]) {
+                    nextAssignments[posNum] = player.id;
+                }
+            }
+        });
+
+        setSaveAssignments(nextAssignments);
+        // Find first empty slot to set as active
+        const firstEmpty = [1, 2, 3, 4, 5].find(p => !nextAssignments[p]) || 1;
+        setActiveSlot(firstEmpty);
+
+        setShowSaveModal(false);
+        setShowSaveAssignmentModal(true);
+    };
+
+    const finalizeSaveStrategy = async () => {
         try {
+            // Validate: check if all used? Or just proceed.
+            // We need to map the TOKENS on the board (which are players) to the LABELS (1-5)
+            // The mapping logic is: Look at the player ID in the token. Find which Position (1-5) has that Player ID in saveAssignments.
+            // That position number becomes the label.
+
+            const abstractFrames = frames.map(frame => ({
+                ...frame,
+                tokens: (frame.tokens || []).map(t => {
+                    // Convert Player -> Offense
+                    if (t.type === 'player') {
+                        // Find which position number this player is assigned to
+                        let assignedLabel = '?';
+                        // Reverse lookup in saveAssignments
+                        for (const [pos, pid] of Object.entries(saveAssignments)) {
+                            if (String(pid) === String(t.playerId)) {
+                                assignedLabel = pos;
+                                break;
+                            }
+                        }
+
+                        return {
+                            id: t.id, // Keep ID for continuity
+                            x: t.x,
+                            y: t.y,
+                            type: 'offense', // Generic type expected by Strategy module
+                            label: assignedLabel
+                        };
+                    }
+                    if (t.type === 'ball') {
+                        return { ...t, label: t.label || '🏀' };
+                    }
+                    return t;
+                }),
+                paths: frame.paths || []
+            }));
+
             await axios.post('http://localhost:5000/api/strategies', {
                 name: tacticName,
-                data: frames, // Saves the real player tokens configuration
+                data: abstractFrames,
                 type: 'full',
                 userId: currentUser?.id
             });
-            setShowSaveModal(false);
+            setShowSaveAssignmentModal(false);
             showNotification('Full Court Strategy Saved', 'success');
         } catch (err) {
             console.error(err);
+            showNotification('Failed to save strategy', 'error');
         }
     };
 
@@ -621,7 +668,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                         </div>
                         <div className="tools-group" style={{ background: '#222', borderRadius: '6px', padding: '4px' }}>
                             <button className="tool-btn" onClick={deleteFrame}><Trash2 size={18} /></button>
-                            <button className="tool-btn" onClick={() => setShowSaveModal(true)}><Save size={18} /></button>
+                            <button className="tool-btn" onClick={handleSaveClick}><Save size={18} /></button>
                         </div>
                     </div>
 
@@ -696,7 +743,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                 </div>
             </div>
 
-            {/* Save Modal */}
+            {/* Save Modal - Step 1: Name */}
             {showSaveModal && createPortal(
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
                     <div className="dashboard-card" style={{ width: '400px', maxWidth: '90%', border: '1px solid rgba(255,49,49,0.2)' }}>
@@ -708,7 +755,241 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="Name of this play..." style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }} />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button onClick={handleSave} className="control-btn btn-save" style={{ background: '#ff3131' }}>SAVE</button>
+                            <button onClick={proceedToAssignment} className="control-btn btn-save" style={{ background: '#ff3131' }}>NEXT: ASSIGN ROLES</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Save Modal - Step 2: Assign Positions */}
+            {showSaveAssignmentModal && createPortal(
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+                    <div className="dashboard-card animate-scale-in" style={{ width: '500px', maxWidth: '95%', border: '1px solid rgba(76, 209, 55, 0.3)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                            <div>
+                                <h2 style={{ margin: 0, border: 'none', color: '#fff', fontSize: '1.2rem' }}>Define System Roles</h2>
+                                <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.8rem' }}>Map your players to the system's positions (1-5).</p>
+                            </div>
+                            <button onClick={() => setShowSaveAssignmentModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                            {/* Top: Position Slots */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                                {[1, 2, 3, 4, 5].map(pos => {
+                                    const assignedId = saveAssignments[pos];
+                                    const assignedPlayer = summonedPlayers.find(p => p.id === assignedId);
+                                    const isActive = activeSlot === pos;
+
+                                    return (
+                                        <div
+                                            key={pos}
+                                            onClick={() => setActiveSlot(pos)}
+                                            style={{
+                                                flex: 1,
+                                                aspectRatio: '1/1',
+                                                background: isActive ? 'rgba(219, 10, 64, 0.1)' : 'rgba(255,255,255,0.03)',
+                                                border: isActive ? '2px solid #DB0A40' : (assignedPlayer ? '1px solid rgba(76, 209, 55, 0.5)' : '1px dashed rgba(255,255,255,0.2)'),
+                                                borderRadius: '12px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            {assignedPlayer ? (
+                                                <>
+                                                    <img src={assignedPlayer.photo_url || "/assets/players/default.png"} alt={assignedPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isActive ? 1 : 0.6 }} />
+                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', fontSize: '0.8rem', color: '#fff', textAlign: 'center', padding: '2px 0' }}>
+                                                        {pos}
+                                                    </div>
+                                                    <div style={{ position: 'absolute', top: 5, right: 5, width: '20px', height: '20px', background: '#000', borderRadius: '50%', color: '#fff', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {assignedPlayer.jersey_number}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isActive ? '#DB0A40' : '#444' }}>{pos}</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>Select a position above, then choose a player below.</p>
+
+                            {/* Bottom: Available Players Grid */}
+                            <div className="full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px', maxHeight: '250px', overflowY: 'auto', padding: '2px' }}>
+                                {/* Filter Only Players ON THE COURT for Saving */}
+                                {frames[0]?.tokens.filter(t => t.type === 'player').map(t => {
+                                    const player = summonedPlayers.find(p => p.id === t.playerId);
+                                    if (!player) return null;
+
+                                    const assignedPos = Object.keys(saveAssignments).find(key => String(saveAssignments[key]) === String(player.id));
+                                    const isAssigned = !!assignedPos;
+
+                                    return (
+                                        <div
+                                            key={player.id}
+                                            onClick={() => {
+                                                setSaveAssignments(prev => {
+                                                    const newAssignments = { ...prev };
+                                                    // Remove from other slot if assigned
+                                                    if (assignedPos) newAssignments[assignedPos] = '';
+                                                    // Assign to current slot
+                                                    newAssignments[activeSlot] = player.id;
+                                                    return newAssignments;
+                                                });
+                                                // Auto advance to next empty slot
+                                                const remainingSlots = [1, 2, 3, 4, 5].filter(p => p !== activeSlot);
+                                                const nextEmpty = remainingSlots.find(p => !saveAssignments[p] || (String(saveAssignments[p]) === String(player.id))); // Logic: finds next empty or stays? 
+                                                // Better: find first empty slot overall
+                                                // But we can't see the state update yet. assume.
+                                                // Simple: just shift active slot to next number, cycling.
+                                                const nextNum = activeSlot === 5 ? 1 : activeSlot + 1;
+                                                setActiveSlot(nextNum);
+                                            }}
+                                            style={{
+                                                background: isAssigned ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                border: isAssigned ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '8px',
+                                                padding: '8px 4px',
+                                                cursor: 'pointer',
+                                                opacity: (isAssigned && assignedPos !== String(activeSlot)) ? 0.5 : 1, // Dim if assigned to OTHER slot
+                                                textAlign: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 5px', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</div>
+                                            <div style={{ fontSize: '0.65rem', color: '#888' }}>#{player.jersey_number}</div>
+                                            {isAssigned && <div style={{ fontSize: '0.6rem', color: '#4cd137', fontWeight: 'bold' }}>Pos {assignedPos}</div>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button onClick={() => setShowSaveAssignmentModal(false)} style={{ padding: '8px 16px', borderRadius: '6px', background: 'transparent', border: '1px solid #666', color: '#ccc', cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={finalizeSaveStrategy} className="control-btn btn-save" style={{ background: '#4cd137', color: '#000', fontWeight: 'bold' }}>CONFIRM & SAVE</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Load Modal - Assign Players */}
+            {showLoadAssignmentModal && createPortal(
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+                    <div className="dashboard-card animate-scale-in" style={{ width: '500px', maxWidth: '95%', border: '1px solid rgba(252, 211, 77, 0.3)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                            <div>
+                                <h2 style={{ margin: 0, border: 'none', color: '#fff', fontSize: '1.2rem' }}>Load System Lineup</h2>
+                                <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.8rem' }}>Assign your squad to the system's roles.</p>
+                            </div>
+                            <button onClick={() => setShowLoadAssignmentModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                            {/* Top: Position Slots */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                                {[1, 2, 3, 4, 5].map(pos => {
+                                    const assignedId = loadAssignments[pos];
+                                    const assignedPlayer = summonedPlayers.find(p => p.id === assignedId);
+                                    const isActive = activeSlot === pos;
+
+                                    return (
+                                        <div
+                                            key={pos}
+                                            onClick={() => setActiveSlot(pos)}
+                                            style={{
+                                                flex: 1,
+                                                aspectRatio: '1/1',
+                                                background: isActive ? 'rgba(252, 211, 77, 0.1)' : 'rgba(255,255,255,0.03)',
+                                                border: isActive ? '2px solid #fcd34d' : (assignedPlayer ? '1px solid rgba(76, 209, 55, 0.5)' : '1px dashed rgba(255,255,255,0.2)'),
+                                                borderRadius: '12px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            {assignedPlayer ? (
+                                                <>
+                                                    <img src={assignedPlayer.photo_url || "/assets/players/default.png"} alt={assignedPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isActive ? 1 : 0.6 }} />
+                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', fontSize: '0.8rem', color: '#fff', textAlign: 'center', padding: '2px 0' }}>
+                                                        {pos}
+                                                    </div>
+                                                    <div style={{ position: 'absolute', top: 5, right: 5, width: '20px', height: '20px', background: '#000', borderRadius: '50%', color: '#fff', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {assignedPlayer.jersey_number}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isActive ? '#fcd34d' : '#444' }}>{pos}</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>Select a position above, then choose a player below.</p>
+
+                            {/* Bottom: Available Players Grid */}
+                            <div className="full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px', maxHeight: '250px', overflowY: 'auto', padding: '2px' }}>
+                                {summonedPlayers.map(player => {
+                                    const assignedPos = Object.keys(loadAssignments).find(key => String(loadAssignments[key]) === String(player.id));
+                                    const isAssigned = !!assignedPos;
+
+                                    return (
+                                        <div
+                                            key={player.id}
+                                            onClick={() => {
+                                                setLoadAssignments(prev => {
+                                                    const newAssignments = { ...prev };
+                                                    if (assignedPos) newAssignments[assignedPos] = '';
+                                                    newAssignments[activeSlot] = player.id;
+                                                    return newAssignments;
+                                                });
+                                                const nextNum = activeSlot === 5 ? 1 : activeSlot + 1;
+                                                setActiveSlot(nextNum);
+                                            }}
+                                            style={{
+                                                background: isAssigned ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                border: isAssigned ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '8px',
+                                                padding: '8px 4px',
+                                                cursor: 'pointer',
+                                                opacity: (isAssigned && assignedPos !== String(activeSlot)) ? 0.5 : 1,
+                                                textAlign: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 5px', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</div>
+                                            <div style={{ fontSize: '0.65rem', color: '#888' }}>#{player.jersey_number}</div>
+                                            {isAssigned && <div style={{ fontSize: '0.6rem', color: '#4cd137', fontWeight: 'bold' }}>Pos {assignedPos}</div>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button onClick={() => setShowLoadAssignmentModal(false)} style={{ padding: '8px 16px', borderRadius: '6px', background: 'transparent', border: '1px solid #666', color: '#ccc', cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={finalizeLoadStrategy} className="control-btn btn-save" style={{ background: '#fcd34d', color: '#000', fontWeight: 'bold' }}>LOAD SYSTEM</button>
                         </div>
                     </div>
                 </div>,

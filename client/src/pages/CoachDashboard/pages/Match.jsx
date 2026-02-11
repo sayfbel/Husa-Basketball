@@ -18,7 +18,8 @@ const Match = () => {
 
     // Squad State
     const [selectedPlayers, setSelectedPlayers] = useState([]); // Array of player IDs (The Squad)
-    const [starters, setStarters] = useState([]); // Array of player IDs (The First 5)
+    const [starters, setStarters] = useState([null, null, null, null, null]); // Array of 5 player IDs (Positions 1-5)
+    const [activePosition, setActivePosition] = useState(0); // 0-4 (corresponds to Pos 1-5)
     const [isSquadConfirmed, setIsSquadConfirmed] = useState(false);
     const [searchTerm, setSearchTerm] = useState(""); // Added search term
 
@@ -73,7 +74,8 @@ const Match = () => {
         setActiveMatch(match);
         // Reset state for new match
         setSelectedPlayers([]);
-        setStarters([]);
+        setStarters([null, null, null, null, null]);
+        setActivePosition(0);
         setIsSquadConfirmed(false);
         setActiveStrategyId(null);
         showNotification(`Managing squad for vs ${match.home.includes('HUSA') ? match.away : match.home}`, 'info');
@@ -93,9 +95,7 @@ const Match = () => {
     const handleDismiss = (playerId) => {
         if (isSquadConfirmed) return;
         setSelectedPlayers(prev => prev.filter(id => id !== playerId));
-        if (starters.includes(playerId)) {
-            setStarters(prev => prev.filter(id => id !== playerId));
-        }
+        setStarters(prev => prev.map(id => id === playerId ? null : id));
     };
 
     const handleConfirmSquad = () => {
@@ -109,18 +109,28 @@ const Match = () => {
 
     const handleEditSquad = () => {
         setIsSquadConfirmed(false);
-        setStarters([]);
+        setStarters([null, null, null, null, null]);
+        setActivePosition(0);
     };
 
     const toggleStarter = (playerId) => {
+        // If player is already a starter, remove them from whatever position they are in
         if (starters.includes(playerId)) {
-            setStarters(prev => prev.filter(id => id !== playerId));
-        } else {
-            if (starters.length >= 5) {
-                showNotification("Create your Starting 5 (Max 5 players).", "warning");
-                return;
-            }
-            setStarters(prev => [...prev, playerId]);
+            setStarters(prev => prev.map(id => id === playerId ? null : id));
+            return;
+        }
+
+        // If not a starter, assign to activePosition
+        const newStarters = [...starters];
+
+        // If activePosition already has a player, it will be replaced
+        newStarters[activePosition] = playerId;
+        setStarters(newStarters);
+
+        // Auto-advance activePosition to next empty slot or loop
+        const nextPosition = [0, 1, 2, 3, 4].find(i => newStarters[i] === null);
+        if (nextPosition !== undefined) {
+            setActivePosition(nextPosition);
         }
     };
 
@@ -132,7 +142,7 @@ const Match = () => {
                 matchData: activeMatch, // Pass the full scraped object
                 matchId: null, // Scraped matches don't have our IDs initially
                 squad: selectedPlayers,
-                starters: starters,
+                starters: starters.filter(id => id !== null),
                 strategyId: activeStrategyId // Passed from Tactics Board if integrated, or null
             };
 
@@ -150,7 +160,7 @@ const Match = () => {
 
 
     return (
-        <div className="dashboard-grid-vertical" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="dashboard-grid-vertical" style={{ display: 'flex', padding: '3rem 0', flexDirection: 'column', gap: '2rem' }}>
 
             {/* 1. Schedule & Match Selection */}
             <div className="dashboard-card" style={{ padding: '1.5rem' }}>
@@ -368,6 +378,7 @@ const Match = () => {
                                                     padding: '1rem 0.5rem',
                                                     cursor: 'pointer',
                                                     display: 'flex',
+                                                    maxHeight: '10rem',
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
                                                     gap: '8px',
@@ -498,25 +509,100 @@ const Match = () => {
                                         {Array.from({ length: 5 }).map((_, idx) => {
                                             const starterId = starters[idx];
                                             const starter = players.find(p => p.id === starterId);
+                                            const isActive = activePosition === idx;
 
-                                            // Action: if occupied, click removes it (returns to bench). If empty, nothing (click bench player to add)
                                             return (
                                                 <div
                                                     key={idx}
-                                                    className={`starter-slot-fancy ${!starter ? 'empty' : ''}`}
-                                                    onClick={() => starter && toggleStarter(starterId)}
+                                                    className={`starter-slot-fancy ${!starter ? 'empty' : ''} ${isActive ? 'active-slot' : ''}`}
+                                                    onClick={() => setActivePosition(idx)}
+                                                    style={{
+                                                        border: isActive ? '3px solid #fcd34d' : '2px dashed rgba(252, 211, 77, 0.3)',
+                                                        background: isActive ? 'rgba(252, 211, 77, 0.15)' : (starter ? 'rgba(252, 211, 77, 0.1)' : 'rgba(255, 255, 255, 0.05)'),
+                                                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                                        position: 'relative',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        overflow: 'visible',
+                                                        boxShadow: isActive ? '0 0 20px rgba(252, 211, 77, 0.2)' : 'none'
+                                                    }}
                                                 >
+                                                    {/* Large Position Number Background */}
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '50%',
+                                                        left: '50%',
+                                                        transform: 'translate(-50%, -50%)',
+                                                        fontSize: '6rem',
+                                                        fontWeight: '950',
+                                                        color: '#fcd34d',
+                                                        opacity: starter ? 0.1 : 0.2,
+                                                        lineHeight: 1,
+                                                        pointerEvents: 'none',
+                                                        zIndex: 0,
+                                                        fontFamily: '"Impact", "Oswald", sans-serif',
+                                                        fontStyle: 'italic'
+                                                    }}>
+                                                        {idx + 1}
+                                                    </div>
+
                                                     {starter ? (
-                                                        <>
-                                                            <div style={{ width: '70px', height: '70px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #fcd34d', marginBottom: '10px', boxShadow: '0 0 15px rgba(252, 211, 77, 0.4)' }}>
+                                                        <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', width: '100%' }}>
+                                                            {/* Remove Button */}
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); toggleStarter(starterId); }}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: '-15px',
+                                                                    right: '5px',
+                                                                    background: 'rgba(219, 10, 64, 0.8)',
+                                                                    border: 'none',
+                                                                    color: '#fff',
+                                                                    width: '20px',
+                                                                    height: '20px',
+                                                                    borderRadius: '50%',
+                                                                    fontSize: '12px',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center'
+                                                                }}
+                                                            >
+                                                                &times;
+                                                            </button>
+
+                                                            <div style={{ width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #fcd34d', marginBottom: '8px', boxShadow: '0 0 15px rgba(252, 211, 77, 0.4)' }}>
                                                                 <img src={starter.photo_url || "/assets/players/default.png"} alt={starter.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', textAlign: 'center' }}>{starter.name}</div>
-                                                            <div style={{ fontSize: '0.8rem', color: '#fcd34d' }}>#{starter.jersey_number}</div>
-                                                            <div style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', marginTop: '4px' }}>{starter.position}</div>
-                                                        </>
+                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{starter.name}</div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#fcd34d', fontWeight: 'bold' }}>#{starter.jersey_number}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#aaa', textTransform: 'uppercase', marginTop: '2px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Pos {idx + 1}</div>
+                                                        </div>
                                                     ) : (
-                                                        <div style={{ color: '#fcd34d', opacity: 0.3, fontSize: '2rem' }}>+</div>
+                                                        <div style={{ zIndex: 1, textAlign: 'center' }}>
+                                                            <div style={{ color: '#fcd34d', fontSize: '2.5rem', fontWeight: '900', lineHeight: 1 }}>{idx + 1}</div>
+                                                            <div style={{ color: '#fcd34d', opacity: 0.6, fontSize: '0.7rem', fontWeight: 'bold', marginTop: '5px' }}>SELECT PLAYER</div>
+                                                        </div>
+                                                    )}
+
+                                                    {isActive && (
+                                                        <div className="animate-pulse" style={{
+                                                            position: 'absolute',
+                                                            bottom: '-12px',
+                                                            background: '#fcd34d',
+                                                            color: '#000',
+                                                            padding: '4px 12px',
+                                                            borderRadius: '20px',
+                                                            fontSize: '0.65rem',
+                                                            fontWeight: '900',
+                                                            textTransform: 'uppercase',
+                                                            boxShadow: '0 4px 10px rgba(252, 211, 77, 0.4)',
+                                                            zIndex: 2
+                                                        }}>
+                                                            ACTIVE POS
+                                                        </div>
                                                     )}
                                                 </div>
                                             );
