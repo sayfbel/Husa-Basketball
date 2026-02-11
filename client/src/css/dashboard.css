@@ -661,22 +661,21 @@
 
 /* Custom Scrollbar for Match Squad Lists */
 .full-custom-scroll::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
+    height: 4px;
 }
 
 .full-custom-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 4px;
+    background: transparent;
 }
 
 .full-custom-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    transition: background 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
 }
 
 .full-custom-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--dash-primary);
+    background: rgba(219, 10, 64, 0.5);
 }
 
 /* Squad Manager Stepper */
@@ -737,7 +736,7 @@
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 2rem;
-    height: 600px;
+    height: 750px;
 }
 
 .player-pool-sidebar {
@@ -999,6 +998,204 @@
     animation: fadeIn 0.4s ease-out forwards;
 }
 
+/* Report System Styles */
+.report-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+}
+
+.recipient-selector {
+    margin-bottom: 2rem;
+}
+
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.selectable-card {
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.selectable-card.selected {
+    background: rgba(219, 10, 64, 0.1);
+    border-color: #ff3131;
+    box-shadow: 0 0 15px rgba(255, 49, 49, 0.2);
+    transform: translateY(-3px);
+}
+
+.selectable-card.president-card {
+    grid-column: 1 / -1;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(20, 20, 20, 0.4) 100%);
+}
+
+.selectable-card.president-card.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(20, 20, 20, 0.6) 100%);
+}
+
+.report-form-container {
+    background: rgba(20, 20, 20, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 2rem;
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    color: #fff;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #ff3131;
+    outline: none;
+}
+
+.btn-send-report {
+    width: 100%;
+    background: #ff3131;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-send-report:hover {
+    background: #e62020;
+    box-shadow: 0 5px 15px rgba(255, 49, 49, 0.4);
+}
+
+.btn-send-report:disabled {
+    background: #444;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Fashion Custom Selector Styles */
+.custom-category-select {
+    width: 100%;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.overview-container {
+    padding: 9rem;
+}
+
+.custom-category-select label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #8f8f8f;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.custom-select-box {
+    background: linear-gradient(180deg, #141414, #0f0f0f);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid #ff3131;
+    /* Vibrant Husa Red */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #ffffff;
+}
+
+.custom-select-box:hover {
+    box-shadow: 0 0 0 2px rgba(255, 49, 49, 0.25);
+}
+
+.custom-select-box .arrow {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.custom-category-select.active .custom-select-box .arrow {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    position: absolute;
+    width: 100%;
+    background: #0f0f0f;
+    border-radius: 12px;
+    margin-top: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.custom-category-select.active .custom-options {
+    display: block;
+}
+
+.custom-option {
+    padding: 12px 16px;
+    color: #dcdcdc;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.custom-option:hover {
+    background: linear-gradient(90deg, #ff3131, #8b0000);
+    color: #ffffff;
+}
+
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(219, 10, 64, 0.4);
@@ -1015,4 +1212,14 @@
 
 .animate-pulse {
     animation: pulse 2s infinite;
+}
+
+@media (max-width: 1024px) {
+    .report-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .report-form-container {
+        position: static;
+    }
 }

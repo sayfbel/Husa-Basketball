@@ -13,7 +13,9 @@ import {
     Plus,
     Trash2,
     Save,
-    X
+    X,
+    Undo2,
+    RotateCcw
 } from 'lucide-react';
 
 const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm, savedTactics, fetchTactics }) => {
@@ -33,6 +35,9 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
     // Save System State
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [tacticName, setTacticName] = useState('');
+
+    // Undo System
+    const [history, setHistory] = useState([]); // Array of frames arrays
 
     // Interactive State
     const [draggingId, setDraggingId] = useState(null);
@@ -58,15 +63,40 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
         return currentTokens.some(t => t.type === type && t.label === label);
     };
 
+    const pushToHistory = () => {
+        const framesClone = JSON.parse(JSON.stringify(frames));
+        setHistory(prev => [...prev.slice(-19), framesClone]); // Keep last 20 actions
+    };
+
+    const handleUndo = () => {
+        if (history.length === 0) return;
+        const lastState = history[history.length - 1];
+        setFrames(lastState);
+        setHistory(prev => prev.slice(0, -1));
+        if (showNotification) showNotification('Action undone', 'info');
+    };
+
+    const handleReset = () => {
+        pushToHistory();
+        setFrames([{
+            tokens: [],
+            paths: []
+        }]);
+        setCurrentFrameIndex(0);
+        if (showNotification) showNotification('Board reset', 'info');
+    };
+
     // --- Mouse Handlers (Move Mode) ---
     const handleTokenMouseDown = (e, id) => {
         if (mode !== 'move') return;
         e.stopPropagation();
         e.preventDefault();
+        pushToHistory(); // Save state before movement
         setDraggingId(id);
     };
 
     const removeToken = (id) => {
+        pushToHistory();
         const newTokens = currentTokens.filter(t => t.id !== id);
         updateCurrentFrame(newTokens, null);
     };
@@ -80,6 +110,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
         const x = 50;
         const y = 50;
 
+        pushToHistory();
         const newToken = {
             id: `token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             label,
@@ -103,6 +134,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
     };
 
     const erasePath = (index) => {
+        pushToHistory();
         const newPaths = currentPaths.filter((_, i) => i !== index);
         updateCurrentFrame(null, newPaths);
     };
@@ -160,6 +192,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
     const handleGlobalMouseUp = () => {
         if (draggingId) setDraggingId(null);
         if (currentPath) {
+            pushToHistory();
             updateCurrentFrame(null, [...currentPaths, currentPath]);
             setCurrentPath('');
         }
@@ -178,6 +211,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
 
     // --- Frame Controls ---
     const addFrame = () => {
+        pushToHistory();
         const newFrame = JSON.parse(JSON.stringify(frames[currentFrameIndex]));
         const newFrames = [
             ...frames.slice(0, currentFrameIndex + 1),
@@ -190,6 +224,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
 
     const deleteFrame = () => {
         if (frames.length <= 1) return;
+        pushToHistory();
         const newFrames = frames.filter((_, i) => i !== currentFrameIndex);
         setFrames(newFrames);
         if (currentFrameIndex >= newFrames.length) {
@@ -329,7 +364,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
 
                 <div className="court-and-sidebar" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                     {/* Active Players Sidebar */}
-                    <div className="active-players-sidebar" style={{
+                    <div className="active-players-sidebar full-custom-scroll" style={{
                         width: '180px',
                         background: '#151515',
                         borderRadius: '8px',
@@ -464,6 +499,8 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                         </div>
 
                         <div className="save-controls">
+                            <button className="control-btn btn-reset" onClick={handleUndo} disabled={history.length === 0} title="Undo Action"><Undo2 size={18} /></button>
+                            <button className="control-btn btn-reset" onClick={handleReset} title="Clear Board"><RotateCcw size={18} /></button>
                             <button className="control-btn btn-reset" onClick={deleteFrame} disabled={frames.length <= 1} title="Delete Frame"><Trash2 size={18} /></button>
                             <button className="control-btn btn-save" onClick={handleSaveClick} title="Save Play"><Save size={18} style={{ marginRight: '6px' }} /> SAVE</button>
                         </div>
@@ -482,7 +519,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                         </div>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>System Name</label>
-                            <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="e.g. Baseline Out" style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px', fontSize: '1rem' }} />
+                            <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="e.g. Baseline Out" maxLength={50} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px', fontSize: '1rem' }} />
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
 

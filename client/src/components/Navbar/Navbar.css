@@ -178,7 +178,7 @@
 .dropdown-wrapper:hover .dropdown-card {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(20px);
 }
 
 /* Keep the parent link active while dropdown is hovered */

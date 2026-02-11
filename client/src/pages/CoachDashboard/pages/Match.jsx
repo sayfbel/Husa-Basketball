@@ -26,6 +26,7 @@ const Match = () => {
     // Strategy State
     const [fullCourtStrategies, setFullCourtStrategies] = useState([]);
     const [activeStrategyId, setActiveStrategyId] = useState(null);
+    const [selectedBriefingStrategies, setSelectedBriefingStrategies] = useState([]); // Array of IDs for the final briefing
 
     useEffect(() => {
         fetchPlayers();
@@ -78,6 +79,7 @@ const Match = () => {
         setActivePosition(0);
         setIsSquadConfirmed(false);
         setActiveStrategyId(null);
+        setSelectedBriefingStrategies([]);
         showNotification(`Managing squad for vs ${match.home.includes('HUSA') ? match.away : match.home}`, 'info');
         // Scroll to squad section
         document.getElementById('squad-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -127,6 +129,13 @@ const Match = () => {
         newStarters[activePosition] = playerId;
         setStarters(newStarters);
 
+        // Security/UX: Scroll to tactical board when all starters are selected
+        if (newStarters.every(id => id !== null)) {
+            setTimeout(() => {
+                document.getElementById('tactical-board-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+
         // Auto-advance activePosition to next empty slot or loop
         const nextPosition = [0, 1, 2, 3, 4].find(i => newStarters[i] === null);
         if (nextPosition !== undefined) {
@@ -139,11 +148,11 @@ const Match = () => {
 
         try {
             const payload = {
-                matchData: activeMatch, // Pass the full scraped object
-                matchId: null, // Scraped matches don't have our IDs initially
+                matchData: activeMatch,
+                matchId: null,
                 squad: selectedPlayers,
                 starters: starters.filter(id => id !== null),
-                strategyId: activeStrategyId // Passed from Tactics Board if integrated, or null
+                strategyIds: selectedBriefingStrategies // Array of IDs
             };
 
             const res = await axios.post('http://localhost:5000/api/matches/save', payload);
@@ -365,7 +374,7 @@ const Match = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="pool-list full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px', padding: '10px' }}>
+                                    <div className="pool-list full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gridAutoRows: 'max-content', alignContent: 'start', gap: '10px', padding: '10px' }}>
                                         {availablePlayers.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
                                             <div
                                                 key={p.id}
@@ -378,7 +387,7 @@ const Match = () => {
                                                     padding: '1rem 0.5rem',
                                                     cursor: 'pointer',
                                                     display: 'flex',
-                                                    maxHeight: '10rem',
+
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
                                                     gap: '8px',
@@ -471,8 +480,7 @@ const Match = () => {
                                                                 justifyContent: 'center',
                                                                 fontSize: '0.8rem',
                                                                 opacity: 0
-                                                            }} className="remove-btn">
-                                                                &times;
+                                                            }}>
                                                             </div>
                                                         </div>
                                                     ) : (
@@ -645,10 +653,10 @@ const Match = () => {
 
             {/* 3. Strategy Board (Only if squad is confirmed) */}
             {isSquadConfirmed && summonedPlayers.length > 0 && (
-                <div className="animate-slide-up">
+                <div id="tactical-board-section" className="animate-slide-up">
                     <div className="section-header-row" style={{ marginTop: '3rem', marginBottom: '1rem' }}>
                         <div className="role-tag coach-tag">System</div>
-                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Strategy Board</h2>
+                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Tactical Board</h2>
                     </div>
 
                     <MatchTacticsBoard
@@ -656,9 +664,125 @@ const Match = () => {
                         starters={starters}
                         strategies={fullCourtStrategies}
                         showNotification={showNotification}
+                        fetchStrategies={fetchStrategies}
                         // Optional: Pass function to let board notify parent of active strategy
                         onStrategyLoaded={(id) => setActiveStrategyId(id)}
                     />
+                </div>
+            )}
+
+            {/* 4. Tactical Briefing & Transmission */}
+            {isSquadConfirmed && starters.every(id => id !== null) && (
+                <div id="briefing-section" className="animate-fade-in" style={{ marginTop: '4rem', paddingBottom: '5rem' }}>
+                    <div className="section-header-row" style={{ marginBottom: '2rem' }}>
+                        <div className="role-tag coach-tag">Briefing</div>
+                        <h2 style={{ fontSize: '1.8rem', margin: 0 }}>Tactical Briefing & Deployment</h2>
+                        <p style={{ margin: '5px 0 0 0', color: '#888' }}>Finalize the package to be transmitted to the squad.</p>
+                    </div>
+
+                    <div className="briefing-container shadow-premium" style={{ background: '#111', borderRadius: '24px', padding: '2.5rem', border: '1px solid rgba(255,215,0,0.1)' }}>
+                        <div className="briefing-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px' }}>
+
+                            {/* Left Side: The Selection Review */}
+                            <div className="briefing-selection-review">
+                                <h3 style={{ color: '#ffd700', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <Shield size={18} /> Official Starting Five
+                                </h3>
+                                <div className="briefing-starters-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', marginBottom: '3rem' }}>
+                                    {starters.map((id, idx) => {
+                                        const p = players.find(player => player.id === id);
+                                        return (
+                                            <div key={idx} style={{ textAlign: 'center', background: 'rgba(255,215,0,0.03)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,215,0,0.1)' }}>
+                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 10px', border: '2px solid #ffd700' }}>
+                                                    <img src={p?.photo_url || '/assets/players/default.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                </div>
+                                                <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>{p?.name.split(' ')[0]}</div>
+                                                <div style={{ color: '#ffd700', fontSize: '0.75rem', fontWeight: 'bold' }}>POS {idx + 1}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <h3 style={{ color: '#888', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Strategic Rotation (Bench)</h3>
+                                <div className="briefing-bench-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px' }}>
+                                    {summonedPlayers.filter(p => !starters.includes(p.id)).map(p => (
+                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <img src={p.photo_url || '/assets/players/default.png'} alt="" style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover' }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 'bold' }}>{p.name.split(' ')[0]}</div>
+                                                <div style={{ color: '#666', fontSize: '0.65rem' }}>#{p.jersey_number} - {p.position}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right Side: System Selection */}
+                            <div className="briefing-systems-selection" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem' }}>Attach Systems</h3>
+                                <p style={{ color: '#666', fontSize: '0.8rem', marginBottom: '1.5rem' }}>Select the technical systems to be deployed for this match.</p>
+
+                                <div className="briefing-systems-list full-custom-scroll" style={{ maxHeight: '400px', overflowY: 'auto', display: 'grid', gap: '10px' }}>
+                                    {fullCourtStrategies.map(s => {
+                                        const isSelected = selectedBriefingStrategies.includes(s.id);
+                                        return (
+                                            <div
+                                                key={s.id}
+                                                onClick={() => {
+                                                    setSelectedBriefingStrategies(prev =>
+                                                        prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id]
+                                                    );
+                                                }}
+                                                style={{
+                                                    padding: '12px',
+                                                    background: isSelected ? 'rgba(219, 10, 64, 0.1)' : 'rgba(255,255,255,0.02)',
+                                                    border: isSelected ? '1px solid #DB0A40' : '1px solid rgba(255,255,255,0.05)',
+                                                    borderRadius: '12px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isSelected ? '#DB0A40' : '#333' }} />
+                                                    <span style={{ color: isSelected ? '#fff' : '#aaa', fontSize: '0.85rem', fontWeight: isSelected ? 'bold' : 'normal' }}>{s.name}</span>
+                                                </div>
+                                                {isSelected && <Shield size={14} color="#DB0A40" />}
+                                            </div>
+                                        );
+                                    })}
+                                    {fullCourtStrategies.length === 0 && (
+                                        <div style={{ textAlign: 'center', padding: '2rem', color: '#444', fontSize: '0.8rem', fontStyle: 'italic' }}>No systems available.</div>
+                                    )}
+                                </div>
+
+                                <button
+                                    onClick={handleSaveMatchSetup}
+                                    className="shiny-btn"
+                                    style={{
+                                        width: '100%',
+                                        marginTop: '2rem',
+                                        background: '#DB0A40',
+                                        color: '#fff',
+                                        border: 'none',
+                                        padding: '15px',
+                                        borderRadius: '12px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 10px 20px rgba(219, 10, 64, 0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px'
+                                    }}
+                                >
+                                    SAVE & TRANSMIT BRIEFING
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

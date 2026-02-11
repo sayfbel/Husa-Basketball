@@ -1,5 +1,48 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const db = require('../config/db');
+
+// Initialize Tables
+exports.initTable = async () => {
+    try {
+        // 1. Matches Table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS matches (
+                id VARCHAR(36) PRIMARY KEY,
+                opponent VARCHAR(255) NOT NULL,
+                date DATETIME NOT NULL,
+                location VARCHAR(255),
+                score VARCHAR(50) DEFAULT '-',
+                status VARCHAR(50) DEFAULT 'scheduled',
+                strategy_id JSON,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Migration: Add strategy_id if missing (for existing tables)
+        try {
+            await db.query('ALTER TABLE matches ADD COLUMN strategy_id JSON AFTER location');
+            console.log('Matches table migrated with strategy_id column');
+        } catch (err) {
+            // Likely already exists
+        }
+
+        // 2. Lineups Table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS match_lineups (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                match_id VARCHAR(36),
+                player_id INT,
+                is_starter BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE
+            )
+        `);
+
+        console.log('Match tables initialized');
+    } catch (error) {
+        console.error('Error initializing match tables:', error);
+    }
+};
 
 // Scrape HUSA Matches from FRMBB
 // Scrape HUSA Matches from FRMBB
@@ -105,27 +148,22 @@ exports.saveMatchSquad = async (req, res) => {
     //   starters: [playerIds...],
     //   strategyId: "strategy-uuid"
     // }
-    const { matchId, matchData, squad, starters, strategyId } = req.body;
+    const { matchId, matchData, squad, starters, strategyIds } = req.body;
     const db = require('../config/db'); // Assuming db connection is exported here
     const { v4: uuidv4 } = require('uuid');
 
     try {
         let finalMatchId = matchId;
+        const strategiesSerialized = JSON.stringify(strategyIds || []);
 
         // 1. Create Match if ID not provided (scraped match being saved for first time)
         if (!finalMatchId && matchData) {
-            // Convert Date from DD/MM/YYYY to YYYY-MM-DD
+            // ... (date/time formatting)
             const [day, month, year] = matchData.date.split('/');
             const formattedDate = `${year}-${month}-${day}`;
-
-            // Format Time (HH:MM -> HH:MM:00)
             const formattedTime = matchData.time ? `${matchData.time}:00` : '00:00:00';
-
-            // Combine for DATETIME
             const dbDateTime = `${formattedDate} ${formattedTime}`;
 
-            // Check if match already exists (by date + opponent) to avoid duplication
-            // Logic for opponent: If HUSA is home, opponent is away. If HUSA is away, opponent is home.
             const opponent = matchData.home.includes('HUSA') || matchData.home.includes('Hassania')
                 ? matchData.away
                 : matchData.home;
@@ -137,24 +175,21 @@ exports.saveMatchSquad = async (req, res) => {
 
             if (existing.length > 0) {
                 finalMatchId = existing[0].id;
-                // Update match strategy and ensuring date/time is correct
                 await db.query(
                     'UPDATE matches SET strategy_id = ? WHERE id = ?',
-                    [strategyId, finalMatchId]
+                    [strategiesSerialized, finalMatchId]
                 );
             } else {
                 finalMatchId = uuidv4();
-                // Create new match record
                 await db.query(
                     'INSERT INTO matches (id, opponent, date, location, strategy_id) VALUES (?, ?, ?, ?, ?)',
-                    [finalMatchId, opponent, dbDateTime, matchData.venue, strategyId]
+                    [finalMatchId, opponent, dbDateTime, matchData.venue, strategiesSerialized]
                 );
             }
         } else if (finalMatchId) {
-            // Update existing match strategy
             await db.query(
                 'UPDATE matches SET strategy_id = ? WHERE id = ?',
-                [strategyId, finalMatchId]
+                [strategiesSerialized, finalMatchId]
             );
         }
 

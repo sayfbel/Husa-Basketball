@@ -15,6 +15,7 @@ import PlayerDashboard from '../pages/PlayerDashboard';
 import CoachDashboard from '../pages/CoachDashboard';
 import PresidentDashboard from '../pages/PresidentDashboard';
 import Login from '../pages/Login';
+import Rules from '../pages/Rules';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes = () => {
@@ -27,6 +28,7 @@ const AppRoutes = () => {
             <Route path="/join" element={<JoinTeam />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/reservation" element={<KidsReservation />} />
+            <Route path="/rules" element={<Rules />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/training" element={<TrainingCenter />} />
             <Route path="/fans" element={<FanSupport />} />

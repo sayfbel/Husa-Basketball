@@ -15,7 +15,9 @@ import {
     Save,
     X,
     FolderOpen, // For loading strategies
-    Shield
+    Shield,
+    Undo2,
+    RotateCcw
 } from 'lucide-react';
 
 const MiniCourtPreview = ({ tactic }) => {
@@ -63,7 +65,7 @@ const MiniCourtPreview = ({ tactic }) => {
     );
 };
 
-const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotification, onStrategyLoaded }) => {
+const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotification, onStrategyLoaded, fetchStrategies }) => {
     const { currentUser } = useAuth();
     const [mode, setMode] = useState('move');
     const [frames, setFrames] = useState([{
@@ -80,16 +82,8 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     // Strategy Load State
     const [showLoadDropdown, setShowLoadDropdown] = useState(false);
     const [selectedStrategyId, setSelectedStrategyId] = useState(null);
-
-    // Save Assignment State
-    const [showSaveAssignmentModal, setShowSaveAssignmentModal] = useState(false);
-    const [saveAssignments, setSaveAssignments] = useState({ 1: '', 2: '', 3: '', 4: '', 5: '' }); // Map Pos -> PlayerID
-
-    // Load Assignment State
-    const [showLoadAssignmentModal, setShowLoadAssignmentModal] = useState(false);
-    const [strategyToLoad, setStrategyToLoad] = useState(null); // The strategy waiting to be loaded
-    const [loadAssignments, setLoadAssignments] = useState({ 1: '', 2: '', 3: '', 4: '', 5: '' }); // Map Pos -> PlayerID
-    const [activeSlot, setActiveSlot] = useState(1); // Track which position is being assigned (1-5)
+    const [pendingSubstitute, setPendingSubstitute] = useState(null); // { newPlayer: playerObj }
+    const [history, setHistory] = useState([]); // Array of frames arrays
 
     // Interactive State
     const [draggingId, setDraggingId] = useState(null);
@@ -109,6 +103,28 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         ));
     };
 
+    const pushToHistory = () => {
+        // Deep clone frames to avoid reference soup
+        const framesClone = JSON.parse(JSON.stringify(frames));
+        setHistory(prev => [...prev.slice(-19), framesClone]);
+    };
+
+    const handleUndo = () => {
+        if (history.length === 0) return;
+        const lastState = history[history.length - 1];
+        setFrames(lastState);
+        setHistory(prev => prev.slice(0, -1));
+        showNotification("Action undone", "info");
+    };
+
+    const handleReset = () => {
+        pushToHistory();
+        setFrames([{ tokens: [], paths: [] }]);
+        setCurrentFrameIndex(0);
+        setSelectedStrategyId(null);
+        showNotification("Board Reset", "info");
+    };
+
     // Check if a player is already on the court
     const isPlayerOnCourt = (playerId) => {
         return currentTokens.some(t => t.playerId === playerId);
@@ -118,13 +134,15 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     const handleAddPlayer = (player) => {
         if (isPlayerOnCourt(player.id)) return;
 
-        // Count current players on court (excluding ball/defense if any)
-        const playerCount = currentTokens.filter(t => t.type === 'player').length;
-        if (playerCount >= 5) {
-            if (showNotification) showNotification('Max 5 players on court!', 'warning');
+        const playerTokens = currentTokens.filter(t => t.type === 'player');
+
+        if (playerTokens.length >= 5) {
+            setPendingSubstitute({ newPlayer: player });
+            if (showNotification) showNotification(`Select a player on the court to replace with ${player.name}`, 'info');
             return;
         }
 
+        pushToHistory();
         const newToken = {
             id: `token-${Date.now()}`,
             playerId: player.id,
@@ -140,6 +158,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
     const handleAddBall = () => {
         if (currentTokens.some(t => t.type === 'ball')) return;
+        pushToHistory();
         const newToken = {
             id: `ball-${Date.now()}`,
             type: 'ball',
@@ -150,67 +169,40 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         updateCurrentFrame([...currentTokens, newToken], null);
     };
 
+    const handleAddDefense = (num) => {
+        const label = `D${num}`;
+        if (currentTokens.some(t => t.type === 'defense' && t.label === label)) return;
+        pushToHistory();
+        const newToken = {
+            id: `def-${Date.now()}-${num}`,
+            type: 'defense',
+            label: label,
+            x: 50,
+            y: 50
+        };
+        updateCurrentFrame([...currentTokens, newToken], null);
+    };
+
     const removeToken = (id) => {
+        pushToHistory();
         updateCurrentFrame(currentTokens.filter(t => t.id !== id), null);
     };
 
     // --- Strategy Loading ---
-    const getNumericPosition = (posStr) => {
-        if (!posStr) return '0';
-        const lower = posStr.toLowerCase();
-        if (lower.includes('point') || lower.includes('guard 1')) return '1';
-        if (lower.includes('shooting') || lower.includes('guard 2')) return '2';
-        if (lower.includes('small') || lower.includes('forward 3')) return '3';
-        if (lower.includes('power') || lower.includes('forward 4')) return '4';
-        if (lower.includes('center') || lower.includes('5')) return '5';
-        return '0';
-    };
+
 
     const loadStrategy = (originalStrategy) => {
-        setSelectedStrategyId(originalStrategy.id);
         if (!originalStrategy.data || originalStrategy.data.length === 0) return;
 
-        // Open Assignment Modal instead of auto-loading
-        setStrategyToLoad(JSON.parse(JSON.stringify(originalStrategy)));
+        setSelectedStrategyId(originalStrategy.id);
 
-        // Pre-fill assignments if possible based on starters or previous logic (optional)
-        // For now, reset to empty to force user selection as requested
-        const initialLoadAssignments = { 1: '', 2: '', 3: '', 4: '', 5: '' };
-
-        // Optional: Auto-select if we can match position names exactly? 
-        // User requested: "user select have to select the players"
-        // So we leave it empty or maybe just pre-fill starters but allow change.
-        // Let's pre-fill with starters 1-5 if they exist in summonedPlayers to be helpful, strictly by index?
-        // No, let's keep it empty to ensure explicit selection.
-
-        setLoadAssignments(initialLoadAssignments);
-        setActiveSlot(1);
-        setShowLoadAssignmentModal(true);
-    };
-
-    const finalizeLoadStrategy = () => {
-        if (!strategyToLoad) return;
-
-        // Validate all 5 positions (or at least check if user is OK with empty ones? usually 5v5)
-        // We will map 'offense' tokens with label '1' to the player in loadAssignments['1']
-
-        const tokenPlayerMap = {}; // Map abstract label '1' -> Player Object
-
-        Object.keys(loadAssignments).forEach(pos => {
-            const playerId = loadAssignments[pos];
-            if (playerId) {
-                const player = summonedPlayers.find(p => p.id === playerId);
-                if (player) {
-                    tokenPlayerMap[pos] = player;
-                }
-            }
-        });
-
-        const newFrames = strategyToLoad.data.map(frame => {
+        const newFrames = originalStrategy.data.map(frame => {
             const newTokens = (frame.tokens || []).map(t => {
                 if (t.type === 'offense') {
-                    const label = String(t.label); // '1', '2', etc.
-                    const player = tokenPlayerMap[label];
+                    const label = parseInt(t.label); // '1', '2', etc.
+                    // Map label '1' to starters[0], '2' to starters[1], etc.
+                    const starterId = starters[label - 1];
+                    const player = summonedPlayers.find(p => p.id === starterId);
 
                     if (player) {
                         return {
@@ -225,8 +217,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             label: t.label
                         };
                     } else {
-                        // Keep as generic if no player assigned (or maybe return null to remove?)
-                        // Returning generic offense token with no photo
+                        // Keep as generic offense token with no photo if no starter matched
                         return t;
                     }
                 }
@@ -241,21 +232,47 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
         setFrames(newFrames);
         setCurrentFrameIndex(0);
-        setShowLoadAssignmentModal(false);
-        setStrategyToLoad(null);
-        showNotification(`Strategy loaded with assigned lineup.`, 'success');
+        showNotification(`Strategy loaded with assigned Starting 5.`, 'success');
 
         if (typeof onStrategyLoaded === 'function') {
-            onStrategyLoaded(strategyToLoad.id);
+            onStrategyLoaded(originalStrategy.id);
         }
     };
 
 
     // --- Mouse Handlers (Same as Workspace) ---
-    const handleTokenMouseDown = (e, id) => {
+    const handleTokenMouseDown = (e, token) => {
+        if (pendingSubstitute) {
+            e.stopPropagation();
+            if (token.type !== 'player') return;
+
+            const newPlayer = pendingSubstitute.newPlayer;
+            const oldName = token.name;
+
+            pushToHistory();
+            const newFrames = frames.map(frame => ({
+                ...frame,
+                tokens: (frame.tokens || []).map(t =>
+                    t.id === token.id ? {
+                        ...t,
+                        playerId: newPlayer.id,
+                        name: newPlayer.name,
+                        number: newPlayer.jersey_number,
+                        photo: newPlayer.photo_url
+                    } : t
+                )
+            }));
+
+            setFrames(newFrames);
+            setPendingSubstitute(null);
+            if (showNotification) showNotification(`Substituted ${oldName} for ${newPlayer.name} globally.`, 'success');
+            return;
+        }
+
         if (mode !== 'move') return;
         e.stopPropagation();
-        setDraggingId(id);
+        pushToHistory(); // Save state before movement starts
+        setDraggingId(token.id);
     };
 
     // ... (Coordinate logic copied from Workspace but cleaned up)
@@ -268,6 +285,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     };
 
     const erasePath = (index) => {
+        pushToHistory();
         const newPaths = currentPaths.filter((_, i) => i !== index);
         updateCurrentFrame(null, newPaths);
     };
@@ -331,6 +349,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     const handleGlobalMouseUp = () => {
         if (draggingId) setDraggingId(null);
         if (currentPath) {
+            pushToHistory(); // Save state before adding the new path permanently
             updateCurrentFrame(null, [...currentPaths, currentPath]);
             setCurrentPath('');
         }
@@ -350,12 +369,14 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
     // --- Frame & Play Logic ---
     const addFrame = () => {
+        pushToHistory();
         setFrames(prev => [...prev, JSON.parse(JSON.stringify(prev[currentFrameIndex]))]);
         setCurrentFrameIndex(prev => prev + 1);
     };
 
     const deleteFrame = () => {
         if (frames.length <= 1) return;
+        pushToHistory();
         const newFrames = frames.filter((_, i) => i !== currentFrameIndex);
         setFrames(newFrames);
         setCurrentFrameIndex(prev => Math.min(prev, newFrames.length - 1));
@@ -387,64 +408,27 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         setShowSaveModal(true);
     };
 
-    const proceedToAssignment = () => {
+    const finalizeSaveStrategy = async () => {
         if (!tacticName.trim()) return;
 
-        // Identify available players on court to populate dropdowns (redundant but good for context)
-        // We will start with empty assignments or pre-fill if we can guess.
-
-        // Try to guess from current tokens on court
-        const tokensOnCourt = frames[0].tokens.filter(t => t.type === 'player');
-        const nextAssignments = { 1: '', 2: '', 3: '', 4: '', 5: '' };
-
-        // Attempt to pre-fill based on position mathing just to be nice caused user asked "have to select"
-        // but pre-filling is better UX. User can change it.
-        tokensOnCourt.forEach(t => {
-            const player = summonedPlayers.find(p => p.id === t.playerId);
-            if (player && player.position) {
-                const posNum = getNumericPosition(player.position);
-                if (posNum !== '0' && !nextAssignments[posNum]) {
-                    nextAssignments[posNum] = player.id;
-                }
-            }
-        });
-
-        setSaveAssignments(nextAssignments);
-        // Find first empty slot to set as active
-        const firstEmpty = [1, 2, 3, 4, 5].find(p => !nextAssignments[p]) || 1;
-        setActiveSlot(firstEmpty);
-
-        setShowSaveModal(false);
-        setShowSaveAssignmentModal(true);
-    };
-
-    const finalizeSaveStrategy = async () => {
         try {
-            // Validate: check if all used? Or just proceed.
-            // We need to map the TOKENS on the board (which are players) to the LABELS (1-5)
-            // The mapping logic is: Look at the player ID in the token. Find which Position (1-5) has that Player ID in saveAssignments.
-            // That position number becomes the label.
+            // Mapping logic: Look at the player ID in the token. Find which Position (1-5) that player occupies in starters.
+            // That position number (index + 1) becomes the label.
 
             const abstractFrames = frames.map(frame => ({
                 ...frame,
                 tokens: (frame.tokens || []).map(t => {
                     // Convert Player -> Offense
                     if (t.type === 'player') {
-                        // Find which position number this player is assigned to
-                        let assignedLabel = '?';
-                        // Reverse lookup in saveAssignments
-                        for (const [pos, pid] of Object.entries(saveAssignments)) {
-                            if (String(pid) === String(t.playerId)) {
-                                assignedLabel = pos;
-                                break;
-                            }
-                        }
+                        // Find which position number (1-5) this player is in starters
+                        const starterIdx = starters.indexOf(t.playerId);
+                        const assignedLabel = starterIdx !== -1 ? String(starterIdx + 1) : '?';
 
                         return {
-                            id: t.id, // Keep ID for continuity
+                            id: t.id,
                             x: t.x,
                             y: t.y,
-                            type: 'offense', // Generic type expected by Strategy module
+                            type: 'offense',
                             label: assignedLabel
                         };
                     }
@@ -462,8 +446,11 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                 type: 'full',
                 userId: currentUser?.id
             });
-            setShowSaveAssignmentModal(false);
-            showNotification('Full Court Strategy Saved', 'success');
+            setShowSaveModal(false);
+            showNotification('Strategy Saved successfully.', 'success');
+            if (typeof fetchStrategies === 'function') {
+                fetchStrategies();
+            }
         } catch (err) {
             console.error(err);
             showNotification('Failed to save strategy', 'error');
@@ -646,6 +633,38 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                         >
                             Add Ball 🏀
                         </div>
+
+                        {/* Defense Players - Generic */}
+                        <div style={{ marginTop: '1.5rem', padding: '0 5px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: '#666', textTransform: 'uppercase' }}>Opposition Units</h3>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {[1, 2, 3, 4, 5].map(num => {
+                                    const active = currentTokens.some(t => t.type === 'defense' && t.label === `D${num}`);
+                                    return (
+                                        <div
+                                            key={num}
+                                            onClick={() => !active && handleAddDefense(num)}
+                                            style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '50%',
+                                                background: '#111',
+                                                border: '1px solid rgba(255,255,255,0.3)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '0.7rem',
+                                                color: '#fff',
+                                                cursor: active ? 'default' : 'pointer',
+                                                opacity: active ? 0.3 : 1
+                                            }}
+                                        >
+                                            D{num}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -667,9 +686,33 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             <button className="tool-btn" onClick={addFrame}><Plus size={18} /></button>
                         </div>
                         <div className="tools-group" style={{ background: '#222', borderRadius: '6px', padding: '4px' }}>
+                            <button className="tool-btn" onClick={handleUndo} disabled={history.length === 0} title="Undo last action"><Undo2 size={18} /></button>
+                            <button className="tool-btn" onClick={handleReset} title="Reset Board (Clear all)"><RotateCcw size={18} /></button>
                             <button className="tool-btn" onClick={deleteFrame}><Trash2 size={18} /></button>
                             <button className="tool-btn" onClick={handleSaveClick}><Save size={18} /></button>
                         </div>
+                        {pendingSubstitute && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '60px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#ff3131',
+                                color: '#fff',
+                                padding: '8px 16px',
+                                borderRadius: '30px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                zIndex: 100,
+                                boxShadow: '0 4px 15px rgba(255, 49, 49, 0.4)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <span>REPLACING WITH {pendingSubstitute.newPlayer.name.toUpperCase()}</span>
+                                <X size={14} style={{ cursor: 'pointer' }} onClick={() => setPendingSubstitute(null)} />
+                            </div>
+                        )}
                     </div>
 
                     <div
@@ -720,15 +763,20 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                     zIndex: draggingId === token.id ? 10 : 2,
                                     pointerEvents: mode === 'move' ? 'auto' : 'none',
                                     transition: draggingId === token.id ? 'none' : (isPlaying ? 'all 800ms ease' : 'all 300ms ease'),
-                                    fontSize: token.type === 'ball' ? '1.5rem' : '0'
+                                    fontSize: token.type === 'ball' ? '1.5rem' : '0',
+                                    outline: (pendingSubstitute && token.type === 'player') ? '3px solid #ff3131' : 'none',
+                                    borderRadius: '50%'
                                 }}
-                                onMouseDown={(e) => handleTokenMouseDown(e, token.id)}
+                                onMouseDown={(e) => handleTokenMouseDown(e, token)}
                             >
-                                {token.type === 'ball' ? token.label : (
+                                {token.type === 'ball' ? token.label : token.type === 'player' ? (
                                     <div style={{ width: '100%', height: '100%', borderRadius: '50%', border: '2px solid #fff', overflow: 'hidden', background: '#000', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', position: 'relative' }}>
                                         <img src={token.photo || "/assets/players/default.png"} alt={token.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '10px', textAlign: 'center', fontWeight: 'bold' }}>#{token.number}</div>
-                                        {/* Close/Remove Button on Hover (Simple implementation: right click to remove?) */}
+                                    </div>
+                                ) : (
+                                    <div className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`} style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', width: '100%', height: '100%' }}>
+                                        {token.label}
                                     </div>
                                 )}
                                 {/* Right click remove handler overlay */}
@@ -752,249 +800,17 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             <button onClick={() => setShowSaveModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
                         </div>
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="Name of this play..." style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }} />
+                            <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="Name of this play..." maxLength={50} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }} />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button onClick={proceedToAssignment} className="control-btn btn-save" style={{ background: '#ff3131' }}>NEXT: ASSIGN ROLES</button>
+                            <button onClick={finalizeSaveStrategy} className="control-btn btn-save" style={{ background: '#ff3131' }}>SAVE STRATEGY</button>
                         </div>
                     </div>
                 </div>,
                 document.body
             )}
 
-            {/* Save Modal - Step 2: Assign Positions */}
-            {showSaveAssignmentModal && createPortal(
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-                    <div className="dashboard-card animate-scale-in" style={{ width: '500px', maxWidth: '95%', border: '1px solid rgba(76, 209, 55, 0.3)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                            <div>
-                                <h2 style={{ margin: 0, border: 'none', color: '#fff', fontSize: '1.2rem' }}>Define System Roles</h2>
-                                <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.8rem' }}>Map your players to the system's positions (1-5).</p>
-                            </div>
-                            <button onClick={() => setShowSaveAssignmentModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
-                        </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                            {/* Top: Position Slots */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                                {[1, 2, 3, 4, 5].map(pos => {
-                                    const assignedId = saveAssignments[pos];
-                                    const assignedPlayer = summonedPlayers.find(p => p.id === assignedId);
-                                    const isActive = activeSlot === pos;
-
-                                    return (
-                                        <div
-                                            key={pos}
-                                            onClick={() => setActiveSlot(pos)}
-                                            style={{
-                                                flex: 1,
-                                                aspectRatio: '1/1',
-                                                background: isActive ? 'rgba(219, 10, 64, 0.1)' : 'rgba(255,255,255,0.03)',
-                                                border: isActive ? '2px solid #DB0A40' : (assignedPlayer ? '1px solid rgba(76, 209, 55, 0.5)' : '1px dashed rgba(255,255,255,0.2)'),
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                position: 'relative',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            {assignedPlayer ? (
-                                                <>
-                                                    <img src={assignedPlayer.photo_url || "/assets/players/default.png"} alt={assignedPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isActive ? 1 : 0.6 }} />
-                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', fontSize: '0.8rem', color: '#fff', textAlign: 'center', padding: '2px 0' }}>
-                                                        {pos}
-                                                    </div>
-                                                    <div style={{ position: 'absolute', top: 5, right: 5, width: '20px', height: '20px', background: '#000', borderRadius: '50%', color: '#fff', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        {assignedPlayer.jersey_number}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isActive ? '#DB0A40' : '#444' }}>{pos}</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>Select a position above, then choose a player below.</p>
-
-                            {/* Bottom: Available Players Grid */}
-                            <div className="full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px', maxHeight: '250px', overflowY: 'auto', padding: '2px' }}>
-                                {/* Filter Only Players ON THE COURT for Saving */}
-                                {frames[0]?.tokens.filter(t => t.type === 'player').map(t => {
-                                    const player = summonedPlayers.find(p => p.id === t.playerId);
-                                    if (!player) return null;
-
-                                    const assignedPos = Object.keys(saveAssignments).find(key => String(saveAssignments[key]) === String(player.id));
-                                    const isAssigned = !!assignedPos;
-
-                                    return (
-                                        <div
-                                            key={player.id}
-                                            onClick={() => {
-                                                setSaveAssignments(prev => {
-                                                    const newAssignments = { ...prev };
-                                                    // Remove from other slot if assigned
-                                                    if (assignedPos) newAssignments[assignedPos] = '';
-                                                    // Assign to current slot
-                                                    newAssignments[activeSlot] = player.id;
-                                                    return newAssignments;
-                                                });
-                                                // Auto advance to next empty slot
-                                                const remainingSlots = [1, 2, 3, 4, 5].filter(p => p !== activeSlot);
-                                                const nextEmpty = remainingSlots.find(p => !saveAssignments[p] || (String(saveAssignments[p]) === String(player.id))); // Logic: finds next empty or stays? 
-                                                // Better: find first empty slot overall
-                                                // But we can't see the state update yet. assume.
-                                                // Simple: just shift active slot to next number, cycling.
-                                                const nextNum = activeSlot === 5 ? 1 : activeSlot + 1;
-                                                setActiveSlot(nextNum);
-                                            }}
-                                            style={{
-                                                background: isAssigned ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                border: isAssigned ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.1)',
-                                                borderRadius: '8px',
-                                                padding: '8px 4px',
-                                                cursor: 'pointer',
-                                                opacity: (isAssigned && assignedPos !== String(activeSlot)) ? 0.5 : 1, // Dim if assigned to OTHER slot
-                                                textAlign: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 5px', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                            <div style={{ fontSize: '0.7rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</div>
-                                            <div style={{ fontSize: '0.65rem', color: '#888' }}>#{player.jersey_number}</div>
-                                            {isAssigned && <div style={{ fontSize: '0.6rem', color: '#4cd137', fontWeight: 'bold' }}>Pos {assignedPos}</div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => setShowSaveAssignmentModal(false)} style={{ padding: '8px 16px', borderRadius: '6px', background: 'transparent', border: '1px solid #666', color: '#ccc', cursor: 'pointer' }}>Cancel</button>
-                            <button onClick={finalizeSaveStrategy} className="control-btn btn-save" style={{ background: '#4cd137', color: '#000', fontWeight: 'bold' }}>CONFIRM & SAVE</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-
-            {/* Load Modal - Assign Players */}
-            {showLoadAssignmentModal && createPortal(
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-                    <div className="dashboard-card animate-scale-in" style={{ width: '500px', maxWidth: '95%', border: '1px solid rgba(252, 211, 77, 0.3)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                            <div>
-                                <h2 style={{ margin: 0, border: 'none', color: '#fff', fontSize: '1.2rem' }}>Load System Lineup</h2>
-                                <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.8rem' }}>Assign your squad to the system's roles.</p>
-                            </div>
-                            <button onClick={() => setShowLoadAssignmentModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                            {/* Top: Position Slots */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                                {[1, 2, 3, 4, 5].map(pos => {
-                                    const assignedId = loadAssignments[pos];
-                                    const assignedPlayer = summonedPlayers.find(p => p.id === assignedId);
-                                    const isActive = activeSlot === pos;
-
-                                    return (
-                                        <div
-                                            key={pos}
-                                            onClick={() => setActiveSlot(pos)}
-                                            style={{
-                                                flex: 1,
-                                                aspectRatio: '1/1',
-                                                background: isActive ? 'rgba(252, 211, 77, 0.1)' : 'rgba(255,255,255,0.03)',
-                                                border: isActive ? '2px solid #fcd34d' : (assignedPlayer ? '1px solid rgba(76, 209, 55, 0.5)' : '1px dashed rgba(255,255,255,0.2)'),
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                position: 'relative',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            {assignedPlayer ? (
-                                                <>
-                                                    <img src={assignedPlayer.photo_url || "/assets/players/default.png"} alt={assignedPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isActive ? 1 : 0.6 }} />
-                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', fontSize: '0.8rem', color: '#fff', textAlign: 'center', padding: '2px 0' }}>
-                                                        {pos}
-                                                    </div>
-                                                    <div style={{ position: 'absolute', top: 5, right: 5, width: '20px', height: '20px', background: '#000', borderRadius: '50%', color: '#fff', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        {assignedPlayer.jersey_number}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: isActive ? '#fcd34d' : '#444' }}>{pos}</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>Select a position above, then choose a player below.</p>
-
-                            {/* Bottom: Available Players Grid */}
-                            <div className="full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '10px', maxHeight: '250px', overflowY: 'auto', padding: '2px' }}>
-                                {summonedPlayers.map(player => {
-                                    const assignedPos = Object.keys(loadAssignments).find(key => String(loadAssignments[key]) === String(player.id));
-                                    const isAssigned = !!assignedPos;
-
-                                    return (
-                                        <div
-                                            key={player.id}
-                                            onClick={() => {
-                                                setLoadAssignments(prev => {
-                                                    const newAssignments = { ...prev };
-                                                    if (assignedPos) newAssignments[assignedPos] = '';
-                                                    newAssignments[activeSlot] = player.id;
-                                                    return newAssignments;
-                                                });
-                                                const nextNum = activeSlot === 5 ? 1 : activeSlot + 1;
-                                                setActiveSlot(nextNum);
-                                            }}
-                                            style={{
-                                                background: isAssigned ? 'rgba(76, 209, 55, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                border: isAssigned ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.1)',
-                                                borderRadius: '8px',
-                                                padding: '8px 4px',
-                                                cursor: 'pointer',
-                                                opacity: (isAssigned && assignedPos !== String(activeSlot)) ? 0.5 : 1,
-                                                textAlign: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 5px', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                            <div style={{ fontSize: '0.7rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</div>
-                                            <div style={{ fontSize: '0.65rem', color: '#888' }}>#{player.jersey_number}</div>
-                                            {isAssigned && <div style={{ fontSize: '0.6rem', color: '#4cd137', fontWeight: 'bold' }}>Pos {assignedPos}</div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => setShowLoadAssignmentModal(false)} style={{ padding: '8px 16px', borderRadius: '6px', background: 'transparent', border: '1px solid #666', color: '#ccc', cursor: 'pointer' }}>Cancel</button>
-                            <button onClick={finalizeLoadStrategy} className="control-btn btn-save" style={{ background: '#fcd34d', color: '#000', fontWeight: 'bold' }}>LOAD SYSTEM</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
         </div>
     );
 };
