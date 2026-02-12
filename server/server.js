@@ -25,6 +25,7 @@ app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/matches', require('./routes/matchRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/reservations', require('./routes/reservationRoutes'));
+app.use('/api/store-reservations', require('./routes/storeReservationRoutes'));
 
 // app.use('/api/news', require('./routes/news'));
 
@@ -35,6 +36,7 @@ const tryoutController = require('./controllers/tryoutController');
 const contactController = require('./controllers/contactController');
 const matchController = require('./controllers/matchController');
 const reservationController = require('./controllers/reservationController');
+const storeReservationController = require('./controllers/storeReservationController');
 
 app.use('/api/strategies', require('./routes/strategyRoutes'));
 
@@ -47,6 +49,7 @@ app.listen(PORT, async () => {
         await contactController.initTable();
         await matchController.initTable();
         await reservationController.initTable();
+        await storeReservationController.initTable();
         console.log('Database seeded & tables initialized');
     } catch (err) {
         console.error('Seeding error:', err);

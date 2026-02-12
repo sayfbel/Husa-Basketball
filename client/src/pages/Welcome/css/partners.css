@@ -26,17 +26,22 @@
     align-items: center;
 }
 
-.flyviral-logo {
-    font-size: 3rem;
-    font-weight: 900;
-    color: #111;
-    text-transform: uppercase;
-    letter-spacing: -2px;
+.partner-logo-image-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.flyviral-logo span {
-    color: #0066ff;
-    /* Assuming FlyViral blue based on name, or generic tech blue */
+.partner-main-logo {
+    max-width: 300px;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+    transition: transform 0.4s ease;
+}
+
+.partner-logo-area:hover .partner-main-logo {
+    transform: scale(1.05);
 }
 
 .partner-content h2 {

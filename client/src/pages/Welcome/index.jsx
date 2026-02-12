@@ -4,6 +4,7 @@ import StatsBar from './components/StatsBar';
 import Seasons from './components/Seasons';
 import Partners from './components/Partners';
 import SocialCentral from './components/SocialCentral';
+import Colab from './components/colabe';
 import './css/welcome.css';
 import './css/social-central.css';
 
@@ -16,6 +17,7 @@ const Welcome = () => {
             <Seasons />
             <SocialCentral />
             <Partners />
+            <Colab />
         </div>
     );
 };

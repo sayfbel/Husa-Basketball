@@ -1,4 +1,4 @@
-import React from 'react';
+import flyViralLogo from '../../../assets/images/colabs/logo-flyviral-2.webp';
 import '../css/partners.css';
 
 const Partners = () => {
@@ -8,8 +8,8 @@ const Partners = () => {
 
             <div className="partner-spotlight">
                 <div className="partner-logo-area">
-                    <div className="flyviral-logo">
-                        Fly<span>Viral</span> <br /> Maroc
+                    <div className="partner-logo-image-wrapper">
+                        <img src={flyViralLogo} alt="FlyViral Maroc Logo" className="partner-main-logo" />
                     </div>
                 </div>
 

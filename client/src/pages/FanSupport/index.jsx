@@ -1,14 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './css/fan.css';
-import TrainingTShirt from '../../assets/images/T-shirts/542207433_17887122501357067_4280698276740856535_n..jpg';
-import HomeKit from '../../assets/images/T-shirts/540271147_17886699834357067_1641371197587090454_n..jpg';
-import Hoodie from '../../assets/images/T-shirts/542207433_17887122501357067_4280698276740856535_n..jpg';
+import RedJerseyFlyer from '../../assets/images/T-shirts/542207433_17887122501357067_4280698276740856535_n..jpg';
+import RedJerseyPhoto from '../../assets/images/T-shirts/540271147_17886699834357067_1641371197587090454_n..jpg';
+import WhiteJerseyFlyer from '../../assets/images/T-shirts/Gemini_Generated_Image_ceomz6ceomz6ceom.png';
+import WhiteJerseyPhoto from '../../assets/images/T-shirts/e37a7414-1b79-4bc6-8769-c7858fbe33b4.png';
+import SelectorCard from '../../components/SelectorCard/SelectorCard';
 
 import husaLogo from '../../assets/images/husa_logo.jpg';
 // Try to deliver a real logo for the opponent if possible, or use a high-quality placeholder
 const wydadLogo = "https://upload.wikimedia.org/wikipedia/en/2/2c/Wydad_Athletic_Club_logo.png";
 
 const FanSupport = () => {
+    const navigate = useNavigate();
     const [selectedProduct, setSelectedProduct] = React.useState(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
@@ -24,21 +29,23 @@ const FanSupport = () => {
     const products = [
         {
             id: 1,
-            name: "HUSA Official Home Jersey",
-            price: "250 DH",
-            image: TrainingTShirt
+            name: "HUSA Official Kit (Promo)",
+            price: "150 DH",
+            image: RedJerseyFlyer,
+            variants: {
+                Red: RedJerseyFlyer,
+                White: WhiteJerseyFlyer
+            }
         },
         {
             id: 2,
-            name: "HUSA Training T-Shirt",
-            price: "150 DH",
-            image: HomeKit
-        },
-        {
-            id: 3,
-            name: "Supporter Hoodie",
-            price: "300 DH",
-            image: Hoodie
+            name: "HUSA Official Kit (Match)",
+            price: "250 DH",
+            image: RedJerseyPhoto,
+            variants: {
+                Red: RedJerseyPhoto,
+                White: WhiteJerseyPhoto
+            }
         }
     ];
 
@@ -52,6 +59,12 @@ const FanSupport = () => {
     const handleBuyClick = (product) => {
         setSelectedProduct(product);
         setIsModalOpen(true);
+        // Pre-select color based on product name
+        if (product.name.toLowerCase().includes('white')) {
+            setFormData(prev => ({ ...prev, color: 'White' }));
+        } else {
+            setFormData(prev => ({ ...prev, color: 'Red' }));
+        }
     };
 
     const handleFormSubmit = (e) => {
@@ -63,11 +76,28 @@ const FanSupport = () => {
             return;
         }
 
-        console.log("Purchase Order:", { product: selectedProduct, ...formData });
-        alert(`Thank you ${formData.name}! Your order for the ${selectedProduct.name} has been received. We will contact you at ${formData.phone} soon.`);
-        setIsModalOpen(false);
-        // Reset form
-        setFormData({ name: '', location: '', phone: '', size: 'M', color: 'Red' });
+        const orderData = {
+            product_name: selectedProduct.name,
+            price: selectedProduct.price,
+            customer_name: formData.name,
+            location: formData.location,
+            phone: formData.phone,
+            size: formData.size,
+            color: formData.color
+        };
+
+        axios.post('http://localhost:5000/api/store-reservations', orderData)
+            .then(res => {
+                setIsModalOpen(false);
+                // Reset form
+                setFormData({ name: '', location: '', phone: '', size: 'M', color: 'Red' });
+                // Redirect to thanks page
+                navigate('/thanks');
+            })
+            .catch(err => {
+                console.error("Error saving order:", err);
+                alert("There was an error processing your order. Please try again later.");
+            });
     };
 
     return (
@@ -206,11 +236,12 @@ const FanSupport = () => {
                             </div>
 
                         </div>
-                        <div className="contact-for-tikite">
-                            +212 6 66 66 66 66
-                        </div>
+
                     </section>
                 </div>
+            </div>
+            <div className="contact-for-tikite">
+                +212 6 66 66 66 66
             </div>
 
             {/* Purchase Modal (Outside fan-page to fill screen) */}
@@ -221,7 +252,10 @@ const FanSupport = () => {
 
                         <div className="modal-content-grid">
                             <div className="product-preview-side">
-                                <img src={selectedProduct.image} alt={selectedProduct.name} />
+                                <img
+                                    src={selectedProduct.variants ? selectedProduct.variants[formData.color] : selectedProduct.image}
+                                    alt={selectedProduct.name}
+                                />
                                 <div className="preview-info">
                                     <h3>{selectedProduct.name}</h3>
                                     <span className="preview-price">{selectedProduct.price}</span>
@@ -265,18 +299,14 @@ const FanSupport = () => {
                                     </div>
 
                                     <div className="form-row-fashion">
-                                        <div className="form-group-fashion">
-                                            <label>Size</label>
-                                            <select
+                                        <div className="form-group-fashion" style={{ zIndex: 10 }}>
+                                            <SelectorCard
+                                                label="Size"
+                                                options={['S', 'M', 'L', 'XL', 'XXL']}
                                                 value={formData.size}
-                                                onChange={e => setFormData({ ...formData, size: e.target.value })}
-                                            >
-                                                <option>S</option>
-                                                <option>M</option>
-                                                <option>L</option>
-                                                <option>XL</option>
-                                                <option>XXL</option>
-                                            </select>
+                                                onChange={val => setFormData({ ...formData, size: val })}
+                                                placeholder="Select Size"
+                                            />
                                         </div>
 
                                         <div className="form-group-fashion">

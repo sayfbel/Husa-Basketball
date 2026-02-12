@@ -122,3 +122,17 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Store Reservations (Official Store Orders)
+CREATE TABLE IF NOT EXISTS store_reservations (
+    id VARCHAR(36) PRIMARY KEY,
+    product_name VARCHAR(255) NOT NULL,
+    price VARCHAR(50) NOT NULL,
+    customer_name VARCHAR(255) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    size VARCHAR(10) NOT NULL,
+    color VARCHAR(20) NOT NULL,
+    status ENUM('pending', 'contacted', 'completed', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

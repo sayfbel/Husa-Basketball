@@ -16,6 +16,7 @@ import CoachDashboard from '../pages/CoachDashboard';
 import PresidentDashboard from '../pages/PresidentDashboard';
 import Login from '../pages/Login';
 import Rules from '../pages/Rules';
+import Thanks from '../pages/Thanks';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes = () => {
@@ -32,6 +33,7 @@ const AppRoutes = () => {
             <Route path="/staff" element={<Staff />} />
             <Route path="/training" element={<TrainingCenter />} />
             <Route path="/fans" element={<FanSupport />} />
+            <Route path="/thanks" element={<Thanks />} />
             <Route path="/admin/login" element={<Login />} />
 
             {/* Protected Role-Based Routes */}

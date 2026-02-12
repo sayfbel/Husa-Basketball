@@ -1,0 +1,181 @@
+.thanks-page.fashion-theme {
+    min-height: 100vh;
+    background-color: #050505;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    padding: 2rem;
+}
+
+/* Bold Watermark */
+.watermark-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 25vw;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.02);
+    z-index: 1;
+    pointer-events: none;
+    letter-spacing: -2vw;
+    line-height: 1;
+}
+
+.thanks-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    width: 100%;
+}
+
+.header-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 1px solid rgba(219, 10, 64, 0.5);
+    color: #DB0A40;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 2rem;
+    border-radius: 2px;
+    background: rgba(219, 10, 64, 0.05);
+}
+
+.main-title {
+    font-size: 5rem;
+    line-height: 0.9;
+    font-weight: 900;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+}
+
+.main-title .accent {
+    color: #DB0A40;
+    display: block;
+}
+
+.description {
+    font-size: 1.1rem;
+    color: #888;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    margin-bottom: 4rem;
+    text-transform: uppercase;
+}
+
+.actions-section {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.fashion-btn {
+    padding: 20px 40px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    min-width: 220px;
+}
+
+.fashion-btn.primary {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #fff;
+}
+
+.fashion-btn.primary:hover {
+    background-color: #DB0A40;
+    border-color: #DB0A40;
+    color: #fff;
+    transform: translateY(-5px);
+}
+
+.fashion-btn.secondary {
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fashion-btn.secondary:hover {
+    border-color: #fff;
+    transform: translateY(-5px);
+}
+
+/* Page Footer */
+.page-footer {
+    position: absolute;
+    bottom: 3rem;
+    width: 100%;
+    padding: 0 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.footer-line {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.footer-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #555;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+.footer-info .tag {
+    color: #DB0A40;
+}
+
+/* Animations */
+.fashion-theme {
+    animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 3rem;
+    }
+
+    .actions-section {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .fashion-btn {
+        width: 100%;
+    }
+
+    .page-footer {
+        bottom: 1.5rem;
+        padding: 0 2rem;
+    }
+}
