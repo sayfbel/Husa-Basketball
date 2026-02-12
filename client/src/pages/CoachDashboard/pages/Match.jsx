@@ -204,9 +204,12 @@ const Match = () => {
                             // Parse date if possible, otherwise use string
                             let dateDisplay = match.date;
                             try {
-                                const d = new Date(match.date);
+                                const d = new Date(match.date && match.date.includes('/') ? match.date.split('/').reverse().join('-') : match.date);
                                 if (!isNaN(d.getTime())) {
-                                    dateDisplay = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    dateDisplay = `${day}/${month}/${year}`;
                                 }
                             } catch (e) { /* ignore */ }
 

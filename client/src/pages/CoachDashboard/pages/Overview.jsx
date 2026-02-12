@@ -144,7 +144,11 @@ const Overview = () => {
                         <div className="engagement-meta">
                             <div className="meta-bit">
                                 <Calendar size={16} />
-                                <span>{nextMatch?.date || 'DATE TBD'}</span>
+                                <span>{nextMatch ? (() => {
+                                    const d = new Date(nextMatch.date.includes('/') ? nextMatch.date.split('/').reverse().join('-') : nextMatch.date);
+                                    if (isNaN(d.getTime())) return nextMatch.date;
+                                    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                                })() : 'DATE TBD'}</span>
                             </div>
                             <div className="meta-bit">
                                 <Clock size={16} />
