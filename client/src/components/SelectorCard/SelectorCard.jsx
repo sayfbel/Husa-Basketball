@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import './SelectorCard.css';
 
 const SelectorCard = ({
@@ -57,7 +58,7 @@ const SelectorCard = ({
 
             <div className="select-box" onClick={() => setIsOpen(!isOpen)}>
                 <div className="selected-text">{displayLabel}</div>
-                <span className="material-icons-outlined">expand_more</span>
+                <ChevronDown size={20} className="select-arrow" />
             </div>
 
             <div className="options">

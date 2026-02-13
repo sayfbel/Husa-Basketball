@@ -36,15 +36,21 @@
     /* Hover effect */
 }
 
+.select-wrapper.active .select-box {
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 15px rgba(219, 10, 64, 0.2);
+}
+
 /* Arrow icon */
 /* Arrow icon */
-.select-box .material-icons-outlined {
+.select-arrow {
     font-size: 20px;
     transition: transform 0.3s;
+    color: #666;
 }
 
 /* Rotate arrow when active */
-.select-wrapper.active .select-box .material-icons-outlined {
+.select-wrapper.active .select-arrow {
     transform: rotate(180deg);
 }
 

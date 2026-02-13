@@ -1,37 +1,76 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import '../../css/dashboard.css'; // Shared premium style
+import './css/playerDashboard.css'; // Player specific style
+import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
+
+// Import Sub-Pages
+import Overview from './pages/Overview';
+import Profile from './pages/Profile';
+import Match from './pages/Match';
+import Report from './pages/Report';
+import Tactics from './pages/Tactics';
 
 const PlayerDashboard = () => {
     const { currentUser } = useAuth();
 
     return (
-        <div className="dashboard-container container animate-fade-in">
+        <div className="dashboard-container player-dashboard container animate-fade-in">
             <div className="dashboard-header">
-                <div className="dashboard-header-info">
-                    <h1>Welcome, {currentUser?.name}</h1>
-                    <p className="role-tag">Player Dashboard</p>
+                <div className="dashboard-header-top">
+                    <div className="dashboard-header-info">
+                        <h1>Welcome, {currentUser?.name?.split(' ')[0]}</h1>
+                        <p className="subtitle">Track your performance and receive tactical briefings.</p>
+                    </div>
+                    <div className="role-tag player-tag animate-slide-right">Player Hub</div>
                 </div>
+
+                {/* Navigation Menu */}
+                <nav className="dashboard-nav">
+                    <NavLink
+                        to="/dashboard/player"
+                        end
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Overview
+                    </NavLink>
+                    <NavLink
+                        to="/dashboard/player/profile"
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Profile
+                    </NavLink>
+                    <NavLink
+                        to="/dashboard/player/match"
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Match
+                    </NavLink>
+                    <NavLink
+                        to="/dashboard/player/rapore"
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Rapore
+                    </NavLink>
+                    <NavLink
+                        to="/dashboard/player/tactics"
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Tactics
+                    </NavLink>
+                </nav>
             </div>
 
-            <div className="dashboard-grid">
-                <div className="dashboard-card status-card">
-                    <h2>Current Status</h2>
-                    <p>Training Camp: <span className="status-active">Active</span></p>
-                    <p>Next Match: <span className="match-info">vs WAC (Feb 24)</span></p>
-                </div>
-
-                <div className="dashboard-card stats-card">
-                    <h2>My Stats</h2>
-                    <div className="stat-item">
-                        <span>Games Played</span>
-                        <strong>12</strong>
-                    </div>
-                    <div className="stat-item">
-                        <span>Points Per Game</span>
-                        <strong>18.5</strong>
-                    </div>
-                </div>
+            <div className="dashboard-content" style={{ marginTop: '2rem' }}>
+                <Routes>
+                    <Route path="/" element={<Overview />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="match" element={<Match />} />
+                    <Route path="rapore" element={<Report />} />
+                    <Route path="tactics" element={<Tactics />} />
+                    {/* Handle potential typos or alternative names */}
+                    <Route path="report" element={<Navigate to="rapore" replace />} />
+                </Routes>
             </div>
         </div>
     );

@@ -15,6 +15,8 @@ exports.initTable = async () => {
                 score VARCHAR(50) DEFAULT '-',
                 status VARCHAR(50) DEFAULT 'scheduled',
                 strategy_id JSON,
+                starters JSON,
+                bench JSON,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -22,21 +24,39 @@ exports.initTable = async () => {
         // Migration: Add strategy_id if missing (for existing tables)
         try {
             await db.query('ALTER TABLE matches ADD COLUMN strategy_id JSON AFTER location');
-            console.log('Matches table migrated with strategy_id column');
-        } catch (err) {
-            // Likely already exists
-        }
+        } catch (err) { }
+        // Migration: Add score and status if missing
+        try {
+            await db.query('ALTER TABLE matches ADD COLUMN score VARCHAR(50) DEFAULT "-" AFTER location');
+        } catch (err) { }
+        try {
+            await db.query('ALTER TABLE matches ADD COLUMN status VARCHAR(50) DEFAULT "scheduled" AFTER score');
+        } catch (err) { }
+        try {
+            await db.query('ALTER TABLE matches ADD COLUMN starters JSON AFTER strategy_id');
+        } catch (err) { }
+        try {
+            await db.query('ALTER TABLE matches ADD COLUMN bench JSON AFTER starters');
+        } catch (err) { }
+        console.log('Matches table migrated with new columns');
 
         // 2. Lineups Table
         await db.query(`
             CREATE TABLE IF NOT EXISTS match_lineups (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 match_id VARCHAR(36),
-                player_id INT,
+                player_id VARCHAR(36),
                 is_starter BOOLEAN DEFAULT FALSE,
                 FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE
             )
         `);
+
+        // Migration: Change player_id to VARCHAR if it's currently INT
+        try {
+            await db.query('ALTER TABLE match_lineups MODIFY COLUMN player_id VARCHAR(36)');
+        } catch (err) {
+            // Likely already VARCHAR
+        }
 
         console.log('Match tables initialized');
     } catch (error) {
@@ -155,16 +175,17 @@ exports.saveMatchSquad = async (req, res) => {
     try {
         let finalMatchId = matchId;
         const strategiesSerialized = JSON.stringify(strategyIds || []);
+        const startersSerialized = JSON.stringify(starters || []);
+        const benchSerialized = JSON.stringify(squad ? squad.filter(id => !starters.includes(id)) : []);
 
         // 1. Create Match if ID not provided (scraped match being saved for first time)
         if (!finalMatchId && matchData) {
-            // ... (date/time formatting)
             const [day, month, year] = matchData.date.split('/');
             const formattedDate = `${year}-${month}-${day}`;
             const formattedTime = matchData.time ? `${matchData.time}:00` : '00:00:00';
             const dbDateTime = `${formattedDate} ${formattedTime}`;
 
-            const opponent = matchData.home.includes('HUSA') || matchData.home.includes('Hassania')
+            const opponent = (matchData.home.includes('HUSA') || matchData.home.includes('Hassania'))
                 ? matchData.away
                 : matchData.home;
 
@@ -176,20 +197,20 @@ exports.saveMatchSquad = async (req, res) => {
             if (existing.length > 0) {
                 finalMatchId = existing[0].id;
                 await db.query(
-                    'UPDATE matches SET strategy_id = ? WHERE id = ?',
-                    [strategiesSerialized, finalMatchId]
+                    'UPDATE matches SET strategy_id = ?, starters = ?, bench = ? WHERE id = ?',
+                    [strategiesSerialized, startersSerialized, benchSerialized, finalMatchId]
                 );
             } else {
                 finalMatchId = uuidv4();
                 await db.query(
-                    'INSERT INTO matches (id, opponent, date, location, strategy_id) VALUES (?, ?, ?, ?, ?)',
-                    [finalMatchId, opponent, dbDateTime, matchData.venue, strategiesSerialized]
+                    'INSERT INTO matches (id, opponent, date, location, strategy_id, starters, bench) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    [finalMatchId, opponent, dbDateTime, matchData.venue, strategiesSerialized, startersSerialized, benchSerialized]
                 );
             }
         } else if (finalMatchId) {
             await db.query(
-                'UPDATE matches SET strategy_id = ? WHERE id = ?',
-                [strategiesSerialized, finalMatchId]
+                'UPDATE matches SET strategy_id = ?, starters = ?, bench = ? WHERE id = ?',
+                [strategiesSerialized, startersSerialized, benchSerialized, finalMatchId]
             );
         }
 
@@ -218,5 +239,82 @@ exports.saveMatchSquad = async (req, res) => {
     } catch (error) {
         console.error('Error saving squad:', error);
         res.status(500).json({ message: 'Failed to save squad', error: error.message });
+    }
+};
+
+// Get Matches for a specific player
+exports.getPlayerMatches = async (req, res) => {
+    const { playerName } = req.params;
+    try {
+        // 1. Find player ID by name
+        const [playerRows] = await db.query('SELECT id FROM players WHERE name = ?', [playerName]);
+        if (playerRows.length === 0) {
+            return res.status(404).json({ message: 'Player not found' });
+        }
+        const playerId = playerRows[0].id;
+
+        // 2. Get matches where player is in squad
+        const [matchRows] = await db.query(`
+            SELECT m.*, ml.is_starter 
+            FROM matches m
+            JOIN match_lineups ml ON m.id = ml.match_id
+            WHERE ml.player_id = ?
+            ORDER BY m.date DESC
+        `, [playerId]);
+
+        // 3. For each match, fetch strategy details and full player details for starters/bench
+        const matchesWithDetails = await Promise.all(matchRows.map(async (match) => {
+            let strategyIds = [];
+            try {
+                strategyIds = typeof match.strategy_id === 'string' ? JSON.parse(match.strategy_id) : (match.strategy_id || []);
+            } catch (e) { strategyIds = []; }
+
+            // Fetch Strategies
+            let strategies = [];
+            if (strategyIds.length > 0) {
+                const [stratRows] = await db.query('SELECT * FROM tactics WHERE id IN (?)', [strategyIds]);
+                strategies = stratRows.map(row => ({
+                    ...row,
+                    data: typeof row.data === 'string' ? JSON.parse(row.data) : row.data
+                }));
+            }
+
+            // Fetch Starters Details
+            let starterIds = [];
+            try {
+                starterIds = typeof match.starters === 'string' ? JSON.parse(match.starters) : (match.starters || []);
+            } catch (e) { starterIds = []; }
+
+            let starterDetails = [];
+            if (starterIds.length > 0) {
+                const [starters] = await db.query('SELECT id, name, photo_url, jersey_number, position FROM players WHERE id IN (?)', [starterIds]);
+                // Maintain order if possible (simplified here)
+                starterDetails = starters;
+            }
+
+            // Fetch Bench Details
+            let benchIds = [];
+            try {
+                benchIds = typeof match.bench === 'string' ? JSON.parse(match.bench) : (match.bench || []);
+            } catch (e) { benchIds = []; }
+
+            let benchDetails = [];
+            if (benchIds.length > 0) {
+                const [bench] = await db.query('SELECT id, name, photo_url, jersey_number, position FROM players WHERE id IN (?)', [benchIds]);
+                benchDetails = bench;
+            }
+
+            return {
+                ...match,
+                strategies,
+                starterDetails,
+                benchDetails
+            };
+        }));
+
+        res.json(matchesWithDetails);
+    } catch (error) {
+        console.error('Error fetching player matches:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
