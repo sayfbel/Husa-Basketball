@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import TacticalWorkspace from './TacticalWorkspace.jsx';
@@ -51,10 +52,30 @@ const MiniCourtPreview = ({ tactic }) => {
 const Strategy = () => {
     const [savedTactics, setSavedTactics] = useState([]);
     const { showNotification, showConfirm } = useNotification();
+    const location = useLocation();
 
     useEffect(() => {
         fetchTactics();
     }, []);
+
+    // Handle auto-load from Overview
+    useEffect(() => {
+        if (savedTactics.length > 0 && location.state?.loadTacticId) {
+            const tactic = savedTactics.find(t => t.id === location.state.loadTacticId);
+            if (tactic) {
+                // Short timeout to ensure workspace components are fully ready to receive events
+                setTimeout(() => {
+                    loadTactic(tactic, false); // Skip confirmation for auto-load
+
+                    const workspaceId = `workspace-${tactic.type || 'full'}`;
+                    const element = document.getElementById(workspaceId);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 500);
+            }
+        }
+    }, [savedTactics, location.state]);
 
     const fetchTactics = async () => {
         try {
@@ -79,17 +100,23 @@ const Strategy = () => {
         });
     };
 
-    const loadTactic = (tactic) => {
+    const loadTactic = (tactic, askConfirm = true) => {
         const targetType = tactic.type || 'full';
         const displayType = targetType === 'full' ? 'Full Court' : 'Half Court';
 
-        showConfirm(`Load "${tactic.name}" into ${displayType} workspace?`, () => {
+        const doLoad = () => {
             const event = new CustomEvent(`load-tactic-${targetType}`, {
                 detail: { data: tactic.data }
             });
             window.dispatchEvent(event);
             showNotification(`System "${tactic.name}" loaded to ${displayType}`, 'success');
-        });
+        };
+
+        if (askConfirm) {
+            showConfirm(`Load "${tactic.name}" into ${displayType} workspace?`, doLoad);
+        } else {
+            doLoad();
+        }
     };
 
     const fullCourtTactics = savedTactics.filter(t => (t.type || 'full') === 'full');

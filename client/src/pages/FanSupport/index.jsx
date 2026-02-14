@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './css/fan.css';
@@ -14,11 +14,13 @@ const wydadLogo = "https://upload.wikimedia.org/wikipedia/en/2/2c/Wydad_Athletic
 
 const FanSupport = () => {
     const navigate = useNavigate();
-    const [selectedProduct, setSelectedProduct] = React.useState(null);
-    const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [matches, setMatches] = useState([]);
+    const [loadingMatches, setLoadingMatches] = useState(true);
 
     // Form State
-    const [formData, setFormData] = React.useState({
+    const [formData, setFormData] = useState({
         name: '',
         location: '',
         phone: '',
@@ -49,11 +51,45 @@ const FanSupport = () => {
         }
     ];
 
+    useEffect(() => {
+        const fetchMatchData = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/matches/schedule');
+                setMatches(res.data || []);
+            } catch (err) {
+                console.error("Error fetching match data:", err);
+            } finally {
+                setLoadingMatches(false);
+            }
+        };
+        fetchMatchData();
+    }, []);
+
+    const isPastMatch = (matchDate) => {
+        try {
+            const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
+            if (isNaN(d.getTime())) return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return d < today;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const nextMatchData = matches.find(m => !isPastMatch(m.date)) || matches[0] || null;
+
     const matchDetails = {
-        date: "Saturday, 24 Feb",
-        time: "19:00",
-        opponent: "Wydad AC",
-        location: "Salle Al Inbiaat, Agadir"
+        date: nextMatchData ? (() => {
+            const d = new Date(nextMatchData.date.includes('/') ? nextMatchData.date.split('/').reverse().join('-') : nextMatchData.date);
+            if (isNaN(d.getTime())) return nextMatchData.date;
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+        })() : "Saturday, 24 Feb",
+        time: nextMatchData?.time || "19:00",
+        opponent: nextMatchData ? (nextMatchData.opponent || (nextMatchData.home?.includes('HUSA') ? nextMatchData.away : nextMatchData.home) || 'TBD') : 'Wydad AC',
+        location: nextMatchData?.location || "Salle Al Inbiaat, Agadir"
     };
 
     const handleBuyClick = (product) => {
@@ -133,8 +169,6 @@ const FanSupport = () => {
                         </div>
                     </section>
 
-
-
                     <div className="match-info-grid">
                         {/* Next Match Card */}
                         <section className="match-card">
@@ -203,7 +237,7 @@ const FanSupport = () => {
                                             <div className="t-vs">VS</div>
                                             <div className="t-team">
                                                 <img src={wydadLogo} alt="WAC" className="t-logo" />
-                                                <span className="t-name">WAC</span>
+                                                <span className="t-name">{matchDetails.opponent}</span>
                                             </div>
                                         </div>
                                         <div className="ticket-info-row">

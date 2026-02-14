@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
 import '../css/match.css';
 
-import { Search, User, Users, Shield } from 'lucide-react'; // Added icons
+import { Search, User, Users, Shield, Activity, Send } from 'lucide-react'; // Added icons
 
 const Match = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
     const [players, setPlayers] = useState([]);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [selectedReportMatch, setSelectedReportMatch] = useState(null);
+    const [reportContent, setReportContent] = useState("");
 
     // Match State
     const [matches, setMatches] = useState([]);
@@ -28,12 +31,28 @@ const Match = () => {
     const [fullCourtStrategies, setFullCourtStrategies] = useState([]);
     const [activeStrategyId, setActiveStrategyId] = useState(null);
     const [selectedBriefingStrategies, setSelectedBriefingStrategies] = useState([]); // Array of IDs for the final briefing
+    const scheduleContainerRef = useRef(null);
 
     useEffect(() => {
         fetchPlayers();
-        fetchScrapedMatches();
+        fetchCachedMatches(); // Get from database first (Fast)
         fetchStrategies();
     }, []);
+
+    // Auto-scroll to first non-past match
+    useEffect(() => {
+        if (matches.length > 0 && scheduleContainerRef.current) {
+            const firstUpcomingIndex = matches.findIndex(m => !isPastMatch(m.date));
+            if (firstUpcomingIndex !== -1) {
+                // Approximate card width (280px) + gap (20px)
+                const scrollAmount = firstUpcomingIndex * 300;
+                scheduleContainerRef.current.scrollTo({
+                    left: scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }, [matches]);
 
     const fetchPlayers = async () => {
         try {
@@ -44,12 +63,28 @@ const Match = () => {
         }
     };
 
+    const fetchCachedMatches = async () => {
+        setLoadingMatches(true);
+        try {
+            const res = await axios.get('http://localhost:5000/api/matches/schedule');
+            if (res.data && Array.isArray(res.data)) {
+                setMatches(res.data);
+            }
+        } catch (err) {
+            console.error("Error fetching cached matches:", err);
+        } finally {
+            setLoadingMatches(false);
+        }
+    };
+
     const fetchScrapedMatches = async () => {
         setLoadingMatches(true);
         try {
+            showNotification("Checking for schedule updates from FRMBB...", "info");
             const res = await axios.get('http://localhost:5000/api/matches/scrape');
             if (res.data && Array.isArray(res.data)) {
                 setMatches(res.data);
+                showNotification("Schedule updated successfully.", "success");
             } else {
                 setMatches([]);
             }
@@ -70,9 +105,28 @@ const Match = () => {
         }
     };
 
+    const isPastMatch = (matchDate) => {
+        try {
+            const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
+            if (isNaN(d.getTime())) return false;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return d < today;
+        } catch (e) {
+            return false;
+        }
+    };
+
     // --- Actions ---
 
     const handleSelectMatch = (match) => {
+        if (isPastMatch(match.date)) {
+            setSelectedReportMatch(match);
+            setShowReportModal(true);
+            return;
+        }
+
         setActiveMatch(match);
         // Reset state for new match
         setSelectedPlayers([]);
@@ -84,6 +138,30 @@ const Match = () => {
         showNotification(`Managing squad for vs ${match.home.includes('HUSA') ? match.away : match.home}`, 'info');
         // Scroll to squad section
         document.getElementById('squad-section')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const handleSendMatchReport = async () => {
+        if (!reportContent.trim()) {
+            showNotification("Please enter report content.", "warning");
+            return;
+        }
+        try {
+            const opponent = selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home;
+            await axios.post('http://localhost:5000/api/reports/send', {
+                sender_id: 'coach_id', // Should use auth context id
+                sender_name: 'Staff Coach',
+                recipient_role: 'president',
+                title: `Match Report: vs ${opponent} (${selectedReportMatch.date})`,
+                content: reportContent,
+                type: 'performance',
+                priority: 'normal'
+            });
+            showNotification("Match report transmitted to President.", "success");
+            setShowReportModal(false);
+            setReportContent("");
+        } catch (err) {
+            showNotification("Failed to transmit report.", "error");
+        }
     };
 
     const handleSummon = (playerId) => {
@@ -197,10 +275,15 @@ const Match = () => {
                 </div>
 
                 {matches.length > 0 ? (
-                    <div className="full-custom-scroll" style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px 0 20px 0' }}>
+                    <div
+                        ref={scheduleContainerRef}
+                        className="full-custom-scroll"
+                        style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px 0 20px 0' }}
+                    >
                         {matches.map((match, idx) => {
                             const isHome = match.home.includes('HUSA') || match.home.includes('Hassania');
                             const isActive = activeMatch === match;
+                            const isPast = isPastMatch(match.date);
 
                             // Parse date if possible, otherwise use string
                             let dateDisplay = match.date;
@@ -218,11 +301,11 @@ const Match = () => {
                                 <div
                                     key={idx}
                                     onClick={() => handleSelectMatch(match)}
-                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''}`}
+                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''} ${isPast ? 'past-match-card' : ''}`}
                                     style={{
                                         flex: '0 0 280px',
                                         background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e',
-                                        border: isActive ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)',
+                                        border: isActive ? '2px solid #DB0A40' : (isPast ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)'),
                                         borderRadius: '16px',
                                         padding: '1.5rem',
                                         cursor: 'pointer',
@@ -233,7 +316,8 @@ const Match = () => {
                                         justifyContent: 'space-between',
                                         gap: '1rem',
                                         boxShadow: isActive ? '0 10px 30px rgba(219, 10, 64, 0.2)' : '0 4px 6px rgba(0,0,0,0.2)',
-                                        transform: isActive ? 'translateY(-4px)' : 'none'
+                                        transform: isActive ? 'translateY(-4px)' : 'none',
+                                        filter: isPast ? 'grayscale(0.7) opacity(0.6)' : 'none'
                                     }}
                                     onMouseEnter={(e) => {
                                         if (!isActive) {
@@ -289,8 +373,8 @@ const Match = () => {
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
-                                        <span style={{ fontSize: '0.8rem', color: isActive ? '#DB0A40' : '#666', fontWeight: '600' }}>
-                                            {isActive ? 'Currently Managing' : 'Click to Manage'}
+                                        <span style={{ fontSize: '0.8rem', color: isActive ? '#DB0A40' : (isPast ? '#444' : '#666'), fontWeight: '600' }}>
+                                            {isActive ? 'Currently Managing' : (isPast ? 'Match Concluded' : 'Click to Manage')}
                                         </span>
                                         {isActive && <Shield size={16} color="#DB0A40" />}
                                     </div>
@@ -639,7 +723,7 @@ const Match = () => {
                                                 <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', marginBottom: '8px', border: '2px solid rgba(255,255,255,0.1)' }}>
                                                     <img src={p.photo_url || "/assets/players/default.png"} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
-                                                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                                                <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', width: '100%', marginBottom: '4px' }}>{p.name}</div>
                                                 <div style={{ fontSize: '0.75rem', color: '#888' }}>#{p.jersey_number}</div>
                                                 <div style={{ fontSize: '0.7rem', color: '#666', textAlign: 'center', textTransform: 'uppercase' }}>{p.position}</div>
                                             </div>
@@ -789,6 +873,108 @@ const Match = () => {
                     </div>
                 </div>
             )}
+            {/* Match Paper Modal */}
+            {showReportModal && selectedReportMatch && (
+                <div className="modal-overlay animate-fade-in" style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(15px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '2rem'
+                }}>
+                    <div className="match-paper-card animate-scale-in" style={{
+                        background: '#050505', width: '100%', maxWidth: '650px',
+                        borderRadius: '24px', boxShadow: '0 0 100px rgba(219, 10, 64, 0.15)',
+                        border: '1px solid rgba(219, 10, 64, 0.3)',
+                        position: 'relative', overflow: 'hidden', padding: '2.5rem',
+                        display: 'flex', flexDirection: 'column', color: '#fff'
+                    }}>
+                        {/* Designer Accents */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#DB0A40' }}></div>
+                        <div style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '0.6rem', color: '#333', letterSpacing: '3px', fontWeight: '900' }}>[ AUTH_SECURED_INTEL ]</div>
+
+                        {/* Tactical Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                            <div>
+                                <div className="role-tag coach-tag" style={{ background: '#DB0A40', color: '#fff', fontSize: '0.6rem', padding: '3px 10px', marginBottom: '8px' }}>OFFICIAL LOG</div>
+                                <h1 style={{ margin: 0, fontSize: '1.8rem', letterSpacing: '-1px', fontWeight: '950', textTransform: 'uppercase', fontStyle: 'italic' }}>Match Intel</h1>
+                                <p style={{ color: '#666', fontSize: '0.75rem', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Outcome & Tactical Analysis</p>
+                            </div>
+                            <button
+                                onClick={() => setShowReportModal(false)}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', width: '40px', height: '40px', borderRadius: '50%', color: '#666', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Match Metadata Pill */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
+                                <label style={{ fontSize: '0.55rem', color: '#444', fontWeight: '900', display: 'block', marginBottom: '2px' }}>OPPONENT</label>
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home}</span>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
+                                <label style={{ fontSize: '0.55rem', color: '#444', fontWeight: '900', display: 'block', marginBottom: '2px' }}>ENGAGEMENT_DATE</label>
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedReportMatch.date}</span>
+                            </div>
+                            <div style={{ background: 'rgba(219, 10, 64, 0.1)', border: '1px solid rgba(219, 10, 64, 0.2)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
+                                <label style={{ fontSize: '0.55rem', color: '#DB0A40', fontWeight: '900', display: 'block', marginBottom: '2px' }}>FINAL_STATUS</label>
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#DB0A40' }}>CONCLUDED</span>
+                            </div>
+                        </div>
+
+                        {/* Analysis Input */}
+                        <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '0.65rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '3px', marginBottom: '1rem', display: 'block' }}>COMPOSE TACTICAL REPORT</label>
+                            <div style={{ position: 'relative' }}>
+                                <textarea
+                                    value={reportContent}
+                                    onChange={(e) => setReportContent(e.target.value)}
+                                    placeholder="Execute final analysis..."
+                                    style={{
+                                        width: '100%', minHeight: '180px', background: 'rgba(255,255,255,0.01)',
+                                        border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem', lineHeight: '1.6',
+                                        fontFamily: '"Geist Mono", "JetBrains Mono", monospace', outline: 'none',
+                                        padding: '1.2rem', borderRadius: '14px', color: '#ccc', resize: 'none'
+                                    }}
+                                />
+                                <div style={{ position: 'absolute', bottom: '10px', right: '15px', pointerEvents: 'none' }}>
+                                    <Activity size={24} color="rgba(219, 10, 64, 0.2)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#DB0A40', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                    <Shield size={18} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fff' }}>STAFF_VERIFIED</div>
+                                    <div style={{ fontSize: '0.65rem', color: '#444' }}>COACH_TRANSMISSION</div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSendMatchReport}
+                                style={{
+                                    background: '#DB0A40', color: '#fff', border: 'none',
+                                    padding: '12px 30px', borderRadius: '100px', fontWeight: '950',
+                                    cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase',
+                                    fontSize: '0.8rem', boxShadow: '0 8px 30px rgba(219, 10, 64, 0.3)',
+                                    display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02) translateY(-2px)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
+                            >
+                                <Send size={16} />
+                                Transmit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

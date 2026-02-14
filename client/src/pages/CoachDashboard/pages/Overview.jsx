@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     Users,
@@ -17,6 +18,7 @@ import '../../../css/dashboard.css';
 import '../css/overview.css';
 
 const Overview = () => {
+    const navigate = useNavigate();
     const [players, setPlayers] = useState([]);
     const [strategies, setStrategies] = useState([]);
     const [matches, setMatches] = useState([]);
@@ -28,7 +30,7 @@ const Overview = () => {
                 const [playersRes, strategiesRes, matchesRes] = await Promise.all([
                     axios.get('http://localhost:5000/api/players'),
                     axios.get('http://localhost:5000/api/strategies'),
-                    axios.get('http://localhost:5000/api/matches')
+                    axios.get('http://localhost:5000/api/matches/schedule')
                 ]);
 
                 setPlayers(playersRes.data || []);
@@ -43,7 +45,19 @@ const Overview = () => {
         fetchData();
     }, []);
 
-    const nextMatch = matches[0] || null;
+    const isPastMatch = (matchDate) => {
+        try {
+            const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
+            if (isNaN(d.getTime())) return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return d < today;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const nextMatch = (matches || []).find(m => !isPastMatch(m.date)) || matches[0] || null;
     const opponent = nextMatch ? (nextMatch.opponent || (nextMatch.home?.includes('HUSA') ? nextMatch.away : nextMatch.home) || 'TBD') : 'TBD';
 
     return (
@@ -147,7 +161,10 @@ const Overview = () => {
                                 <span>{nextMatch?.time || '20:00'}</span>
                             </div>
                         </div>
-                        <button className="intel-btn-primary">
+                        <button
+                            className="intel-btn-primary"
+                            onClick={() => navigate('/dashboard/coach/match')}
+                        >
                             INITIALIZE MATCH PREP <ChevronRight size={18} />
                         </button>
                     </div>
@@ -162,7 +179,12 @@ const Overview = () => {
                         </div>
                         <div className="feed-list">
                             {strategies.slice(0, 3).map(strategy => (
-                                <div className="feed-item" key={strategy.id}>
+                                <div
+                                    className="feed-item"
+                                    key={strategy.id}
+                                    onClick={() => navigate('/dashboard/coach/strategy', { state: { loadTacticId: strategy.id } })}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="item-marker"></div>
                                     <div className="item-info">
                                         <span className="item-name">{strategy.name}</span>
@@ -207,7 +229,10 @@ const Overview = () => {
                             <div className="transmission-uplink-sub">Submit technical intelligence directly to club leadership.</div>
                         </div>
                     </div>
-                    <button className="intel-btn-primary uplink-btn">
+                    <button
+                        className="intel-btn-primary uplink-btn"
+                        onClick={() => navigate('/dashboard/coach/report')}
+                    >
                         ESTABLISH UPLINK
                     </button>
                 </div>

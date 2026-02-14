@@ -58,6 +58,21 @@ exports.initTable = async () => {
             // Likely already VARCHAR
         }
 
+        // 3. Match Schedule Table (Scraped Data Cache)
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS match_schedule (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                date VARCHAR(50),
+                time VARCHAR(50),
+                venue VARCHAR(255),
+                home VARCHAR(255),
+                away VARCHAR(255),
+                score VARCHAR(50),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_match (date, home, away)
+            )
+        `);
+
         console.log('Match tables initialized');
     } catch (error) {
         console.error('Error initializing match tables:', error);
@@ -74,32 +89,14 @@ exports.scrapeMatches = async (req, res) => {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
 
-        let matches = [];
-        // 2. Scan ALL tables and rows for HUSA matches
-        // This bypasses specific header detection ('Groupe -3-') which can be brittle.
-        // We look for any row containing "HUSA" or "Hassania".
+        let scrapedMatches = [];
 
         $('table tr').each((i, row) => {
             const cols = $(row).find('td');
             if (cols.length > 0) {
                 const rowText = $(row).text().replace(/\s+/g, ' ').toUpperCase();
 
-                // Check for HUSA in the row
                 if (rowText.includes('HUSA') || rowText.includes('HASSANIA')) {
-
-                    // Column Mapping based on observed FRMBB structure:
-                    // Col 0: ID (1DNH...)
-                    // Col 1: Date (dd/mm/yyyy)
-                    // Col 2: Time (hh:mm)
-                    // Col 3: Venue
-                    // Col 4: Home Team
-                    // Col 5: Away Team
-                    // Col 6: Home Score
-                    // Col 7: Away Score
-
-                    // Robustness check: Ensure we have enough columns
-                    // Sometimes tables might be simpler. Let's try to detect based on content.
-
                     let date = $(cols[1]).text().trim();
                     let time = $(cols[2]).text().trim();
                     let venue = $(cols[3]).text().trim();
@@ -108,18 +105,13 @@ exports.scrapeMatches = async (req, res) => {
                     let scoreHome = $(cols[6]).text().trim();
                     let scoreAway = $(cols[7]).text().trim();
 
-                    // If Col 0 is NOT an ID but the date (shorter tables), shift indices
-                    // Check if Col 0 looks like a date (DD/MM/YYYY)
                     const col0Text = $(cols[0]).text().trim();
                     if (col0Text.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
                         date = $(cols[0]).text().trim();
                         time = $(cols[1]).text().trim();
-                        venue = $(cols[2]).text().trim(); // Or Home
-                        // This shift logic depends on the specific variant.
-                        // Given the user's screenshot showed ID in Col 0, we stick to the first mapping primarily.
+                        venue = $(cols[2]).text().trim();
                     }
 
-                    // Format Score
                     let finalScore = '-';
                     if (scoreHome && scoreAway) {
                         finalScore = `${scoreHome} - ${scoreAway}`;
@@ -127,34 +119,46 @@ exports.scrapeMatches = async (req, res) => {
                         finalScore = scoreHome;
                     }
 
-                    // Avoid adding duplicate entries if the page lists the same match twice (rare but possible)
-                    // Key: Date + Home + Away
-                    const duplicateCheck = matches.find(m => m.date === date && m.home === home && m.away === away);
-
-                    if (!duplicateCheck && date && home && away) {
-                        matches.push({
-                            date,
-                            time,
-                            home,
-                            away,
-                            score: finalScore,
-                            venue
-                        });
+                    if (date && home && away) {
+                        scrapedMatches.push([date, time, venue, home, away, finalScore]);
                     }
                 }
             }
         });
 
-        if (matches.length === 0) {
-            // It's possible we didn't find specific headers, or HUSA hasn't played/been scheduled
-            return res.json([]);
+        if (scrapedMatches.length > 0) {
+            // UPSERT into database
+            // We use INSERT ... ON DUPLICATE KEY UPDATE
+            for (const match of scrapedMatches) {
+                await db.query(`
+                    INSERT INTO match_schedule (date, time, venue, home, away, score)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                    time = VALUES(time),
+                    venue = VALUES(venue),
+                    score = VALUES(score)
+                `, match);
+            }
         }
 
-        res.json(matches);
+        // Return the updated schedule from DB
+        const [rows] = await db.query('SELECT * FROM match_schedule ORDER BY id ASC');
+        res.json(rows);
 
     } catch (error) {
-        console.error('Error scraping matches:', error.message);
-        res.status(500).json({ message: 'Failed to scrape data', error: error.message });
+        console.error('Error scraping/syncing matches:', error.message);
+        res.status(500).json({ message: 'Failed to sync match data', error: error.message });
+    }
+};
+
+// Get Scraped Matches from Database (Fast)
+exports.getCachedMatches = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM match_schedule ORDER BY id ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching cached matches:', error.message);
+        res.status(500).json({ message: 'Failed to fetch cached matches', error: error.message });
     }
 };
 

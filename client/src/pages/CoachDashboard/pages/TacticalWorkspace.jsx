@@ -301,7 +301,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
 
     return (
         <>
-            <div className="strategy-card" style={{ width: '100%', marginBottom: '2rem' }}>
+            <div id={`workspace-${type}`} className="strategy-card" style={{ width: '100%', marginBottom: '2rem' }}>
                 <div className="card-header-flex">
                     <h2>{title}</h2>
                     <span className="live-indicator">ACTIVE</span>
@@ -391,7 +391,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                     className="remove-token-btn"
                                     title="Remove from court"
                                 >
-                                    <Trash2 size={14} />
+                                    <X size={16} />
                                 </button>
                             </div>
                         ))}

@@ -7,6 +7,11 @@
     align-items: stretch;
 }
 
+.court-and-sidebar {
+    display: flex;
+    padding: 1rem;
+}
+
 .strategy-registry-card {
     background: rgba(20, 20, 20, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -158,24 +163,94 @@
     z-index: 0;
 }
 
-/* Tactical Workspace additions */
+/* Tactical Workspace Sidebar (On Court) */
 .active-players-sidebar {
-    width: 180px;
-    background: #151515;
-    border-radius: 8px;
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 220px;
+    border-radius: 12px;
+    padding: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     overflow-y: auto;
+    margin-right: 15px;
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-group-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #555;
+    margin-bottom: 1.2rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-group-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 12px;
+    background: var(--dash-primary);
+    border-radius: 2px;
 }
 
 .sidebar-token-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 6px 10px;
-    border-radius: 4px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    transition: all 0.2s ease;
+}
+
+.sidebar-token-row:hover {
+    background: rgba(219, 10, 64, 0.05);
+    border-color: rgba(219, 10, 64, 0.2);
+    transform: translateX(4px);
+}
+
+.sidebar-token-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+
+.remove-token-btn {
+    background: transparent;
+    border: none;
+    color: #444;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.remove-token-btn:hover {
+    background: rgba(255, 77, 77, 0.15);
+    color: #ff4d4d;
+    transform: rotate(90deg);
+}
+
+.no-players-hint {
+    font-size: 0.8rem;
+    color: #333;
+    font-style: italic;
+    text-align: center;
+    margin-top: 2rem;
 }
 
 .court-board.interactive-board {
