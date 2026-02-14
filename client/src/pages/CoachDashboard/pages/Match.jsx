@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
+import '../css/match.css';
 
 import { Search, User, Users, Shield } from 'lucide-react'; // Added icons
 

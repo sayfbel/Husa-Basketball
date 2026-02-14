@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext'; // Adjusted path
+import '../css/tacticsBoard.css';
 import {
     Move,
     Pencil,

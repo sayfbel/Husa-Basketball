@@ -1,0 +1,188 @@
+/* Strategy Page Layout */
+.strategy-container {
+    padding-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.strategy-registry-card {
+    background: rgba(20, 20, 20, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 0;
+    padding: 1rem 1.25rem;
+    border-radius: 16px;
+    max-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.8rem;
+    overflow-y: auto;
+    padding-right: 8px;
+    padding-bottom: 8px;
+}
+
+/* Custom Scrollbar for Registry */
+.strategy-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.strategy-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.strategy-grid::-webkit-scrollbar-thumb {
+    background: rgba(219, 10, 64, 0.3);
+    border-radius: 10px;
+}
+
+.strategy-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(219, 10, 64, 0.5);
+}
+
+/* Strategy Headers Compact */
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.strategy-registry-card .prep-title-box {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #fff;
+    font-weight: 700;
+}
+
+.strategy-registry-card .archive-subtitle {
+    margin: 2px 0 0 0;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+/* Tactic Item Premium */
+.tactic-item-premium {
+    position: relative;
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(15, 15, 15, 0.95));
+    padding: 0.8rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 120px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.tactic-item-premium:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: var(--dash-primary);
+    box-shadow: 0 10px 30px rgba(219, 10, 64, 0.2);
+}
+
+.tactic-info-box {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.tactic-name-label {
+    margin: 0;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tactic-action-hint {
+    font-size: 0.65rem;
+    color: var(--dash-primary);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.delete-tactic-btn {
+    background: rgba(255, 77, 77, 0.15);
+    border: none;
+    color: #ff4d4d;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.delete-tactic-btn:hover {
+    background: #ff4d4d !important;
+    color: #fff !important;
+}
+
+/* Mini Court Preview */
+.mini-court-preview {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.preview-gradient-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.4), transparent);
+    z-index: 0;
+}
+
+/* Tactical Workspace additions */
+.active-players-sidebar {
+    width: 180px;
+    background: #151515;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+}
+
+.sidebar-token-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 10px;
+    border-radius: 4px;
+}
+
+.court-board.interactive-board {
+    flex: 1;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1a1a1a;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}

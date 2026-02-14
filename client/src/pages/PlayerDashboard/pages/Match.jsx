@@ -19,7 +19,57 @@ import {
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
-const ReadOnlyCourt = ({ frames, type = 'full' }) => {
+const MiniCourtPreview = ({ tactic }) => {
+    const data = typeof tactic.data === 'string' ? JSON.parse(tactic.data) : (tactic.data || []);
+    const firstFrame = data?.[0] || { tokens: [], paths: [] };
+    const type = tactic.type || 'full';
+    const viewBoxH = type === 'full' ? 560 : 470;
+    const viewBoxW = type === 'full' ? 1000 : 500;
+    const themeColor = '#DB0A40';
+
+    return (
+        <div className="mini-court-preview" style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 0,
+            pointerEvents: 'none',
+            overflow: 'hidden'
+        }}>
+            <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} style={{
+                width: '100%',
+                height: '100%',
+                opacity: 0.3,
+                maskImage: 'linear-gradient(to left, white 40%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to left, white 40%, transparent 100%)'
+            }}>
+                <rect width={viewBoxW} height={viewBoxH} fill="none" stroke={themeColor} strokeWidth="2" opacity="0.2" />
+                {viewBoxW === 1000 && <line x1="500" y1="0" x2="500" y2="560" stroke="#fff" strokeWidth="1" opacity="0.1" />}
+                <circle cx={viewBoxW / 2} cy={viewBoxW === 1000 ? 280 : 205} r={viewBoxW === 1000 ? 70 : 60} fill="none" stroke={themeColor} strokeWidth="1" opacity="0.2" />
+
+                {firstFrame.paths?.map((d, i) => (
+                    <path key={`path-${i}`} d={d} stroke="#fcd34d" strokeWidth="6" fill="none" opacity="0.3" strokeDasharray="10,5" />
+                ))}
+
+                {firstFrame.tokens && firstFrame.tokens.map((token, idx) => (
+                    <circle
+                        key={idx}
+                        cx={`${token.x * (viewBoxW / 100)}`}
+                        cy={`${token.y * (viewBoxH / 100)}`}
+                        r="18"
+                        fill={token.type === 'offense' ? '#DB0A40' : token.type === 'defense' ? '#000' : '#f97316'}
+                        stroke={token.type === 'defense' ? 'rgba(255,255,255,0.2)' : 'none'}
+                        strokeWidth="2"
+                    />
+                ))}
+            </svg>
+        </div>
+    );
+};
+
+const ReadOnlyCourt = ({ frames, type = 'full', players = [] }) => {
     const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const playInterval = useRef(null);
@@ -82,28 +132,69 @@ const ReadOnlyCourt = ({ frames, type = 'full' }) => {
                     ))}
                 </svg>
 
-                {currentFrame.tokens?.map((token, idx) => (
-                    <div
-                        key={idx}
-                        className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`}
-                        style={{
-                            position: 'absolute',
-                            top: `${token.y}%`,
-                            left: `${token.x}%`,
-                            width: token.type === 'ball' ? '30px' : '40px',
-                            height: token.type === 'ball' ? '30px' : '40px',
-                            transform: 'translate(-50%, -50%)',
-                            transition: isPlaying ? 'all 800ms ease' : 'all 300ms ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            pointerEvents: 'none',
-                            zIndex: token.type === 'ball' ? 5 : 2
-                        }}
-                    >
-                        {token.label}
-                    </div>
-                ))}
+                {/* Tokens Layer */}
+                {currentFrame.tokens?.map((token, idx) => {
+                    // Logic to find player for this token
+                    let player = null;
+                    if (token.type === 'offense' && players && players.length > 0) {
+                        const posNumber = parseInt(token.label);
+                        if (!isNaN(posNumber) && posNumber >= 1 && posNumber <= 5) {
+                            player = players[posNumber - 1]; // Use index or specific mapping
+                        }
+                    }
+
+                    return (
+                        <div
+                            key={idx}
+                            style={{
+                                position: 'absolute',
+                                top: `${token.y}%`,
+                                left: `${token.x}%`,
+                                width: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
+                                height: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
+                                transform: 'translate(-50%, -50%)',
+                                transition: isPlaying ? 'all 800ms ease' : 'all 300ms ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                pointerEvents: 'none',
+                                zIndex: token.type === 'ball' ? 5 : 2
+                            }}
+                        >
+                            {player ? (
+                                <div style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    border: '2px solid #fff',
+                                    overflow: 'hidden',
+                                    background: '#000',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                                    position: 'relative'
+                                }}>
+                                    <img src={player.photo_url || "/assets/players/default.png"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        width: '100%',
+                                        background: 'rgba(0,0,0,0.8)',
+                                        color: '#fff',
+                                        fontSize: '10px',
+                                        fontWeight: '950',
+                                        textAlign: 'center',
+                                        padding: '2px 0'
+                                    }}>
+                                        #{player.jersey_number}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {token.label}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             <div style={{ padding: '15px', background: '#0a0a0a', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
@@ -319,12 +410,13 @@ const Match = () => {
                                             <div className="systems-feed-v2">
                                                 {selectedMatch.strategies?.length > 0 ? (
                                                     selectedMatch.strategies.map(strat => (
-                                                        <div key={strat.id} className="strat-card-v2" onClick={() => setSelectedTactic(strat)}>
-                                                            <div className="strat-card-info">
+                                                        <div key={strat.id} className="strat-card-v2" onClick={() => setSelectedTactic(strat)} style={{ position: 'relative', overflow: 'hidden' }}>
+                                                            <div className="strat-card-info" style={{ position: 'relative', zIndex: 2 }}>
                                                                 <h5>{strat.name}</h5>
                                                                 <span>{strat.type?.toUpperCase()} COURT SYSTEM</span>
                                                             </div>
-                                                            <div className="study-btn-v2">
+                                                            <MiniCourtPreview tactic={strat} />
+                                                            <div className="study-btn-v2" style={{ position: 'relative', zIndex: 2 }}>
                                                                 <Play size={12} fill="currentColor" />
                                                                 STUDY
                                                             </div>
@@ -372,10 +464,11 @@ const Match = () => {
                             </button>
                         </div>
                         <div className="modal-body-v2">
-                            <div style={{ width: '80%', maxWidth: '1400px', height: '100%' }}>
+                            <div style={{ width: '100%', maxWidth: '850px' }}>
                                 <ReadOnlyCourt
                                     frames={typeof selectedTactic.data === 'string' ? JSON.parse(selectedTactic.data) : (selectedTactic.data || [])}
                                     type={selectedTactic.type}
+                                    players={selectedMatch.starterDetails}
                                 />
                             </div>
                         </div>

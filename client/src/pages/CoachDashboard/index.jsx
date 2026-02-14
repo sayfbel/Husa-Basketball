@@ -10,12 +10,13 @@ import Players from './pages/Players';
 import Strategy from './pages/Strategy';
 import Report from './pages/Report';
 import Match from './pages/Match';
+import Profile from './pages/Profile';
 
 const CoachDashboard = () => {
     const { currentUser } = useAuth();
 
     return (
-        <div className="dashboard-container container animate-fade-in">
+        <div className="dashboard-container container">
             <div className="dashboard-header">
                 <div className="dashboard-header-top">
                     <div className="dashboard-header-info">
@@ -27,9 +28,10 @@ const CoachDashboard = () => {
                 {/* Navigation Menu */}
                 <nav className="dashboard-nav">
                     <NavLink to="/dashboard/coach" end className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Overview</NavLink>
+                    <NavLink to="/dashboard/coach/profile" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Profile</NavLink>
+                    <NavLink to="/dashboard/coach/report" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Report</NavLink>
                     <NavLink to="/dashboard/coach/players" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Players</NavLink>
                     <NavLink to="/dashboard/coach/strategy" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Strategy</NavLink>
-                    <NavLink to="/dashboard/coach/report" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Report</NavLink>
                     <NavLink to="/dashboard/coach/match" className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}>Match</NavLink>
                 </nav>
             </div>
@@ -43,6 +45,7 @@ const CoachDashboard = () => {
                     <Route path="report" element={<Report />} />
                     <Route path="raport" element={<Navigate to="report" replace />} /> {/* Typo redirect */}
                     <Route path="match" element={<Match />} />
+                    <Route path="profile" element={<Profile />} />
                 </Routes>
             </div>
         </div>

@@ -1,0 +1,101 @@
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-grid .player-card {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    height: 100%;
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--dash-primary);
+    box-shadow: 0 10px 30px rgba(219, 10, 64, 0.2);
+}
+
+.player-card-image {
+    position: relative;
+    height: 350px;
+    background: #0a0a0a;
+    overflow: hidden;
+}
+
+.player-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    transition: transform 0.5s ease;
+}
+
+.player-card:hover .player-card-image img {
+    transform: scale(1.05);
+}
+
+/* Gradient Mask to transition into content */
+.player-card-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to top, #111 0%, transparent 100%);
+    z-index: 1;
+}
+
+.player-number {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--dash-primary);
+    color: #fff;
+    padding: 10px 15px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    border-radius: 12px;
+    font-family: var(--font-accent);
+    z-index: 2;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.player-card-info {
+    padding: 1.5rem;
+}
+
+.player-card-info h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.player-pos {
+    color: var(--dash-primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 5px 0 15px 0;
+}
+
+.player-stats-mini {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.player-stats-mini span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #666;
+}

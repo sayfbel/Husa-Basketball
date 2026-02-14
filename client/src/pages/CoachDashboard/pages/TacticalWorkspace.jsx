@@ -362,35 +362,21 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                     </div>
                 </div>
 
-                <div className="court-and-sidebar" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div className="court-and-sidebar">
                     {/* Active Players Sidebar */}
                     <div className="active-players-sidebar full-custom-scroll" style={{
-                        width: '180px',
-                        background: '#151515',
-                        borderRadius: '8px',
-                        padding: '10px',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        maxHeight: type === 'full' ? '560px' : '470px',
-                        overflowY: 'auto'
+                        maxHeight: type === 'full' ? '560px' : '470px'
                     }}>
-                        <h3 style={{ fontSize: '0.9rem', color: '#888', marginBottom: '10px', textTransform: 'uppercase' }}>On Court</h3>
-                        {currentTokens.length === 0 && <p style={{ fontSize: '0.8rem', color: '#555', fontStyle: 'italic' }}>No players</p>}
+                        <h3 className="sidebar-group-title">On Court</h3>
+                        {currentTokens.length === 0 && <p className="no-players-hint">No players</p>}
                         {currentTokens.map((token, idx) => (
-                            <div key={idx} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: '8px',
-                                background: 'rgba(255,255,255,0.05)',
-                                padding: '6px 10px',
-                                borderRadius: '4px'
-                            }}>
+                            <div key={idx} className="sidebar-token-row">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`}
                                         style={{ position: 'relative', width: '20px', height: '20px', fontSize: '0.6rem', transform: 'none', top: 'auto', left: 'auto' }}>
                                         {token.label}
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                                    <span className="sidebar-token-label">
                                         {token.type === 'offense' ? (
                                             token.label == '1' ? 'Point Guard (1)' :
                                                 token.label == '2' ? 'Shooting Guard (2)' :
@@ -402,7 +388,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                 </div>
                                 <button
                                     onClick={() => removeToken(token.id)}
-                                    style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    className="remove-token-btn"
                                     title="Remove from court"
                                 >
                                     <Trash2 size={14} />
@@ -416,8 +402,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                         ref={courtRef}
                         onMouseDown={handleBoardMouseDown}
                         style={{
-                            cursor: mode === 'draw' ? 'crosshair' : (mode === 'erase' ? 'not-allowed' : 'default'),
-                            flex: 1
+                            cursor: mode === 'draw' ? 'crosshair' : (mode === 'erase' ? 'not-allowed' : 'default')
                         }}
                     >
                         {/* Drawing Layer */}

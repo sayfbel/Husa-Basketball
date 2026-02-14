@@ -8,6 +8,7 @@
 
 .dashboard-container {
     padding-top: 6rem !important;
+    padding-bottom: 6rem !important;
     min-height: 100vh;
     color: #fff;
     font-family: 'Poppins', sans-serif;
@@ -715,7 +716,7 @@
 .step-item.active .step-circle {
     background: var(--dash-primary);
     border-color: var(--dash-primary);
-    box-shadow: 0 0 15px rgba(219, 10, 64, 0.4);
+    box-shadow: 0 0 15px rgba(52, 219, 10, 0.4);
 }
 
 .step-item.completed .step-circle {

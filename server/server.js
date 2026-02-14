@@ -26,6 +26,7 @@ app.use('/api/matches', require('./routes/matchRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/reservations', require('./routes/reservationRoutes'));
 app.use('/api/store-reservations', require('./routes/storeReservationRoutes'));
+app.use('/api/staff', require('./routes/staffRoutes'));
 
 // app.use('/api/news', require('./routes/news'));
 

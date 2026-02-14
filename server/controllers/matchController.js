@@ -158,6 +158,17 @@ exports.scrapeMatches = async (req, res) => {
     }
 };
 
+// Get all matches from Database
+exports.getMatches = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM matches ORDER BY date ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching matches:', error.message);
+        res.status(500).json({ message: 'Failed to fetch matches', error: error.message });
+    }
+};
+
 // Save Matches and Squads
 exports.saveMatchSquad = async (req, res) => {
     // Expected Payload:
@@ -288,8 +299,8 @@ exports.getPlayerMatches = async (req, res) => {
             let starterDetails = [];
             if (starterIds.length > 0) {
                 const [starters] = await db.query('SELECT id, name, photo_url, jersey_number, position FROM players WHERE id IN (?)', [starterIds]);
-                // Maintain order if possible (simplified here)
-                starterDetails = starters;
+                // Re-order to match starterIds array (1-5 positions)
+                starterDetails = starterIds.map(id => starters.find(s => s.id === id)).filter(Boolean);
             }
 
             // Fetch Bench Details

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -6,6 +5,7 @@ import { useNotification } from '../../../components/Notification/Notification.j
 import { Send, User, Users, Shield, CheckCircle, Plus, Activity, Mail, Bell, X, ChevronRight, Clock } from 'lucide-react';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import '../../../css/dashboard.css';
+import '../css/report.css';
 
 const Report = () => {
     const { currentUser } = useAuth();
@@ -143,10 +143,119 @@ const Report = () => {
 
     if (loading) return <div className="loading-spinner">Accessing Tactical Comms...</div>;
 
-    return (
-        <div className="animate-fade-in report-page-refined">
-            <div className="single-col-report-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    const sentByCoach = reports.filter(r => r.sender_id === currentUser.id);
+    const receivedFromPlayers = reports.filter(r => r.sender_id !== currentUser.id);
+    const pendingAction = receivedFromPlayers.filter(r => !r.response).length;
+    const awaitingPlayers = sentByCoach.filter(r => !r.response).length;
 
+    return (
+        <div className="report-layout-v2 animate-fade-in dashboard-fashion-theme">
+            {/* Intel Feed Column */}
+            <div className="report-feed-column">
+                <div className="transmission-status-summary-v2">
+                    <div className="stat-pill-v2">
+                        <div className="stat-label">ACTION REQUIRED</div>
+                        <div className="stat-value" style={{ color: pendingAction > 0 ? 'var(--dash-primary)' : '#444' }}>
+                            {pendingAction.toString().padStart(2, '0')}
+                        </div>
+                    </div>
+                    <div className="stat-pill-v2">
+                        <div className="stat-label">OPEN BRIEFINGS</div>
+                        <div className="stat-value" style={{ color: awaitingPlayers > 0 ? '#fcd34d' : '#444' }}>
+                            {awaitingPlayers.toString().padStart(2, '0')}
+                        </div>
+                    </div>
+                    <div className="stat-pill-v2">
+                        <div className="stat-label">TOTAL LOGS</div>
+                        <div className="stat-value">{reports.length.toString().padStart(2, '0')}</div>
+                    </div>
+                </div>
+
+                <div className="section-title-fancy">
+                    <Mail size={24} color="var(--dash-primary)" />
+                    <h2>Communication Log</h2>
+                    <div className="dot-line"></div>
+                    <button
+                        className={`filter-btn-v2 ${viewMode === 'status' ? 'active' : ''}`}
+                        onClick={() => setViewMode(viewMode === 'status' ? 'create' : 'status')}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '5px 15px', borderRadius: '30px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        {viewMode === 'create' ? 'VIEW ARCHIVE' : 'NEW TRANSMISSION'}
+                    </button>
+                </div>
+
+                <div className="reports-log-v2">
+                    {/* Special Aggregated Card for Sent Messages */}
+                    <div
+                        className={`report-card-v2 archive-card ${viewMode === 'archive' ? 'selected' : ''}`}
+                        onClick={() => {
+                            setViewMode('archive');
+                            setSelectedReport(null);
+                        }}
+                    >
+                        <div className="card-accent" style={{ background: '#fcd34d' }}></div>
+                        <div className="report-card-main">
+                            <div className="report-card-icon" style={{ color: '#fcd34d' }}>
+                                <Send size={18} />
+                            </div>
+                            <div className="report-card-info">
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <span className="type-tag" style={{ color: '#fcd34d', borderColor: 'rgba(252, 211, 77, 0.2)' }}>ARCHIVE</span>
+                                </div>
+                                <h4>Sent Transmissions</h4>
+                                <div className="report-card-meta">
+                                    {sentByCoach.length} official briefings logged
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {receivedFromPlayers.length === 0 ? (
+                        <div className="empty-feed-v2">
+                            <Activity size={32} />
+                            <p>No communications recorded in the tactical log.</p>
+                        </div>
+                    ) : (
+                        receivedFromPlayers.map(report => (
+                            <div
+                                key={report.id}
+                                className={`report-card-v2 ${selectedReport?.id === report.id ? 'selected' : ''}`}
+                                onClick={() => {
+                                    setSelectedReport(report);
+                                    setViewMode('status');
+                                }}
+                            >
+                                <div className="card-accent"></div>
+                                <div className="report-card-main">
+                                    <div className="report-card-icon">
+                                        <Mail size={18} />
+                                    </div>
+                                    <div className="report-card-info">
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <span className="type-tag">{report.type.toUpperCase()}</span>
+                                            {report.priority === 'urgent' || report.priority === 'critical' || report.priority === 'high' ? <div className="urgent-dot"></div> : null}
+                                        </div>
+                                        <h4>{report.title}</h4>
+                                        <div className="report-card-meta">
+                                            From: {report.sender_name}
+                                            <span>•</span>
+                                            {formatDate(report.created_at)}
+                                        </div>
+                                    </div>
+                                    {report.response && (
+                                        <div style={{ marginLeft: 'auto', color: '#4cd137' }}>
+                                            <Shield size={16} />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Command Center Column */}
+            <div className="report-briefing-column">
                 {viewMode === 'create' ? (
                     <div className="briefing-container-v2 animate-slide-up">
                         <div className="briefing-banner report-bg">
@@ -159,7 +268,7 @@ const Report = () => {
 
                         <div className="briefing-core">
                             <div className="recipient-selector" style={{ marginBottom: '2rem' }}>
-                                <label style={{ fontSize: '0.7rem', fontWeight: '950', color: '#444', marginBottom: '1rem', display: 'block', letterSpacing: '1px' }}>TARGET RECIPIENTS</label>
+                                <label style={{ fontSize: '0.6rem', fontWeight: '950', color: '#444', marginBottom: '1rem', display: 'block', letterSpacing: '2px' }}>TARGET RECIPIENTS</label>
                                 <div className="selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px' }}>
                                     <div
                                         className={`selectable-card president-card ${sendToPresident ? 'selected' : ''}`}
@@ -188,7 +297,7 @@ const Report = () => {
 
                             <form onSubmit={handleSendReport} className="inline-submission-form">
                                 <div className="form-layout-refined">
-                                    <div className="form-group-refined full">
+                                    <div className="form-group-refined">
                                         <label>SUBJECT LINE</label>
                                         <input
                                             type="text"
@@ -225,7 +334,7 @@ const Report = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="form-group-refined full">
+                                    <div className="form-group-refined">
                                         <label>BRIEFING CONTENT</label>
                                         <textarea
                                             rows="8"
@@ -245,96 +354,123 @@ const Report = () => {
                             </form>
                         </div>
                     </div>
-                ) : (
-                    <div className="status-page-v2 animate-slide-up">
-                        <div className="section-title-fancy" style={{ marginBottom: '2rem' }}>
-                            <Activity size={24} color="var(--dash-primary)" />
-                            <h2>Tactical Comms Archive</h2>
-                            <button className="back-link-v2" onClick={() => setViewMode('create')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.7rem' }}>
-                                BACK TO COMMAND
-                            </button>
-                        </div>
-
-                        <div className="status-grid-v2">
-                            {reports.map(report => (
-                                <div key={report.id} className="message-status-card" onClick={() => report.player_id && setSelectedReport(report)}>
-                                    <div className={`msg-status-badge ${report.response ? 'replied' : 'pending'}`}>
-                                        {report.response ? 'RESPONSE LOGGED' : (report.player_id && report.recipient_role !== 'player' ? 'ACTION REQUIRED' : 'SENT')}
-                                    </div>
-                                    <div className="msg-info-v2">
-                                        <div className="msg-recipient">
-                                            {report.sender_name} → {report.recipient_role.toUpperCase()}
-                                            <span className="dot">•</span>
-                                            {formatDate(report.created_at)}
-                                        </div>
-                                        <h3>{report.title}</h3>
-                                        <div className="msg-body-preview">{report.content}</div>
-
-                                        {report.response && (
-                                            <div className="msg-coach-response">
-                                                <h5>YOUR RESPONSE</h5>
-                                                <p>{report.response}</p>
-                                            </div>
-                                        )}
-
-                                        {selectedReport?.id === report.id && !report.response && (
-                                            <div className="msg-coach-response" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <h5 style={{ color: '#fff' }}>DRAFT RESPONSE</h5>
-                                                <textarea
-                                                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#eee', padding: '10px 0', fontSize: '0.9rem', minHeight: '80px', outline: 'none' }}
-                                                    placeholder="Type your response to the player..."
-                                                    value={coachResponse}
-                                                    onChange={(e) => setCoachResponse(e.target.value)}
-                                                />
-                                                <button
-                                                    className="notif-see-btn"
-                                                    style={{ marginTop: '10px' }}
-                                                    onClick={() => handleRespond(report.id)}
-                                                >
-                                                    COMMIT RESPONSE
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Floating Notification Hub */}
-                <div className="comms-fab-hub">
-                    {showNotifPopup && (
-                        <div className="notification-popup-v2 animate-slide-up">
-                            <h4 style={{ margin: '0 0 10px 0', fontSize: '0.8rem', color: '#fff', letterSpacing: '1px' }}>BRIEFING QUEUE</h4>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {reports.slice(0, 2).map(report => (
-                                    <div key={report.id} className="notif-item-v2">
-                                        <p style={{ color: report.response ? '#4cd137' : '#fcd34d' }}>
-                                            {report.response ? 'Briefing synced' : 'Pending action'} • {formatDate(report.created_at)}
-                                        </p>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span className="notif-date">{report.title.substring(0, 20)}...</span>
-                                            <button
-                                                className="notif-see-btn"
-                                                onClick={() => {
-                                                    setViewMode('status');
-                                                    setShowNotifPopup(false);
-                                                }}
-                                            >
-                                                OPEN
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                ) : viewMode === 'archive' ? (
+                    <div className="briefing-container-v2 animate-slide-up">
+                        <div className="briefing-banner report-bg">
+                            <Send size={32} color="#fcd34d" />
+                            <div className="banner-text">
+                                <h3>SENT ARCHIVE</h3>
+                                <p>OFFICIAL OUTGOING TRANSMISSIONS</p>
                             </div>
                         </div>
-                    )}
-                    <button className="fab-circle" onClick={() => setShowNotifPopup(!showNotifPopup)}>
-                        <Bell size={28} />
-                        {reports.some(r => !r.response && r.player_id) && <div className="fab-badge">!</div>}
-                    </button>
-                </div>
+                        <div className="briefing-core" style={{ padding: '2rem' }}>
+                            <div className="archive-list-v2">
+                                {sentByCoach.length === 0 ? (
+                                    <div className="empty-archive-v2">
+                                        <p>No outgoing transmissions found.</p>
+                                    </div>
+                                ) : (
+                                    sentByCoach.map(report => (
+                                        <div
+                                            key={report.id}
+                                            className="archive-item-v2"
+                                            onClick={() => {
+                                                setSelectedReport(report);
+                                                setViewMode('status');
+                                            }}
+                                            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '15px', borderRadius: '12px', marginBottom: '10px', cursor: 'pointer', transition: '0.3s' }}
+                                        >
+                                            <div className="archive-item-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div className="archive-item-info">
+                                                    <span className="archive-item-to" style={{ fontSize: '0.6rem', fontWeight: '900', color: 'var(--dash-primary)', letterSpacing: '1px' }}>TO: {report.recipient_role.toUpperCase()}</span>
+                                                    <h4 style={{ margin: '5px 0', fontSize: '0.9rem', color: '#fff' }}>{report.title}</h4>
+                                                    <span className="archive-item-date" style={{ fontSize: '0.7rem', color: '#666' }}>{formatDate(report.created_at)}</span>
+                                                </div>
+                                                <ChevronRight size={18} color="#444" />
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ) : selectedReport ? (
+                    <div className="briefing-container-v2 animate-slide-up">
+                        <div className="briefing-banner report-bg">
+                            <div className="sender-avatar">
+                                {selectedReport.sender_name.charAt(0)}
+                            </div>
+                            <div className="banner-text">
+                                <h3>{selectedReport.sender_name}</h3>
+                                <p>{selectedReport.sender_id === currentUser.id ? 'Outgoing Transmission' : 'Incoming Report'}</p>
+                            </div>
+                            <div className={`briefing-priority-badge ${selectedReport.priority}`}>
+                                {selectedReport.priority.toUpperCase()}
+                            </div>
+                        </div>
+
+                        <div className="briefing-core" style={{ padding: '2rem' }}>
+                            <h2 className="main-title">{selectedReport.title}</h2>
+
+                            <div className="briefing-meta-grid" style={{ marginBottom: '2rem' }}>
+                                <div className="meta-box">
+                                    <span className="label">DATE</span>
+                                    <span className="value">{formatDate(selectedReport.created_at)}</span>
+                                </div>
+                                <div className="meta-box">
+                                    <span className="label">CATEGORY</span>
+                                    <span className="value">{selectedReport.type.toUpperCase()}</span>
+                                </div>
+                                <div className="meta-box">
+                                    <span className="label">STATUS</span>
+                                    <span className="value" style={{ color: selectedReport.response ? '#4cd137' : 'var(--dash-primary)' }}>
+                                        {selectedReport.response ? 'DECISION LOGGED' : 'ACTION PENDING'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="report-content-area" style={{ padding: '2rem', marginBottom: '2rem' }}>
+                                <div className="content-glow"></div>
+                                <div className="content-text">
+                                    {selectedReport.content}
+                                </div>
+                            </div>
+
+                            {selectedReport.response && (
+                                <div className="msg-coach-response" style={{ marginTop: '0' }}>
+                                    <h5>{selectedReport.sender_id === currentUser.id ? `RESPONSE FROM ${selectedReport.recipient_role.toUpperCase()}` : 'YOUR RESPONSE'}</h5>
+                                    <p>{selectedReport.response}</p>
+                                </div>
+                            )}
+
+                            {!selectedReport.response && selectedReport.sender_id !== currentUser.id && (
+                                <div className="msg-coach-response" style={{ marginTop: '0', background: 'rgba(255,255,255,0.02)' }}>
+                                    <h5 style={{ color: '#fff' }}>DRAFT OFFICIAL RESPONSE</h5>
+                                    <textarea
+                                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#eee', padding: '10px 0', fontSize: '0.9rem', minHeight: '100px', outline: 'none' }}
+                                        placeholder="Type your official response to the player..."
+                                        value={coachResponse}
+                                        onChange={(e) => setCoachResponse(e.target.value)}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                                        <button
+                                            className="submit-launch-btn"
+                                            onClick={() => handleRespond(selectedReport.id)}
+                                        >
+                                            COMMIT RESPONSE
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="briefing-empty-v2">
+                        <Activity size={48} color="#222" />
+                        <h3>TACTICAL ARCHIVE</h3>
+                        <p>Select a transmission from the log to decrypt and view briefing details.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

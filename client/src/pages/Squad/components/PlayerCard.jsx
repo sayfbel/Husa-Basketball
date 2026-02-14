@@ -83,16 +83,20 @@ const PlayerCard = ({ player, isStaff }) => {
 
                             <div className="flex flex-col gap-3 w-full">
                                 <div className="flex justify-between border-b border-gray-800 pb-1">
-                                    <span className="text-gray-500 text-sm">Role</span>
+                                    <span className="text-gray-500 text-sm">Role : </span>
                                     <span className="text-sm">{player.role || 'Forward'}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-gray-800 pb-1">
-                                    <span className="text-gray-500 text-sm">Height</span>
-                                    <span className="text-sm">--</span>
+                                    <span className="text-gray-500 text-sm">Height : </span>
+                                    <span className="text-sm">{player.height || '--'}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-gray-800 pb-1">
-                                    <span className="text-gray-500 text-sm">Age</span>
-                                    <span className="text-sm">--</span>
+                                    <span className="text-gray-500 text-sm">Weight : </span>
+                                    <span className="text-sm">{player.weight || '--'}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-800 pb-1">
+                                    <span className="text-gray-500 text-sm">Age : </span>
+                                    <span className="text-sm">{player.age ? `${player.age} Yrs` : '--'}</span>
                                 </div>
                             </div>
                         </div>

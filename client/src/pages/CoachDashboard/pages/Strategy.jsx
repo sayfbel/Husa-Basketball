@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import TacticalWorkspace from './TacticalWorkspace.jsx';
 import '../../../css/dashboard.css';
+import '../css/strategy.css';
 import {
     Trash2
 } from 'lucide-react';
@@ -15,17 +16,7 @@ const MiniCourtPreview = ({ tactic }) => {
     const themeColor = '#DB0A40';
 
     return (
-        <div className="mini-court-preview" style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0.5,
-            zIndex: 0,
-            pointerEvents: 'none',
-            overflow: 'hidden'
-        }}>
+        <div className="mini-court-preview">
             <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} style={{ width: '100%', height: '100%' }}>
                 {/* Court Outline Tinted */}
                 <rect width={viewBoxW} height={viewBoxH} fill="none" stroke={themeColor} strokeWidth="3" opacity="0.3" />
@@ -52,15 +43,7 @@ const MiniCourtPreview = ({ tactic }) => {
                 ))}
             </svg>
             {/* Bottom Gradient Overlay */}
-            <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '70%',
-                background: `linear-gradient(to top, rgba(10,10,10,0.95), rgba(10,10,10,0.4), transparent)`,
-                zIndex: 0
-            }} />
+            <div className="preview-gradient-overlay" />
         </div>
     );
 };
@@ -121,13 +104,13 @@ const Strategy = () => {
             </div>
 
             {/* Full Court Registry */}
-            <div className="strategy-card" style={{ background: 'rgba(20, 20, 20, 0.4)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2.5rem' }}>
-                <div className="card-header-flex" style={{ marginBottom: '1.5rem' }}>
+            <div className="strategy-registry-card">
+                <div className="card-header-flex">
                     <div>
-                        <h2 style={{ fontSize: '1.4rem', letterSpacing: '1px', color: '#fff', border: 'none', margin: 0 }}>Full Court Systems</h2>
-                        <p style={{ fontSize: '0.8rem', color: '#888', margin: '4px 0 0 0' }}>Archive of 5v5 transition and offensive systems.</p>
+                        <h2 className="prep-title-box">Full Court Systems</h2>
+                        <p className="archive-subtitle">Archive of 5v5 transition and offensive systems.</p>
                     </div>
-                    <span className="live-indicator" style={{ background: 'rgba(219, 10, 64, 0.1)', color: '#DB0A40', borderColor: 'rgba(219, 10, 64, 0.2)' }}>REGISTRY</span>
+                    <span className="live-indicator">REGISTRY</span>
                 </div>
 
                 {fullCourtTactics.length === 0 ? (
@@ -135,59 +118,16 @@ const Strategy = () => {
                         <p style={{ color: '#555', fontStyle: 'italic', margin: 0 }}>No full court systems saved yet.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    <div className="strategy-grid">
                         {fullCourtTactics.map(tactic => (
-                            <div key={tactic.id} className="tactic-item-premium"
-                                onClick={() => loadTactic(tactic)}
-                                style={{
-                                    position: 'relative',
-                                    background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95))',
-                                    padding: '1.2rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'flex-end',
-                                    minHeight: '160px',
-                                    overflow: 'hidden',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    cursor: 'pointer'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                                    e.currentTarget.style.borderColor = 'var(--dash-primary)';
-                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(219, 10, 64, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
-                            >
+                            <div key={tactic.id} className="tactic-item-premium" onClick={() => loadTactic(tactic)}>
                                 <MiniCourtPreview tactic={tactic} />
-                                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
+                                <div className="tactic-info-box">
                                     <div style={{ flex: 1 }}>
-                                        <h4 style={{ margin: '0', color: '#fff', fontSize: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{tactic.name}</h4>
-                                        <span style={{ fontSize: '0.65rem', color: 'var(--dash-primary)', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.8 }}>Click to Load</span>
+                                        <h4 className="tactic-name-label">{tactic.name}</h4>
+                                        <span className="tactic-action-hint">Click to Load</span>
                                     </div>
-                                    <button
-                                        onClick={(e) => deleteTactic(tactic.id, e)}
-                                        style={{
-                                            background: 'rgba(255,77,77,0.15)',
-                                            border: 'none',
-                                            color: '#ff4d4d',
-                                            cursor: 'pointer',
-                                            width: '32px',
-                                            height: '32px',
-                                            borderRadius: '8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#ff4d4d'; e.currentTarget.style.color = '#fff'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,77,77,0.15)'; e.currentTarget.style.color = '#ff4d4d'; }}
-                                    >
+                                    <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -208,13 +148,13 @@ const Strategy = () => {
             />
 
             {/* Half Court Registry */}
-            <div className="strategy-card" style={{ background: 'rgba(20, 20, 20, 0.4)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2.5rem', marginTop: '3rem' }}>
-                <div className="card-header-flex" style={{ marginBottom: '1.5rem' }}>
+            <div className="strategy-registry-card" style={{ marginTop: '3rem' }}>
+                <div className="card-header-flex">
                     <div>
-                        <h2 style={{ fontSize: '1.4rem', letterSpacing: '1px', color: '#fff', border: 'none', margin: 0 }}>Half Court Drills</h2>
-                        <p style={{ fontSize: '0.8rem', color: '#888', margin: '4px 0 0 0' }}>Collection of specialized 3v3 sets and training drills.</p>
+                        <h2 className="prep-title-box">Half Court Drills</h2>
+                        <p className="archive-subtitle">Collection of specialized 3v3 sets and training drills.</p>
                     </div>
-                    <span className="live-indicator" style={{ background: 'rgba(219, 10, 64, 0.1)', color: '#DB0A40', borderColor: 'rgba(219, 10, 64, 0.2)' }}>DRILLS</span>
+                    <span className="live-indicator">DRILLS</span>
                 </div>
 
                 {halfCourtTactics.length === 0 ? (
@@ -222,59 +162,16 @@ const Strategy = () => {
                         <p style={{ color: '#555', fontStyle: 'italic', margin: 0 }}>No half court drills saved yet.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    <div className="strategy-grid">
                         {halfCourtTactics.map(tactic => (
-                            <div key={tactic.id} className="tactic-item-premium"
-                                onClick={() => loadTactic(tactic)}
-                                style={{
-                                    position: 'relative',
-                                    background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95))',
-                                    padding: '1.2rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'flex-end',
-                                    minHeight: '160px',
-                                    overflow: 'hidden',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    cursor: 'pointer'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                                    e.currentTarget.style.borderColor = '#DB0A40';
-                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(219, 10, 64, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
-                            >
+                            <div key={tactic.id} className="tactic-item-premium" onClick={() => loadTactic(tactic)}>
                                 <MiniCourtPreview tactic={tactic} />
-                                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
+                                <div className="tactic-info-box">
                                     <div style={{ flex: 1 }}>
-                                        <h4 style={{ margin: '0', color: '#fff', fontSize: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{tactic.name}</h4>
-                                        <span style={{ fontSize: '0.65rem', color: '#DB0A40', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.8 }}>Click to Load</span>
+                                        <h4 className="tactic-name-label">{tactic.name}</h4>
+                                        <span className="tactic-action-hint">Click to Load</span>
                                     </div>
-                                    <button
-                                        onClick={(e) => deleteTactic(tactic.id, e)}
-                                        style={{
-                                            background: 'rgba(255,77,77,0.15)',
-                                            border: 'none',
-                                            color: '#ff4d4d',
-                                            cursor: 'pointer',
-                                            width: '32px',
-                                            height: '32px',
-                                            borderRadius: '8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#ff4d4d'; e.currentTarget.style.color = '#fff'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,77,77,0.15)'; e.currentTarget.style.color = '#ff4d4d'; }}
-                                    >
+                                    <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>

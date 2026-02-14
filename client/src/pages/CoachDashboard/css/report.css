@@ -1,0 +1,101 @@
+/* Report Page Layout */
+.report-container {
+    padding-bottom: 5rem;
+}
+
+.report-header-section {
+    margin-bottom: 3rem;
+}
+
+.report-view-toggle {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.toggle-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #888;
+}
+
+.toggle-btn.active {
+    background: var(--dash-primary);
+    color: #fff;
+    border-color: var(--dash-primary);
+    box-shadow: 0 5px 15px rgba(219, 10, 64, 0.3);
+}
+
+/* Report Status Grid */
+.reports-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.report-status-card {
+    background: rgba(20, 20, 20, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.report-status-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+}
+
+.report-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.priority-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.priority-high {
+    background: rgba(255, 49, 49, 0.1);
+    color: #ff3131;
+}
+
+.priority-normal {
+    background: rgba(252, 211, 77, 0.1);
+    color: #fcd34d;
+}
+
+.report-recipient-tag {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 5px;
+}
+
+.report-excerpt {
+    color: #ccc;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.report-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 1rem;
+}

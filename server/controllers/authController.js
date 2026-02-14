@@ -45,20 +45,20 @@ exports.login = async (req, res) => {
 const seedLogic = async () => {
     // --- Users Seeding ---
     const users = [
-        { id: 'c1', name: "Mohamed Haib", role: "Coach", code: "HCMohamedHaib" },
-        { id: 'p1', name: "Youssef Abid", role: "President", code: "PRYoussefAbid" },
-        { id: 'u5', name: "Moudden Mohamed", role: "Player", code: "05MouddenMohamed" },
-        { id: 'u6', name: "Echraouqi Khalid", role: "Player", code: "06EchraouqiKhalid" },
-        { id: 'u7', name: "Ech Charany Mohamed", role: "Player", code: "07EchCharanyMohamed" },
-        { id: 'u8', name: "Laamrani Youness", role: "Player", code: "08LaamraniYouness" },
-        { id: 'u9', name: "Guaouzi Zoubir", role: "Player", code: "09GuaouziZoubir" },
-        { id: 'u10', name: "Choua M'Barek", role: "Player", code: "10ChouaMBarek" },
-        { id: 'u11', name: "Choua Ismail", role: "Player", code: "11ChouaIsmail" },
-        { id: 'u12', name: "Bentabjaoute Youssef", role: "Player", code: "12BentabjaouteYoussef" },
-        { id: 'u13', name: "Soufiane Banyahya", role: "Player", code: "13SoufianeBanyahya" },
-        { id: 'u14', name: "Mouad Chanouni", role: "Player", code: "14MouadChanouni" },
-        { id: 'u15', name: "Elbika Reda", role: "Player", code: "15ElbikaReda" },
-        { id: 'u16', name: "Bouchentouf Rabii", role: "Player", code: "16BouchentoufRabii" }
+        { id: 'st1', name: "Mohamed Haib", role: "Coach", code: "HCMohamedHaib" },
+        { id: 'st2', name: "Youssef Abid", role: "President", code: "PRYoussefAbid" },
+        { id: 'pl5', name: "Moudden Mohamed", role: "Player", code: "05MouddenMohamed" },
+        { id: 'pl6', name: "Echraouqi Khalid", role: "Player", code: "06EchraouqiKhalid" },
+        { id: 'pl7', name: "Ech Charany Mohamed", role: "Player", code: "07EchCharanyMohamed" },
+        { id: 'pl8', name: "Laamrani Youness", role: "Player", code: "08LaamraniYouness" },
+        { id: 'pl9', name: "Guaouzi Zoubir", role: "Player", code: "09GuaouziZoubir" },
+        { id: 'pl10', name: "Choua M'Barek", role: "Player", code: "10ChouaMBarek" },
+        { id: 'pl11', name: "Choua Ismail", role: "Player", code: "11ChouaIsmail" },
+        { id: 'pl12', name: "Bentabjaoute Youssef", role: "Player", code: "12BentabjaouteYoussef" },
+        { id: 'pl13', name: "Soufiane Banyahya", role: "Player", code: "13SoufianeBanyahya" },
+        { id: 'pl14', name: "Mouad Chanouni", role: "Player", code: "14MouadChanouni" },
+        { id: 'pl15', name: "Elbika Reda", role: "Player", code: "15ElbikaReda" },
+        { id: 'pl16', name: "Bouchentouf Rabii", role: "Player", code: "16BouchentoufRabii" }
     ];
 
     // --- Players Table Seeding ---
@@ -89,16 +89,32 @@ const seedLogic = async () => {
 
     // Seed Users
     for (const user of users) {
-        // Insert or Update existing user to ensure role is set correctly
-        const sql = `
-            INSERT INTO users (id, username, password, role) 
-            VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-            role = VALUES(role),
-            password = VALUES(password)
-         `;
+        // Since username is UNIQUE, if we find a user with the same name but different ID, 
+        // we update their ID to match the new 'plX' or 'stX' format.
+        // This ensures they receive reports correctly.
+        const [existing] = await db.query('SELECT id FROM users WHERE username = ?', [user.name]);
 
-        await db.query(sql, [user.id, user.name, user.code, user.role]);
+        if (existing.length > 0) {
+            const oldId = existing[0].id;
+            if (oldId !== user.id) {
+                console.log(`Syncing ID for ${user.name}: ${oldId} -> ${user.id}`);
+                await db.query('UPDATE users SET id = ?, role = ?, password = ? WHERE username = ?', [user.id, user.role, user.code, user.name]);
+                // Also update any existing reports that used the old ID
+                await db.query('UPDATE reports SET player_id = ? WHERE player_id = ?', [user.id, oldId]);
+                await db.query('UPDATE reports SET sender_id = ? WHERE sender_id = ?', [user.id, oldId]);
+            } else {
+                await db.query('UPDATE users SET role = ?, password = ? WHERE id = ?', [user.role, user.code, user.id]);
+            }
+        } else {
+            await db.query('INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)', [user.id, user.name, user.code, user.role]);
+        }
+    }
+
+    // Migration for old IDs in reports (e.g. c1 -> st1, p1 -> st2)
+    const idMap = { 'c1': 'st1', 'p1': 'st2' };
+    for (const [oldId, newId] of Object.entries(idMap)) {
+        await db.query('UPDATE reports SET sender_id = ? WHERE sender_id = ?', [newId, oldId]);
+        await db.query('UPDATE reports SET player_id = ? WHERE player_id = ?', [newId, oldId]);
     }
 
     // Seed Players Table
@@ -119,23 +135,69 @@ const seedLogic = async () => {
         await db.query(sql, [player.id, player.name, player.number, player.pos, player.img, player.h, player.w, player.age, player.bio]);
     }
 
-    // --- Staff Table Seeding ---
+    // Ensure Contact Columns exist in players table
+    try {
+        await db.query("ALTER TABLE players ADD COLUMN IF NOT EXISTS email VARCHAR(255)");
+        await db.query("ALTER TABLE players ADD COLUMN IF NOT EXISTS phone VARCHAR(50)");
+    } catch (err) {
+        console.log("Players contact update note: " + err.message);
+    }
+
+    // --- Staff Table Seeding & Migration ---
+    try {
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS height VARCHAR(50)");
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS weight VARCHAR(50)");
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS age INT");
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS email VARCHAR(255)");
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS phone VARCHAR(50)");
+        await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS bio TEXT");
+    } catch (err) {
+        console.log("Staff table migration note: " + err.message);
+    }
+
     const staffMembers = [
-        { id: 'st1', name: "Mohamed Haib", role: "Head Coach", department: "coaching", img: "/assets/staff/default.png" },
-        { id: 'st2', name: "Youssef Abid", role: "President", department: "office", img: "/assets/staff/default.png" }
+        {
+            id: 'st1',
+            name: "Mohamed Haib",
+            role: "Head Coach",
+            department: "coaching",
+            img: "/assets/players/coach.jpg",
+            height: "182cm",
+            weight: "78kg",
+            age: 45,
+            bio: "Elite tactical mind with 15+ years of experience in regional basketball championships. Specialized in high-pressure defensive systems."
+        },
+        {
+            id: 'st2',
+            name: "Youssef Abid",
+            role: "President",
+            department: "office",
+            img: "/assets/players/President.jpg",
+            height: "178cm",
+            weight: "80kg",
+            age: 52,
+            bio: "Strategic leadership and organizational management. Dedicated to elevating HUSA Basketball to the national elite."
+        }
     ];
 
     for (const member of staffMembers) {
         const sql = `
-            INSERT INTO staff (id, name, role, department, photo_url)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO staff (id, name, role, department, photo_url, height, weight, age, bio)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
             name = VALUES(name),
             role = VALUES(role),
             department = VALUES(department),
-            photo_url = VALUES(photo_url)
+            photo_url = VALUES(photo_url),
+            height = VALUES(height),
+            weight = VALUES(weight),
+            age = VALUES(age),
+            bio = VALUES(bio)
         `;
-        await db.query(sql, [member.id, member.name, member.role, member.department, member.img]);
+        await db.query(sql, [
+            member.id, member.name, member.role, member.department, member.img,
+            member.height, member.weight, member.age, member.bio
+        ]);
     }
 };
 

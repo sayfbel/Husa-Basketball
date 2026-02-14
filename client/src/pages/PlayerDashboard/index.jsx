@@ -47,10 +47,10 @@ const PlayerDashboard = () => {
                         Match
                     </NavLink>
                     <NavLink
-                        to="/dashboard/player/rapore"
+                        to="/dashboard/player/report"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Rapore
+                        Reports
                     </NavLink>
                     <NavLink
                         to="/dashboard/player/tactics"
@@ -66,10 +66,10 @@ const PlayerDashboard = () => {
                     <Route path="/" element={<Overview />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="match" element={<Match />} />
-                    <Route path="rapore" element={<Report />} />
+                    <Route path="report" element={<Report />} />
+                    <Route path="rapore" element={<Navigate to="report" replace />} />
                     <Route path="tactics" element={<Tactics />} />
                     {/* Handle potential typos or alternative names */}
-                    <Route path="report" element={<Navigate to="rapore" replace />} />
                 </Routes>
             </div>
         </div>

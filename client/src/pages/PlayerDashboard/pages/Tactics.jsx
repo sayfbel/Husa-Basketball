@@ -64,7 +64,7 @@ const MiniCourtPreview = ({ tactic }) => {
     );
 };
 
-const ReadOnlyCourt = ({ frames, type = 'full' }) => {
+const ReadOnlyCourt = ({ frames, type = 'full', players = [] }) => {
     const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const playInterval = useRef(null);
@@ -130,28 +130,68 @@ const ReadOnlyCourt = ({ frames, type = 'full' }) => {
                 </svg>
 
                 {/* Tokens Layer */}
-                {currentFrame.tokens?.map((token, idx) => (
-                    <div
-                        key={idx}
-                        className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`}
-                        style={{
-                            position: 'absolute',
-                            top: `${token.y}%`,
-                            left: `${token.x}%`,
-                            width: token.type === 'ball' ? '30px' : '40px',
-                            height: token.type === 'ball' ? '30px' : '40px',
-                            transform: 'translate(-50%, -50%)',
-                            transition: isPlaying ? 'all 800ms ease' : 'all 300ms ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            pointerEvents: 'none',
-                            zIndex: token.type === 'ball' ? 5 : 2
-                        }}
-                    >
-                        {token.label}
-                    </div>
-                ))}
+                {currentFrame.tokens?.map((token, idx) => {
+                    // Logic to find player for this token
+                    let player = null;
+                    if (token.type === 'offense' && players && players.length > 0) {
+                        const posNumber = parseInt(token.label);
+                        if (!isNaN(posNumber) && posNumber >= 1 && posNumber <= 5) {
+                            player = players[posNumber - 1]; // Use index or specific mapping
+                        }
+                    }
+
+                    return (
+                        <div
+                            key={idx}
+                            style={{
+                                position: 'absolute',
+                                top: `${token.y}%`,
+                                left: `${token.x}%`,
+                                width: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
+                                height: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
+                                transform: 'translate(-50%, -50%)',
+                                transition: isPlaying ? 'all 800ms ease' : 'all 300ms ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                pointerEvents: 'none',
+                                zIndex: token.type === 'ball' ? 5 : 2
+                            }}
+                        >
+                            {player ? (
+                                <div style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    border: '2px solid #fff',
+                                    overflow: 'hidden',
+                                    background: '#000',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                                    position: 'relative'
+                                }}>
+                                    <img src={player.photo_url || "/assets/players/default.png"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        width: '100%',
+                                        background: 'rgba(0,0,0,0.8)',
+                                        color: '#fff',
+                                        fontSize: '10px',
+                                        fontWeight: '950',
+                                        textAlign: 'center',
+                                        padding: '2px 0'
+                                    }}>
+                                        #{player.jersey_number}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {token.label}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Playback Controls */}
@@ -189,10 +229,21 @@ const Tactics = () => {
     const [tactics, setTactics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTactic, setSelectedTactic] = useState(null);
+    const [players, setPlayers] = useState([]);
 
     useEffect(() => {
         fetchTactics();
+        fetchPlayers();
     }, []);
+
+    const fetchPlayers = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/players');
+            setPlayers(res.data);
+        } catch (err) {
+            console.error("Error fetching players:", err);
+        }
+    };
 
     const fetchTactics = async () => {
         try {
@@ -281,9 +332,9 @@ const Tactics = () => {
                         </button>
                     </div>
 
-                    <div style={{ flex: 1, padding: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '100%', maxWidth: '1100px' }}>
-                            <ReadOnlyCourt frames={selectedTactic.data} type={selectedTactic.type} />
+                    <div style={{ flex: 1, padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', maxWidth: '850px' }}>
+                            <ReadOnlyCourt frames={selectedTactic.data} type={selectedTactic.type} players={players.slice(0, 5)} />
                         </div>
                     </div>
                 </div>,

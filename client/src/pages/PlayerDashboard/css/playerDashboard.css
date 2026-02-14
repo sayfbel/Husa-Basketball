@@ -512,10 +512,6 @@
     margin-bottom: 2rem;
 }
 
-.player-dashboard {
-    padding: 8rem 0 !important;
-}
-
 .modal-title-v2 h2 {
     margin: 0;
     font-size: 2rem;
@@ -1271,7 +1267,8 @@
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(219, 10, 64, 0.4);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
+    position: fixed;
+    bottom: -5rem;
     border: none;
 }
 
@@ -1562,4 +1559,382 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     z-index: 3;
+}
+
+/* Transmission Summary V2 */
+.transmission-status-summary-v2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 2.5rem;
+}
+
+.stat-pill-v2 {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.2rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: all 0.3s;
+}
+
+.stat-pill-v2:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: #151515;
+}
+
+.stat-label {
+    font-size: 0.55rem;
+    font-weight: 950;
+    color: #444;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+/* ==========================================================================
+   Editorial Fashion Profile - Tactical V3
+   ========================================================================== */
+
+.profile-fashion-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    padding-bottom: 5rem;
+}
+
+/* Hero Split Layout */
+.profile-hero-split {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 40px;
+    overflow: hidden;
+    min-height: 500px;
+    position: relative;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+}
+
+.profile-hero-image-area {
+    position: relative;
+    background: #111;
+    overflow: hidden;
+}
+
+.profile-hero-image-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.1);
+    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.profile-hero-split:hover .profile-hero-image-area img {
+    filter: grayscale(0.2) contrast(1);
+    transform: scale(1.05);
+}
+
+.profile-hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.profile-hero-content-area {
+    padding: 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fashion-label-small {
+    font-size: 0.65rem;
+    font-weight: 950;
+    color: var(--dash-primary);
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.fashion-name-main {
+    font-size: 5.5rem;
+    font-weight: 950;
+    line-height: 0.85;
+    text-transform: uppercase;
+    letter-spacing: -4px;
+    margin: 0 0 2.5rem 0;
+    color: #fff;
+}
+
+.fashion-bio-text {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: #888;
+    max-width: 500px;
+    margin-bottom: 3.5rem;
+    border-left: 3px solid var(--dash-primary);
+    padding-left: 2.5rem;
+}
+
+.fashion-edit-btn {
+    align-self: flex-start;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 1.2rem 3rem;
+    border-radius: 50px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fashion-edit-btn:hover {
+    background: var(--dash-primary);
+    color: #fff;
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(219, 10, 64, 0.3);
+}
+
+/* Physical Grid */
+.profile-stats-grid-fashion {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+}
+
+.stat-card-fashion {
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 4rem;
+    border-radius: 40px;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-fashion:hover {
+    background: #111;
+    border-color: rgba(219, 10, 64, 0.5);
+    transform: translateY(-10px);
+}
+
+.stat-card-fashion::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--dash-primary);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+    transform-origin: left;
+}
+
+.stat-card-fashion:hover::before {
+    transform: scaleX(1);
+}
+
+.stat-card-fashion .label {
+    font-size: 0.75rem;
+    font-weight: 950;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.stat-card-fashion .value {
+    font-size: 4.5rem;
+    font-weight: 950;
+    color: #fff;
+    letter-spacing: -3px;
+    line-height: 1;
+}
+
+.stat-card-fashion .unit {
+    font-size: 1.2rem;
+    color: var(--dash-primary);
+    margin-left: 8px;
+    font-weight: 900;
+}
+
+/* Contact Module */
+.profile-contact-fashion {
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 40px;
+    padding: 4rem 5rem;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 6rem;
+    align-items: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.contact-info-title h2 {
+    font-size: 3.5rem;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    margin: 0;
+    line-height: 0.9;
+}
+
+.contact-info-title p {
+    color: #444;
+    font-weight: 950;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-top: 1rem;
+}
+
+.contact-info-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+.contact-link-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.contact-link-item .icon-circle {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dash-primary);
+    transition: all 0.3s;
+}
+
+.contact-link-item:hover .icon-circle {
+    background: var(--dash-primary);
+    color: #fff;
+    border-color: var(--dash-primary);
+}
+
+.contact-link-item .link-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-link-item .link-text span.small {
+    font-size: 0.65rem;
+    font-weight: 950;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+
+.contact-link-item .link-text strong {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #eee;
+}
+
+/* Edit Mode Overrides */
+.fashion-input-large {
+    background: transparent;
+    border: none;
+    border-bottom: 4px solid var(--dash-primary);
+    color: #fff;
+    font-size: 4rem;
+    font-weight: 950;
+    width: 100%;
+    outline: none;
+    text-transform: uppercase;
+    font-family: inherit;
+}
+
+.fashion-textarea-refined {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--dash-primary);
+    color: #eee;
+    padding: 1.5rem;
+    font-size: 1.1rem;
+    width: 100%;
+    border-radius: 0 20px 20px 0;
+    outline: none;
+    min-height: 150px;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.fashion-input-stat {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid var(--dash-primary);
+    color: #fff;
+    font-size: 3.5rem;
+    font-weight: 950;
+    width: 200px;
+    text-align: center;
+    outline: none;
+    font-family: inherit;
+}
+
+/* Responsive Fashion */
+@media (max-width: 1200px) {
+    .profile-hero-split {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-contact-fashion {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .fashion-name-main {
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-stats-grid-fashion {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-info-links {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .stat-card-fashion .value {
+        font-size: 3.5rem;
+    }
 }
