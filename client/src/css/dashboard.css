@@ -79,6 +79,11 @@
     color: #ff3131;
 }
 
+.president-tag~.dashboard-nav .dash-link.active {
+    border-bottom-color: var(--dash-primary);
+    color: var(--dash-primary);
+}
+
 /* Specific for coach */
 
 .role-tag {
@@ -109,9 +114,9 @@
 }
 
 .role-tag.president-tag {
-    border-color: #FFD700;
-    color: #FFD700;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    border-color: var(--dash-primary);
+    color: var(--dash-primary);
+    box-shadow: 0 0 15px rgba(219, 10, 64, 0.2);
 }
 
 .dashboard-grid {
