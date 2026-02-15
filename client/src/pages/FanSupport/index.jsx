@@ -17,6 +17,7 @@ const FanSupport = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [matches, setMatches] = useState([]);
+    const [rankings, setRankings] = useState([]);
     const [loadingMatches, setLoadingMatches] = useState(true);
 
     // Form State
@@ -56,6 +57,9 @@ const FanSupport = () => {
             try {
                 const res = await axios.get('http://localhost:5000/api/matches/schedule');
                 setMatches(res.data || []);
+
+                const rankRes = await axios.get('http://localhost:5000/api/rankings');
+                setRankings(rankRes.data || []);
             } catch (err) {
                 console.error("Error fetching match data:", err);
             } finally {
@@ -78,6 +82,8 @@ const FanSupport = () => {
     };
 
     const nextMatchData = matches.find(m => !isPastMatch(m.date)) || matches[0] || null;
+    const opponentName = nextMatchData ? (nextMatchData.opponent || (nextMatchData.home?.includes('HUSA') ? nextMatchData.away : nextMatchData.home) || 'TBD') : 'Wydad AC';
+    const opponentLogo = rankings.find(r => r.club.toLowerCase() === opponentName.toLowerCase())?.logo || wydadLogo;
 
     const matchDetails = {
         date: nextMatchData ? (() => {
@@ -88,7 +94,8 @@ const FanSupport = () => {
             return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
         })() : "Saturday, 24 Feb",
         time: nextMatchData?.time || "19:00",
-        opponent: nextMatchData ? (nextMatchData.opponent || (nextMatchData.home?.includes('HUSA') ? nextMatchData.away : nextMatchData.home) || 'TBD') : 'Wydad AC',
+        opponent: opponentName,
+        opponentLogo: opponentLogo,
         location: nextMatchData?.location || "Salle Al Inbiaat, Agadir"
     };
 
@@ -182,7 +189,7 @@ const FanSupport = () => {
                                     <span className="vs-text">VS</span>
                                 </div>
                                 <div className="team away">
-                                    <img src={wydadLogo} alt="Wydad AC Logo" className="team-logo" />
+                                    <img src={matchDetails.opponentLogo} alt={`${matchDetails.opponent} Logo`} className="team-logo" />
                                     <span className="team-name">{matchDetails.opponent}</span>
                                 </div>
                             </div>
@@ -236,7 +243,7 @@ const FanSupport = () => {
                                             </div>
                                             <div className="t-vs">VS</div>
                                             <div className="t-team">
-                                                <img src={wydadLogo} alt="WAC" className="t-logo" />
+                                                <img src={matchDetails.opponentLogo} alt={matchDetails.opponent} className="t-logo" />
                                                 <span className="t-name">{matchDetails.opponent}</span>
                                             </div>
                                         </div>

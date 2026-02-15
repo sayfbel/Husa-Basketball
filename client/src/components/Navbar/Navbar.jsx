@@ -38,7 +38,6 @@ const Navbar = () => {
                         <Link to="/contact" className="contact-btn">Contact</Link>
                         <div className="dropdown-card">
                             <Link to="/reservation">Kids Reservation</Link>
-                            <Link to="/training">Training Center</Link>
                             <Link to="/join">Join Team</Link>
                             <Link to="/fans">Fan Support</Link>
                         </div>

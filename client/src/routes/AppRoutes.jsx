@@ -8,7 +8,6 @@ import JoinTeam from '../pages/JoinTeam';
 import Contact from '../pages/Contact';
 import KidsReservation from '../pages/KidsReservation';
 import Staff from '../pages/Staff';
-import TrainingCenter from '../pages/TrainingCenter';
 import FanSupport from '../pages/FanSupport';
 // import AdminDashboard from '../pages/AdminDashboard'; // Deleted
 import PlayerDashboard from '../pages/PlayerDashboard';
@@ -31,7 +30,6 @@ const AppRoutes = () => {
             <Route path="/reservation" element={<KidsReservation />} />
             <Route path="/rules" element={<Rules />} />
             <Route path="/staff" element={<Staff />} />
-            <Route path="/training" element={<TrainingCenter />} />
             <Route path="/fans" element={<FanSupport />} />
             <Route path="/thanks" element={<Thanks />} />
             <Route path="/admin/login" element={<Login />} />

@@ -27,6 +27,7 @@ app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/reservations', require('./routes/reservationRoutes'));
 app.use('/api/store-reservations', require('./routes/storeReservationRoutes'));
 app.use('/api/staff', require('./routes/staffRoutes'));
+app.use('/api/rankings', require('./routes/rankingRoutes'));
 
 // app.use('/api/news', require('./routes/news'));
 
@@ -39,6 +40,7 @@ const matchController = require('./controllers/matchController');
 const reservationController = require('./controllers/reservationController');
 const storeReservationController = require('./controllers/storeReservationController');
 const reportController = require('./controllers/reportController');
+const rankingController = require('./controllers/rankingController');
 
 app.use('/api/strategies', require('./routes/strategyRoutes'));
 
@@ -53,6 +55,8 @@ app.listen(PORT, async () => {
         await reservationController.initTable();
         await storeReservationController.initTable();
         await reportController.initTable();
+        await rankingController.initTable();
+        await rankingController.scrapeAndSave(); // Initial scrape if empty
         console.log('Database seeded & tables initialized');
     } catch (err) {
         console.error('Seeding error:', err);

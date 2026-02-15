@@ -147,8 +147,8 @@ const ReadOnlyCourt = ({ frames, type = 'full', players = [] }) => {
                                 position: 'absolute',
                                 top: `${token.y}%`,
                                 left: `${token.x}%`,
-                                width: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
-                                height: token.type === 'ball' ? '30px' : (player ? '50px' : '40px'),
+                                width: token.type === 'ball' ? '20px' : (player ? '40px' : '30px'),
+                                height: token.type === 'ball' ? '20px' : (player ? '40px' : '30px'),
                                 transform: 'translate(-50%, -50%)',
                                 transition: isPlaying ? 'all 800ms ease' : 'all 300ms ease',
                                 display: 'flex',
@@ -333,7 +333,7 @@ const Tactics = () => {
                     </div>
 
                     <div style={{ flex: 1, padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        <div style={{ width: '100%', maxWidth: '850px' }}>
+                        <div style={{ width: '100%', maxWidth: '700px' }}>
                             <ReadOnlyCourt frames={selectedTactic.data} type={selectedTactic.type} players={players.slice(0, 5)} />
                         </div>
                     </div>

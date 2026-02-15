@@ -1,11 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const HistoryTables = () => {
-    const [activeTab, setActiveTab] = useState('2024-2025');
+    const [dynamicRankings, setDynamicRankings] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRankings = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/rankings');
+                if (response.ok) {
+                    const data = await response.json();
+                    setDynamicRankings(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch rankings:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRankings();
+    }, []);
 
     const seasons = {
+        '2025-2026': {
+            title: '1DNH (Division 1 Nationale) - Groupe 3',
+            standings: {
+                headers: ['Pos', 'Club', 'PTS', 'P', 'W', 'L', 'PF', 'PA', 'Diff'],
+                rows: dynamicRankings || []
+            },
+            notes: dynamicRankings ? "Live Data from FRMBB" : "Offline / Historical Data"
+        },
         '2024-2025': {
-            title: '1DNH (Division 1) - Groupe 4',
+            title: '1DNH (Division 1 Nationale) - Groupe 4',
             standings: {
                 headers: ['Pos', 'Club', 'PTS', 'P', 'W', 'L', 'PF', 'PA', 'Diff'],
                 rows: [
@@ -19,7 +46,16 @@ const HistoryTables = () => {
                     { pos: 8, club: 'CSBA', pts: 19, p: 14, w: 5, l: 9, pf: 797, pa: 858, diff: -61 },
                 ]
             },
-            notes: "Current Season - Leading Group 4"
+            playoffs: [
+                {
+                    stage: 'Regular Season Key Matches',
+                    matches: [
+                        { date: '27/10/2024', home: 'HUSA', away: 'CSBA', score: '64 - 41', result: 'W' },
+                        { date: '02/11/2024', home: 'HUSA', away: 'ACSMM', score: '61 - 52', result: 'W' },
+                    ]
+                }
+            ],
+            notes: "Leading Group 4 with 11 Victories"
         },
         '2023-2024': {
             title: '2DNH (Division 2) - Groupe 5',
@@ -60,28 +96,13 @@ const HistoryTables = () => {
             },
             playoffs: [
                 {
-                    stage: 'Phase Finale - 1/16 Finale',
+                    stage: 'Phase Finale - 1/8 & 1/4 Finale',
                     matches: [
                         { date: '21/05/2023', home: 'ASMM', away: 'HUSA', score: '72 - 64', result: 'L' },
                         { date: '04/06/2023', home: 'HUSA', away: 'ASMM', score: '46 - 35', result: 'W' },
-                    ]
-                },
-                {
-                    stage: 'Phase Finale - 1/8 Finale',
-                    matches: [
                         { date: '10/06/2023', home: 'ASTT', away: 'HUSA', score: '61 - 67', result: 'W' },
                         { date: '17/06/2023', home: 'HUSA', away: 'ASTT', score: '66 - 49', result: 'W' },
-                    ]
-                },
-                {
-                    stage: 'Phase Finale - 1/4 Finale',
-                    matches: [
                         { date: '08/07/2023', home: 'EJSC', away: 'HUSA', score: '47 - 54', result: 'W' },
-                    ]
-                },
-                {
-                    stage: 'Phase Finale - 1/2 Finale',
-                    matches: [
                         { date: '09/07/2023', home: 'ABS', away: 'HUSA', score: '59 - 55', result: 'L' },
                     ]
                 }
@@ -91,7 +112,10 @@ const HistoryTables = () => {
 
     return (
         <div className="history-tables-section">
-            {/* Cards for each season */}
+            {loading && !dynamicRankings && (
+                <div className="loading-spinner">Fetching live standings...</div>
+            )}
+
             {Object.keys(seasons).reverse().map(season => {
                 const seasonData = seasons[season];
                 return (
@@ -104,7 +128,6 @@ const HistoryTables = () => {
                             {seasonData.notes && <span className="season-note">{seasonData.notes}</span>}
                         </div>
 
-                        {/* Standings Table */}
                         <div className="table-wrapper">
                             <h4>Regular Season Standings</h4>
                             <table className="history-table">
@@ -115,7 +138,7 @@ const HistoryTables = () => {
                                 </thead>
                                 <tbody>
                                     {seasonData.standings.rows.map((row, i) => (
-                                        <tr key={i} className={row.club === 'HUSA' ? 'husa-row' : ''}>
+                                        <tr key={i} className={row.club.includes('HUSA') ? 'husa-row' : ''}>
                                             <td>{row.pos}</td>
                                             <td>{row.club}</td>
                                             <td>{row.pts}</td>
@@ -134,7 +157,7 @@ const HistoryTables = () => {
                         {/* Playoffs / Matches */}
                         {seasonData.playoffs && (
                             <div className="playoffs-section">
-                                <h4>Play-off & Finals Results</h4>
+                                <h4>Season Match Highlights</h4>
                                 <div className="matches-grid">
                                     {seasonData.playoffs.map((stage, i) => (
                                         <div key={i} className="stage-group">

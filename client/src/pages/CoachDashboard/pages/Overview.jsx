@@ -17,25 +17,30 @@ import {
 import '../../../css/dashboard.css';
 import '../css/overview.css';
 
+import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
+
 const Overview = () => {
     const navigate = useNavigate();
     const [players, setPlayers] = useState([]);
     const [strategies, setStrategies] = useState([]);
     const [matches, setMatches] = useState([]);
+    const [rankings, setRankings] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [playersRes, strategiesRes, matchesRes] = await Promise.all([
+                const [playersRes, strategiesRes, matchesRes, rankingsRes] = await Promise.all([
                     axios.get('http://localhost:5000/api/players'),
                     axios.get('http://localhost:5000/api/strategies'),
-                    axios.get('http://localhost:5000/api/matches/schedule')
+                    axios.get('http://localhost:5000/api/matches/schedule'),
+                    axios.get('http://localhost:5000/api/rankings')
                 ]);
 
                 setPlayers(playersRes.data || []);
                 setStrategies(strategiesRes.data || []);
                 setMatches(matchesRes.data || []);
+                setRankings(rankingsRes.data || []);
             } catch (err) {
                 console.error("Error fetching overview data:", err);
             } finally {
@@ -59,6 +64,7 @@ const Overview = () => {
 
     const nextMatch = (matches || []).find(m => !isPastMatch(m.date)) || matches[0] || null;
     const opponent = nextMatch ? (nextMatch.opponent || (nextMatch.home?.includes('HUSA') ? nextMatch.away : nextMatch.home) || 'TBD') : 'TBD';
+    const opponentLogo = rankings.find(r => r.club.toLowerCase() === opponent.toLowerCase())?.logo;
 
     return (
         <div className="overview-container dashboard-fashion-theme">
@@ -131,6 +137,12 @@ const Overview = () => {
             <div className="operational-grid">
                 {/* Next Engagement Card */}
                 <div className="intel-card engagement-card">
+                    {/* Background Logo Watermarks */}
+                    <div className="engagement-bg-logos">
+                        <img src={husaLogo} alt="" className="bg-logo-left" />
+                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" />}
+                    </div>
+
                     <div className="card-glitch-header">NEXT ENGAGEMENT</div>
                     <div className="engagement-content">
                         <div className="engagement-teams">

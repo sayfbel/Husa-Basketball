@@ -594,9 +594,9 @@ const Match = () => {
                                             <rect width="1000" height="500" fill="#1a1a1a" />
                                             <path d="M 50,450 L 950,450" stroke="#444" strokeWidth="2" /> {/* Baseline */}
                                             <path d="M 50,450 L 50,50 L 950,50 L 950,450" fill="none" stroke="#444" strokeWidth="2" />
-                                            <path d="M 200,450 L 200,260 L 800,260 L 800,450" fill="none" stroke="#444" strokeWidth="2" /> {/* Paint */}
-                                            <path d="M 500,260 A 100,100 0 0 1 500,450" fill="none" stroke="#444" strokeWidth="2" /> {/* FT Circle */}
-                                            <path d="M 50,450 A 400,400 0 0 1 950,450" fill="none" stroke="#666" strokeWidth="3" /> {/* 3PT Line */}
+                                            <path d="M 350,450 L 350,300 L 650,300 L 650,450" fill="none" stroke="#444" strokeWidth="2" /> {/* Paint */}
+                                            <path d="M 350,300 A 350,800 0 0 1 650,300" fill="none" stroke="#444" strokeWidth="2" /> {/* FT Circle */}
+                                            <path d="M 100,450 A 450,500 0 0 1 900,450" fill="none" stroke="#666" strokeWidth="3" /> {/* 3PT Line */}
                                         </svg>
                                     </div>
 
