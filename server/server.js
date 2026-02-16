@@ -45,7 +45,7 @@ const rankingController = require('./controllers/rankingController');
 app.use('/api/strategies', require('./routes/strategyRoutes'));
 
 app.listen(PORT, async () => {
-    console.log(`Server running on port ${PORT}`);
+    // console.log(`Server running on port ${PORT}`);
     try {
         await authController.seedUsers();
         await strategyController.initTable();
@@ -57,8 +57,8 @@ app.listen(PORT, async () => {
         await reportController.initTable();
         await rankingController.initTable();
         await rankingController.scrapeAndSave(); // Initial scrape if empty
-        console.log('Database seeded & tables initialized');
+
     } catch (err) {
-        console.error('Seeding error:', err);
+
     }
 });

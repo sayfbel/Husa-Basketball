@@ -105,5 +105,14 @@
 @media (max-width: 900px) {
     .partner-spotlight {
         grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .partner-logo-area {
+        padding: 2rem;
+    }
+
+    .partner-content h2 {
+        font-size: 2rem;
     }
 }

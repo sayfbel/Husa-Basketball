@@ -1,9 +1,22 @@
 /* welcome.css */
 .welcome-page {
     position: relative;
+    padding: 6rem 0;
     overflow: hidden;
     background-color: var(--secondary-color);
     min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+    .welcome-page {
+        padding: 4rem 0;
+        /* Keep slight padding for content breathing, but reduce it */
+    }
+
+    .container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
 }
 
 /* Background Gradients */

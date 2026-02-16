@@ -130,28 +130,32 @@ const HistoryTables = () => {
 
                         <div className="table-wrapper">
                             <h4>Regular Season Standings</h4>
-                            <table className="history-table">
-                                <thead>
-                                    <tr>
-                                        {seasonData.standings.headers.map((h, i) => <th key={i}>{h}</th>)}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {seasonData.standings.rows.map((row, i) => (
-                                        <tr key={i} className={row.club.includes('HUSA') ? 'husa-row' : ''}>
-                                            <td>{row.pos}</td>
-                                            <td>{row.club}</td>
-                                            <td>{row.pts}</td>
-                                            <td>{row.p}</td>
-                                            <td>{row.w}</td>
-                                            <td>{row.l}</td>
-                                            <td>{row.pf}</td>
-                                            <td>{row.pa}</td>
-                                            <td>{row.diff}</td>
+                            <div className="table-scroll-container custom-scrollbar">
+                                <table className="history-table">
+                                    <thead>
+                                        <tr>
+                                            {seasonData.standings.headers.map((h, i) => (
+                                                <th key={i} className={i < 2 ? 'sticky-col' : ''} style={i === 1 ? { left: '50px' } : {}}>{h}</th>
+                                            ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {seasonData.standings.rows.map((row, i) => (
+                                            <tr key={i} className={row.club.includes('HUSA') ? 'husa-row' : ''}>
+                                                <td className="sticky-col">{row.pos}</td>
+                                                <td className="sticky-col" style={{ left: '50px' }}>{row.club}</td>
+                                                <td>{row.pts}</td>
+                                                <td>{row.p}</td>
+                                                <td>{row.w}</td>
+                                                <td>{row.l}</td>
+                                                <td>{row.pf}</td>
+                                                <td>{row.pa}</td>
+                                                <td>{row.diff}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {/* Playoffs / Matches */}

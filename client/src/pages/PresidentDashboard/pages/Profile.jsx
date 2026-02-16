@@ -22,7 +22,7 @@ import { useNotification } from '../../../components/Notification/Notification.j
 
 const Profile = () => {
     const { currentUser } = useAuth();
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [staffData, setStaffData] = useState({
@@ -61,7 +61,7 @@ const Profile = () => {
                 age: data.age || '52'
             });
         } catch (err) {
-            console.error("Error fetching staff profile:", err);
+
             showNotification("Failed to load profile data", "error");
         } finally {
             setLoading(false);
@@ -77,7 +77,7 @@ const Profile = () => {
             showNotification("Executive profile updated successfully", "success");
             setIsEditing(false);
         } catch (err) {
-            console.error("Update error:", err);
+
             showNotification("Failed to update profile", "error");
         }
     };

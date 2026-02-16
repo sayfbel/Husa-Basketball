@@ -146,13 +146,13 @@ const Seasons = () => {
                             <h3>Performance Trajectory</h3>
                             <p>Consistent growth in scoring efficiency and win percentage over the last 3 years.</p>
                         </div>
-                        <div style={{ height: '400px' }}>
+                        <div className="chart-container-inner">
                             <Line data={chartData} options={chartOptions} />
                         </div>
                     </div>
 
                     {/* Previous Seasons Grid */}
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2rem', gridArea: '2 / 1 / 4 / 3' }}>
+                    <div className="seasons-history-grid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2rem' }}>
                         <div className="season-card">
                             <div className="season-header">
                                 <span className="season-year" style={{ fontSize: '2rem' }}>2023-2024</span>

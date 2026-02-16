@@ -23,7 +23,7 @@ import '../../../css/dashboard.css';
 
 const Profile = () => {
     const { currentUser } = useAuth();
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [coachData, setCoachData] = useState({
@@ -73,7 +73,7 @@ const Profile = () => {
                 age: data.age || '42'
             });
         } catch (err) {
-            console.error("Error fetching coach profile:", err);
+
             showNotification("Failed to load profile data", "error");
         } finally {
             setLoading(false);
@@ -89,7 +89,7 @@ const Profile = () => {
             showNotification("Coach profile updated successfully", "success");
             setIsEditing(false);
         } catch (err) {
-            console.error("Coach update error:", err);
+
             showNotification("Failed to update coach profile", "error");
         }
     };

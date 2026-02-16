@@ -8,7 +8,7 @@ import '../css/match.css';
 import { Search, User, Users, Shield, Activity, Send } from 'lucide-react'; // Added icons
 
 const Match = () => {
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [players, setPlayers] = useState([]);
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedReportMatch, setSelectedReportMatch] = useState(null);
@@ -59,7 +59,7 @@ const Match = () => {
             const res = await axios.get('http://localhost:5000/api/players');
             setPlayers(res.data);
         } catch (err) {
-            console.error("Error fetching players:", err);
+
         }
     };
 
@@ -71,7 +71,7 @@ const Match = () => {
                 setMatches(res.data);
             }
         } catch (err) {
-            console.error("Error fetching cached matches:", err);
+
         } finally {
             setLoadingMatches(false);
         }
@@ -89,7 +89,7 @@ const Match = () => {
                 setMatches([]);
             }
         } catch (err) {
-            console.error("Error scraping matches:", err);
+
             setError("Could not load match data from federation site.");
         } finally {
             setLoadingMatches(false);
@@ -101,7 +101,7 @@ const Match = () => {
             const res = await axios.get('http://localhost:5000/api/strategies');
             setFullCourtStrategies(res.data);
         } catch (err) {
-            console.error("Error fetching strategies:", err);
+
         }
     };
 
@@ -237,7 +237,7 @@ const Match = () => {
             const res = await axios.post('http://localhost:5000/api/matches/save', payload);
             showNotification("Match setup saved successfully!", "success");
         } catch (err) {
-            console.error(err);
+
             showNotification("Failed to save match setup.", "error");
         }
     };

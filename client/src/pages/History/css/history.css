@@ -18,6 +18,7 @@
     letter-spacing: -2px;
     background: linear-gradient(to right, #fff, #999);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -41,6 +42,11 @@
     max-width: 1200px;
     display: flex;
     flex-direction: column-reverse;
+    /* Reverses the order of seasons: 2025 on top of logic but mapped reverse, wait user logic does mapping.  */
+    /* The map in JSX is doing reverse(). So 2022 comes first in render? No Object.keys(seasons).reverse() gives [2022, 2023, 2024, 2025]. 
+       Actually Object.keys usually returns sorted for strings like this if they parse to ints? No, for strings it's insertion order mostly but numbers are sorted.
+       Let's trust the JS logic.
+    */
     margin: 0 auto;
 }
 
@@ -68,6 +74,8 @@
     width: 4px;
     height: 100%;
     background: var(--primary-color);
+    z-index: 2;
+    /* Ensure it stays on top */
 }
 
 .history-header {
@@ -120,9 +128,61 @@
 
 /* Table Styles - Minimalist Fashion */
 .table-wrapper {
-    overflow-x: auto;
     padding: 3rem;
+    /* Wrapper for title and scroll container */
 }
+
+/* New Scroll Container for Sticky Headers */
+.table-scroll-container {
+    overflow-x: auto;
+    max-width: 100%;
+    position: relative;
+    /* Context for sticky */
+    padding-bottom: 10px;
+    /* Space for scrollbar */
+}
+
+/* Custom Scrollbar Styling */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(219, 10, 64, 0.5);
+    /* Glow effect */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ff3131;
+}
+
+/* Sticky Column Styling */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: #0a0a0a !important;
+    /* Match card bg to cover scrolling content */
+    z-index: 2;
+    /* Ensure border visibility */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    /* Shadow to indicate separation */
+}
+
+/* Specific left for 2nd column set in inline style in JSX, but we ensure bg covers */
+th.sticky-col {
+    z-index: 3;
+    /* Headers on top of row sticky cells */
+    background: #0a0a0a !important;
+}
+
 
 .table-wrapper h4,
 .playoffs-section h4 {
@@ -138,7 +198,9 @@
 
 .history-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    /* Required for sticky to work well with borders sometimes, but collapse is usually ok. sticky needs collapse usually? No, sticky works with collapse but sometimes borders get weird. */
+    border-spacing: 0;
     min-width: 800px;
     font-size: 1rem;
     font-family: 'Poppins', sans-serif;
@@ -154,6 +216,7 @@
     font-size: 0.75rem;
     letter-spacing: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
 }
 
 .history-table td {
@@ -161,6 +224,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     color: #aaa;
     font-weight: 300;
+    white-space: nowrap;
 }
 
 .husa-row {
@@ -173,6 +237,20 @@
     font-weight: 600;
     border-bottom: 1px solid rgba(227, 24, 55, 0.3);
 }
+
+/* Ensure sticky cells in active row also get the highlight if needed, or simply keep their bg */
+.husa-row td.sticky-col {
+    background: #0f0f0f !important;
+    /* Slightly distinct for HUSA row if we want, or match. Let's match general card bg #0a0a0a or a slight highlight? */
+    /* Actually, sticky cells need an opaque background. If row is transparent, we see through.
+       So sticky cells MUST have a set background color. 
+       If we want "highlighted" row for HUSA, we might need a background color on those sticky cells specific to HUSA row.
+    */
+    background: #1a050a !important;
+    /* Subtle tint for HUSA sticky cells */
+    border-bottom: 1px solid rgba(227, 24, 55, 0.3);
+}
+
 
 /* Matches Grid - Editorial List */
 .playoffs-section {

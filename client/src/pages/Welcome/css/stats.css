@@ -43,6 +43,8 @@
     .stats-bar {
         flex-direction: column;
         gap: 2rem;
-        margin-top: -5rem;
+        margin-top: 0;
+        width: 100%;
+        padding: 1.5rem;
     }
 }

@@ -23,7 +23,7 @@ import '../css/Reports.css';
 
 const Report = () => {
     const { currentUser } = useAuth();
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('status'); // 'create' or 'status'
@@ -55,7 +55,7 @@ const Report = () => {
             );
             setReports(filtered);
         } catch (err) {
-            console.error("Error fetching reports:", err);
+
         } finally {
             setLoading(false);
         }
@@ -74,7 +74,7 @@ const Report = () => {
             showNotification("Directive launched successfully!", "success");
             setViewMode('status');
         } catch (err) {
-            console.error("Transmission error:", err);
+
             showNotification("Failed to launch directive.", "error");
         }
     };
@@ -91,7 +91,7 @@ const Report = () => {
             setSelectedReport(null);
             fetchReports();
         } catch (err) {
-            console.error("Response error:", err);
+
             showNotification("Failed to record response.", "error");
         }
     };

@@ -1,45 +1,49 @@
-/* hero.css */
+/* Hero Section Styles */
 .hero-wrapper {
-    position: relative;
-    min-height: 90vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: var(--section-padding);
+    padding: 2rem;
+    background-color: var(--secondary-color);
+    position: relative;
     z-index: 1;
 }
 
 .hero-title {
-    font-size: 5rem;
+    font-size: clamp(3rem, 10vw, 8rem);
     font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
+    margin-bottom: 1rem;
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.5) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     text-transform: uppercase;
-    color: #fff;
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 50px rgba(227, 24, 55, 0.5);
-    margin-bottom: 0.5rem;
-    letter-spacing: 2px;
-    line-height: 1.1;
 }
 
 .hero-subtitle {
-    font-size: 1.5rem;
-    font-weight: 300;
-    color: var(--accent-color);
-    /* Gold */
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    color: var(--text-secondary);
     margin-bottom: 3rem;
-    letter-spacing: 5px;
-    text-transform: uppercase;
+    font-weight: 300;
+    max-width: 600px;
+    line-height: 1.5;
 }
 
 .hero-buttons {
     display: flex;
     gap: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
+    z-index: 2;
 }
 
 @media (max-width: 768px) {
-    .hero-title {
-        font-size: 3rem;
+    .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
     }
 }

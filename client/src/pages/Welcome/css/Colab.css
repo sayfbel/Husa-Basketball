@@ -139,19 +139,20 @@
 
 @media (max-width: 768px) {
     .colab-brand-wall {
-        padding: 6rem 2rem;
+        padding: 4rem 1.5rem;
     }
 
     .wall-header h2 {
-        font-size: 2.5rem;
+        font-size: 2rem;
     }
 
     .brand-matrix {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 1.5rem;
     }
 
     .brand-cell {
+        padding: 2rem;
         min-height: auto;
     }
 }

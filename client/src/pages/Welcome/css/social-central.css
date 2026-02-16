@@ -1,164 +1,156 @@
-/* social-central.css */
+/* Social Central Section */
 .social-section {
-    padding: var(--section-padding);
-    background: #000;
     position: relative;
+    padding: 8rem 2rem;
     overflow: hidden;
+    background-color: #000;
 }
 
-/* Background elements */
 .social-bg-gradient {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, rgba(227, 24, 55, 0.15) 0%, transparent 60%);
+    background: radial-gradient(circle at 60% 40%, rgba(227, 24, 55, 0.15) 0%, transparent 60%);
+    pointer-events: none;
     z-index: 0;
 }
 
 .social-container {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 0 auto;
-    position: relative;
-    z-index: 2;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 6rem;
     align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
-/* Left Side: Mockup */
+/* Phone Mockup */
 .mockup-wrapper {
-    position: relative;
     display: flex;
     justify-content: center;
     perspective: 1000px;
 }
 
 .phone-mockup {
-    transform: rotateY(-10deg) rotateX(5deg);
-    transition: transform 0.5s ease;
+    border-radius: 48px;
     overflow: hidden;
+    transform: rotateY(-15deg) rotateX(10deg);
+    transition: transform 0.5s ease;
 }
 
-.phone-mockup:hover {
-    transform: rotateY(0) rotateX(0);
+.mockup-wrapper:hover .phone-mockup {
+    transform: rotateY(0deg) rotateX(0deg);
 }
 
 .mockup-image {
     width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 40px;
-    /* Match typical phone radius */
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    height: 100%;
+    object-fit: cover;
 }
 
-/* Right Side: Content */
+/* Content Side */
 .social-content {
-    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .social-label {
     font-size: 0.9rem;
-    color: var(--accent-color);
+    color: var(--primary-color);
+    letter-spacing: 3px;
     text-transform: uppercase;
-    letter-spacing: 2px;
     font-weight: 700;
-    margin-bottom: 1rem;
-    display: block;
 }
 
 .social-title {
-    font-size: 3.5rem;
-    color: white;
-    font-weight: 900;
-    line-height: 1.1;
-    margin-bottom: 2rem;
-    text-transform: uppercase;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1;
+    font-weight: 800;
+    background: linear-gradient(to right, #fff, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .social-description {
-    color: #aaa;
     font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 600px;
     line-height: 1.6;
-    margin-bottom: 2.5rem;
 }
 
-/* Fake Posts Grid */
+/* Post Cards Grid */
 .posts-preview {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
+    margin-top: 2rem;
 }
 
 .post-card-link {
     text-decoration: none;
-    display: block;
     color: inherit;
+    display: block;
 }
 
 .post-card {
-    background: #1a1a1a;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
     padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.3s ease, border-color 0.3s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    transition: all 0.3s ease;
 }
 
 .post-card:hover {
     transform: translateY(-5px);
-    border-color: var(--primary-color);
-    box-shadow: 0 5px 15px rgba(227, 24, 55, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .post-header {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 1rem;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .post-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    padding: 2px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .post-avatar img {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    border: 2px solid #000;
-    display: block;
+    object-fit: cover;
 }
 
 .post-user {
-    font-weight: 700;
-    color: white;
     font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
 }
 
 .post-meta {
-    font-size: 0.8rem;
-    color: #666;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
 }
 
 .post-image-placeholder {
     width: 100%;
-    height: 180px;
-    /* Fixed height for consistency */
-    background: #222;
+    aspect-ratio: 1;
     border-radius: 8px;
-    margin-bottom: 1rem;
     overflow: hidden;
+    margin-bottom: 12px;
+    background-color: #222;
 }
 
 .post-image-placeholder img {
@@ -174,67 +166,86 @@
 
 .post-caption {
     font-size: 0.85rem;
-    color: #ccc;
+    color: #ddd;
     line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    /* Limit text lines */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* Call to Action Buttons */
+/* Buttons */
 .social-buttons {
     display: flex;
     gap: 1rem;
-    margin-top: 3rem;
+    margin-top: 1rem;
 }
 
 .btn-social {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.8rem;
-    padding: 1rem 2rem;
-    border-radius: 30px;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.btn-insta {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    font-size: 0.95rem;
+    transition: transform 0.2s ease, filter 0.2s ease;
     color: white;
-    box-shadow: 0 10px 20px rgba(220, 39, 67, 0.3);
-}
-
-.btn-fb {
-    background: #1877F2;
-    color: white;
-    box-shadow: 0 10px 20px rgba(24, 119, 242, 0.3);
 }
 
 .btn-social:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     filter: brightness(1.1);
 }
 
-@media (max-width: 900px) {
+.btn-insta {
+    background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+    box-shadow: 0 4px 15px rgba(193, 53, 132, 0.3);
+}
+
+.btn-fb {
+    background-color: #1877f2;
+    box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+}
+
+@media (max-width: 968px) {
     .social-container {
         grid-template-columns: 1fr;
+        gap: 4rem;
         text-align: center;
-    }
-
-    .social-content {
-        text-align: center;
-    }
-
-    .social-buttons {
-        justify-content: center;
     }
 
     .mockup-wrapper {
-        margin-bottom: 3rem;
+        order: -1;
+    }
+
+    .social-content {
+        align-items: center;
+    }
+
+    .social-description {
+        margin: 0 auto;
+    }
+
+    .posts-preview {
+        width: 100%;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .posts-preview {
+        grid-template-columns: 1fr;
+    }
+
+    .social-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-social {
+        justify-content: center;
     }
 }

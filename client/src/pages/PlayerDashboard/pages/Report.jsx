@@ -21,7 +21,7 @@ import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 
 const Report = () => {
     const { currentUser } = useAuth();
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('create'); // 'create' or 'status'
@@ -47,7 +47,7 @@ const Report = () => {
             const res = await axios.get(`http://localhost:5000/api/reports?playerId=${currentUser.id}`);
             setReports(res.data);
         } catch (err) {
-            console.error("Error fetching reports:", err);
+
         } finally {
             setLoading(false);
         }
@@ -67,7 +67,7 @@ const Report = () => {
             showNotification("Transmission successful!", "success");
             // User requested to see notifications, let's just stay on create and show the notif.
         } catch (err) {
-            console.error("Transmission error:", err.response?.data || err.message);
+
             showNotification("Transmission failed. Check console for details.", "error");
         }
     };
@@ -84,7 +84,7 @@ const Report = () => {
             setSelectedReport(null);
             fetchReports();
         } catch (err) {
-            console.error("Response error:", err.response?.data || err.message);
+
             showNotification("Failed to send response.", "error");
         }
     };

@@ -9,7 +9,7 @@ import '../css/report.css';
 
 const Report = () => {
     const { currentUser } = useAuth();
-    const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
+    const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [players, setPlayers] = useState([]);
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ const Report = () => {
             setPlayers(playersRes.data);
             setReports(reportsRes.data);
         } catch (err) {
-            console.error("Failed to fetch data", err);
+
         } finally {
             setLoading(false);
         }
@@ -109,7 +109,7 @@ const Report = () => {
             setSelectedPlayerIds([]);
             fetchData();
         } catch (err) {
-            console.error("Transmission error:", err.response?.data || err.message);
+
             showNotification("Failed to send report. Check console for details.", "error");
         }
     };
@@ -117,7 +117,7 @@ const Report = () => {
     const handleRespond = async (reportId) => {
         if (!coachResponse.trim()) return;
         try {
-            console.log(`Responding to report ${reportId} with content: ${coachResponse}`);
+
             await axios.post('http://localhost:5000/api/reports/respond', {
                 reportId,
                 response: coachResponse
@@ -127,7 +127,7 @@ const Report = () => {
             setSelectedReport(null);
             fetchData();
         } catch (err) {
-            console.error("Response error:", err.response?.data || err.message);
+
             showNotification("Failed to send response. Check console.", "error");
         }
     };
