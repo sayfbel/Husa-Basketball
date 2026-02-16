@@ -69,6 +69,10 @@ const Overview = () => {
 
     const latestCoachNote = reports.find(r => r.type === 'technical' || r.sender_name.toLowerCase().includes('coach')) || (reports.length > 0 ? reports[0] : null);
 
+    const handleImageError = (e) => {
+        e.target.style.display = 'none';
+    };
+
     if (loading) return <div className="loading-spinner">Initializing Systems...</div>;
 
     return (
@@ -148,7 +152,7 @@ const Overview = () => {
                     {/* Background Logo Watermarks */}
                     <div className="engagement-bg-logos">
                         <img src={husaLogo} alt="" className="bg-logo-left" />
-                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" />}
+                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" onError={handleImageError} />}
                     </div>
 
                     <div className="card-glitch-header">NEXT BATTLE</div>

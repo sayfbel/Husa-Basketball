@@ -66,6 +66,12 @@ const Overview = () => {
     const opponent = nextMatch ? (nextMatch.opponent || (nextMatch.home?.includes('HUSA') ? nextMatch.away : nextMatch.home) || 'TBD') : 'TBD';
     const opponentLogo = rankings.find(r => r.club.toLowerCase() === opponent.toLowerCase())?.logo;
 
+    const handleImageError = (e) => {
+        e.target.style.display = 'none';
+    };
+
+    if (loading) return <div className="loading-spinner">Initializing Systems...</div>;
+
     return (
         <div className="overview-container dashboard-fashion-theme">
             {/* 1. Cinematic Header */}
@@ -140,7 +146,7 @@ const Overview = () => {
                     {/* Background Logo Watermarks */}
                     <div className="engagement-bg-logos">
                         <img src={husaLogo} alt="" className="bg-logo-left" />
-                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" />}
+                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" onError={handleImageError} />}
                     </div>
 
                     <div className="card-glitch-header">NEXT ENGAGEMENT</div>

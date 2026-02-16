@@ -85,3 +85,30 @@ exports.submitTryout = async (req, res) => {
         res.status(500).json({ message: 'Server error. Please try again later.' });
     }
 };
+
+exports.getTryouts = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tryouts ORDER BY created_at DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching tryouts:', error);
+        res.status(500).json({ message: 'Error fetching tryouts' });
+    }
+};
+
+exports.updateTryoutStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['pending', 'reviewed', 'accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    try {
+        await db.query('UPDATE tryouts SET status = ? WHERE id = ?', [status, id]);
+        res.json({ message: 'Status updated successfully' });
+    } catch (error) {
+        console.error('Error updating tryout status:', error);
+        res.status(500).json({ message: 'Error updating status' });
+    }
+};

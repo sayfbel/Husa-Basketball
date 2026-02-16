@@ -69,6 +69,10 @@ const FanSupport = () => {
         fetchMatchData();
     }, []);
 
+    const handleImageError = (e) => {
+        e.target.style.display = 'none';
+    };
+
     const isPastMatch = (matchDate) => {
         try {
             const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
@@ -189,7 +193,7 @@ const FanSupport = () => {
                                     <span className="vs-text">VS</span>
                                 </div>
                                 <div className="team away">
-                                    <img src={matchDetails.opponentLogo} alt={`${matchDetails.opponent} Logo`} className="team-logo" />
+                                    <img src={matchDetails.opponentLogo} alt={`${matchDetails.opponent} Logo`} className="team-logo" onError={handleImageError} />
                                     <span className="team-name">{matchDetails.opponent}</span>
                                 </div>
                             </div>
@@ -243,7 +247,7 @@ const FanSupport = () => {
                                             </div>
                                             <div className="t-vs">VS</div>
                                             <div className="t-team">
-                                                <img src={matchDetails.opponentLogo} alt={matchDetails.opponent} className="t-logo" />
+                                                <img src={matchDetails.opponentLogo} alt={matchDetails.opponent} className="t-logo" onError={handleImageError} />
                                                 <span className="t-name">{matchDetails.opponent}</span>
                                             </div>
                                         </div>

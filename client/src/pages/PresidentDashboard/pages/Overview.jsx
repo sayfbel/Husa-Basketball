@@ -15,7 +15,8 @@ import {
     Clock,
     Award,
     Target,
-    Trophy
+    Trophy,
+    UserPlus
 } from 'lucide-react';
 import '../../../css/dashboard.css';
 import '../css/overview.css';
@@ -30,18 +31,20 @@ const Overview = () => {
     const [rankings, setRankings] = useState([]);
     const [staff, setStaff] = useState([]);
     const [players, setPlayers] = useState([]);
+    const [tryouts, setTryouts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // Fetch general club data
-                const [matchesRes, reportsRes, rankingsRes, staffRes, playersRes] = await Promise.all([
+                const [matchesRes, reportsRes, rankingsRes, staffRes, playersRes, tryoutsRes] = await Promise.all([
                     axios.get('http://localhost:5000/api/matches/schedule'),
                     axios.get('http://localhost:5000/api/reports'),
                     axios.get('http://localhost:5000/api/rankings'),
                     axios.get('http://localhost:5000/api/staff'),
-                    axios.get('http://localhost:5000/api/players')
+                    axios.get('http://localhost:5000/api/players'),
+                    axios.get('http://localhost:5000/api/tryouts')
                 ]);
 
                 setMatches(matchesRes.data || []);
@@ -49,6 +52,7 @@ const Overview = () => {
                 setRankings(rankingsRes.data || []);
                 setStaff(staffRes.data || []);
                 setPlayers(playersRes.data || []);
+                setTryouts(tryoutsRes.data || []);
             } catch (err) {
                 console.error("Error fetching president overview data:", err);
             } finally {
@@ -93,6 +97,10 @@ const Overview = () => {
     const winRate = playedMatches.length > 0 ? ((wins / playedMatches.length) * 100).toFixed(0) : 0;
 
     const latestNote = (reports.length > 0 ? reports[0] : null);
+
+    const handleImageError = (e) => {
+        e.target.style.display = 'none';
+    };
 
     if (loading) return <div className="loading-spinner">Accessing Executive Systems...</div>;
 
@@ -147,12 +155,12 @@ const Overview = () => {
                     </div>
                 </div>
 
-                <div className="status-module glow-red">
+                <div className="status-module glow-red clickable" onClick={() => navigate('/dashboard/president/new-members')}>
                     <div className="module-inner">
-                        <Shield className="module-icon" />
-                        <span className="module-label">STAFF STATUS</span>
-                        <h2 className="module-value">ACTIVE</h2>
-                        <div className="module-tag">{staff.length} STAFF MEMBERS</div>
+                        <UserPlus className="module-icon" size={24} />
+                        <span className="module-label">NEW APPLICANTS</span>
+                        <h2 className="module-value">{tryouts.filter(t => t.status === 'pending').length}</h2>
+                        <div className="module-tag">{tryouts.length} TOTAL TRYOUTS</div>
                     </div>
                 </div>
 
@@ -176,7 +184,7 @@ const Overview = () => {
                     {/* Background Logo Watermarks */}
                     <div className="engagement-bg-logos">
                         <img src={husaLogo} alt="" className="bg-logo-left" />
-                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" />}
+                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" onError={handleImageError} />}
                     </div>
 
                     <div className="card-glitch-header">NEXT FIXTURE</div>

@@ -8,6 +8,7 @@ import Overview from './pages/Overview';
 import Profile from './pages/Profile';
 import Match from './pages/Match';
 import Report from './pages/Report';
+import NewMembers from './pages/NewMembers';
 
 
 const PresidentDashboard = () => {
@@ -52,10 +53,10 @@ const PresidentDashboard = () => {
                         Reports
                     </NavLink>
                     <NavLink
-                        to="/dashboard/president/club"
+                        to="/dashboard/president/new-members"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Club Status
+                        New Members
                     </NavLink>
                 </nav>
             </div>
@@ -66,8 +67,8 @@ const PresidentDashboard = () => {
                     <Route path="profile" element={<Profile />} />
                     <Route path="match" element={<Match />} />
                     <Route path="report" element={<Report />} />
+                    <Route path="new-members" element={<NewMembers />} />
                     {/* Placeholder routes for future expansion */}
-                    <Route path="club" element={<div className="glass-card p-4">Club Status Module Coming Soon</div>} />
                     <Route path="financials" element={<div className="glass-card p-4">Financial Oversight Module Coming Soon</div>} />
                 </Routes>
             </div>

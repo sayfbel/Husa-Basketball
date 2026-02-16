@@ -4,7 +4,6 @@
     display: grid;
     grid-template-columns: 450px 1fr;
     gap: 2rem;
-    height: calc(100vh - 250px);
 }
 
 .section-title-fancy {
