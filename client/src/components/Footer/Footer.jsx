@@ -50,7 +50,7 @@ const Footer = () => {
                         <li><span className="material-icons-outlined">email</span> contact@husabasketball.ma</li>
                     </ul>
                     <div className="partner-badge">
-                        <p>Official Member of FRMBB</p>
+                        Official Member of FRMBB
                     </div>
                 </div>
 

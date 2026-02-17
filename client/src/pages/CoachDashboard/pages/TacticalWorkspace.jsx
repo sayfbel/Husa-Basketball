@@ -46,9 +46,10 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
     const courtRef = useRef(null);
     const playInterval = useRef(null);
 
-    // Get current state data derived from frame index
-    const currentTokens = frames[currentFrameIndex].tokens;
-    const currentPaths = frames[currentFrameIndex].paths;
+    // Get current state data derived from frame index with safety fallback
+    const currentFrame = frames[currentFrameIndex] || frames[0] || { tokens: [], paths: [] };
+    const currentTokens = currentFrame.tokens || [];
+    const currentPaths = currentFrame.paths || [];
 
     const viewBox = type === 'full' ? { w: 1000, h: 560 } : { w: 500, h: 470 };
 
@@ -73,6 +74,12 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
         const lastState = history[history.length - 1];
         setFrames(lastState);
         setHistory(prev => prev.slice(0, -1));
+
+        // Sync index if it's now out of bounds
+        if (currentFrameIndex >= lastState.length) {
+            setCurrentFrameIndex(lastState.length - 1);
+        }
+
         if (showNotification) showNotification('Action undone', 'info');
     };
 

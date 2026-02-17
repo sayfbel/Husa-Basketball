@@ -43,7 +43,11 @@ const Navbar = () => {
                 <div className="container nav-content">
                     <Link to="/" className="logo" onClick={closeMenu}>
                         <img src={husaLogo} alt="HUSA Logo" className="navbar-logo-img" />
-                        HUSA <span>Basketball</span>
+                        HUSA <span className="basketball-text">
+                            {"Basketball".split("").map((letter, i) => (
+                                <span key={i} className="basketball-letter">{letter}</span>
+                            ))}
+                        </span>
                     </Link>
 
                     <button className={`menu-toggle ${isMenuOpen ? 'active' : ''}`} onClick={toggleMenu} aria-label="Toggle Menu">

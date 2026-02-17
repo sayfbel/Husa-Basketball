@@ -14,7 +14,8 @@ import {
     Shield,
     Activity,
     Mail,
-    Bell
+    Bell,
+    History
 } from 'lucide-react';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
@@ -133,9 +134,22 @@ const Report = () => {
                     <button
                         className={`filter-btn-v2 ${viewMode === 'status' ? 'active' : ''}`}
                         onClick={() => setViewMode(viewMode === 'status' ? 'create' : 'status')}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '5px 15px', borderRadius: '30px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}
+                        style={{
+                            background: 'rgba(255,255,255,0.05) !important',
+                            border: '1px solid rgba(255,255,255,0.1) !important',
+                            color: '#fff !important',
+                            width: '35px !important',
+                            height: '35px !important',
+                            padding: '0 !important',
+                            display: 'flex !important',
+                            alignItems: 'center !important',
+                            justifyContent: 'center !important',
+                            borderRadius: '50% !important',
+                            cursor: 'pointer !important'
+                        }}
+                        title={viewMode === 'create' ? 'VIEW LOGS' : 'NEW MESSAGE'}
                     >
-                        {viewMode === 'create' ? 'VIEW LOGS' : 'NEW MESSAGE'}
+                        {viewMode === 'create' ? <History size={18} /> : <Plus size={18} />}
                     </button>
                 </div>
 

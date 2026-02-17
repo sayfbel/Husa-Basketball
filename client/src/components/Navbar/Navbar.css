@@ -58,9 +58,79 @@
     gap: 10px;
 }
 
-.logo span {
+.basketball-text {
     color: var(--primary-color);
     font-size: 1.4rem;
+    display: flex;
+}
+
+.basketball-letter {
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 990px) {
+    .basketball-letter:nth-child(10) {
+        display: none;
+    }
+}
+
+@media (max-width: 975px) {
+    .basketball-letter:nth-child(9) {
+        display: none;
+    }
+}
+
+@media (max-width: 960px) {
+    .basketball-letter:nth-child(8) {
+        display: none;
+    }
+}
+
+@media (max-width: 945px) {
+    .basketball-letter:nth-child(7) {
+        display: none;
+    }
+}
+
+@media (max-width: 930px) {
+    .basketball-letter:nth-child(6) {
+        display: none;
+    }
+}
+
+@media (max-width: 915px) {
+    .basketball-letter:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .basketball-letter:nth-child(4) {
+        display: none;
+    }
+}
+
+@media (max-width: 885px) {
+    .basketball-letter:nth-child(3) {
+        display: none;
+    }
+}
+
+@media (max-width: 870px) {
+    .basketball-letter:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (max-width: 855px) {
+    .basketball-letter:nth-child(1) {
+        display: none;
+    }
+
+    .basketball-text {
+        display: none;
+    }
 }
 
 .navbar-logo-img {

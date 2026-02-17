@@ -93,8 +93,10 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     const courtRef = useRef(null);
     const playInterval = useRef(null);
 
-    const currentTokens = frames[currentFrameIndex].tokens;
-    const currentPaths = frames[currentFrameIndex].paths;
+    // Get current state data derived from frame index with safety fallback
+    const currentFrame = frames[currentFrameIndex] || frames[0] || { tokens: [], paths: [] };
+    const currentTokens = currentFrame.tokens || [];
+    const currentPaths = currentFrame.paths || [];
     const viewBox = { w: 1000, h: 560 }; // Full Court
 
     // --- Helpers ---
@@ -115,6 +117,12 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         const lastState = history[history.length - 1];
         setFrames(lastState);
         setHistory(prev => prev.slice(0, -1));
+
+        // Sync index if it's now out of bounds
+        if (currentFrameIndex >= lastState.length) {
+            setCurrentFrameIndex(lastState.length - 1);
+        }
+
         showNotification("Action undone", "info");
     };
 

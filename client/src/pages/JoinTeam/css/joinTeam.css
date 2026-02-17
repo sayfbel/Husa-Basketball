@@ -186,6 +186,7 @@
 
     .tryout-form-wrapper {
         padding: 2rem;
+        z-index: 1000;
     }
 
     .form-row {

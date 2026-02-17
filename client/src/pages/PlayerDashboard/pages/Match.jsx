@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
     Calendar,
@@ -229,6 +230,7 @@ const ReadOnlyCourt = ({ frames, type = 'full', players = [] }) => {
 
 const Match = () => {
     const { currentUser } = useAuth();
+    const location = useLocation();
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedMatch, setSelectedMatch] = useState(null);
@@ -240,14 +242,27 @@ const Match = () => {
         }
     }, [currentUser]);
 
+    // Handle initial selection and re-selection when navigation state changes
+    useEffect(() => {
+        if (matches.length > 0) {
+            if (location.state?.targetMatchId) {
+                const target = matches.find(m => String(m.id) === String(location.state.targetMatchId));
+                if (target) {
+                    setSelectedMatch(target);
+                    return;
+                }
+            }
+
+            // Fallback: Default selection if no target ID or target not found
+            const upcoming = matches.find(m => new Date(m.date) >= new Date());
+            setSelectedMatch(upcoming || matches[0]);
+        }
+    }, [matches, location.state?.targetMatchId]);
+
     const fetchPlayerMatches = async () => {
         try {
             const res = await axios.get(`http://localhost:5000/api/matches/player/${currentUser.name}`);
             setMatches(res.data);
-            // Default select the first match (most recent or next)
-            if (res.data.length > 0) {
-                setSelectedMatch(res.data[0]);
-            }
         } catch (err) {
             console.error("Error fetching player matches:", err);
         } finally {

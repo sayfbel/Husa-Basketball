@@ -170,17 +170,37 @@
 
 .partner-badge {
     margin-top: 2rem;
-    display: inline-block;
-    padding: 0.8rem 1.5rem;
-    background: rgba(255, 215, 0, 0.05);
-    /* Very subtle gold bg */
-    border: 1px solid rgba(255, 215, 0, 0.2);
-    border-radius: 4px;
-    color: var(--accent-color);
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    background: rgba(219, 10, 64, 0.05);
+    border: 1px solid rgba(219, 10, 64, 0.15);
+    border-radius: 50px;
+    color: white;
+    font-weight: 800;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    cursor: default;
+}
+
+.partner-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #DB0A40;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #DB0A40;
+}
+
+.partner-badge:hover {
+    background: rgba(219, 10, 64, 0.1);
+    border-color: rgba(219, 10, 64, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(219, 10, 64, 0.1);
 }
 
 /* Footer Bottom */

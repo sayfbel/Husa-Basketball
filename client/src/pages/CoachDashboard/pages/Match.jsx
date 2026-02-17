@@ -107,6 +107,7 @@ const Match = () => {
 
     const isPastMatch = (matchDate) => {
         try {
+            if (!matchDate || matchDate.includes('00/00')) return false;
             const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
             if (isNaN(d.getTime())) return false;
 

@@ -62,6 +62,7 @@ exports.initTable = async () => {
         await db.query(`
             CREATE TABLE IF NOT EXISTS match_schedule (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                external_id VARCHAR(50),
                 date VARCHAR(50),
                 time VARCHAR(50),
                 venue VARCHAR(255),
@@ -69,9 +70,16 @@ exports.initTable = async () => {
                 away VARCHAR(255),
                 score VARCHAR(50),
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_external_id (external_id),
                 UNIQUE KEY unique_match (date, home, away)
             )
         `);
+
+        // Migration: Add external_id if missing
+        try {
+            await db.query('ALTER TABLE match_schedule ADD COLUMN external_id VARCHAR(50) AFTER id');
+            await db.query('ALTER TABLE match_schedule ADD UNIQUE KEY unique_external_id (external_id)');
+        } catch (err) { }
 
         console.log('Match tables initialized');
     } catch (error) {
@@ -80,23 +88,26 @@ exports.initTable = async () => {
 };
 
 // Scrape HUSA Matches from FRMBB
-// Scrape HUSA Matches from FRMBB
 exports.scrapeMatches = async (req, res) => {
     try {
         const url = 'https://frmbb.ma/1dnh-2025-2026/';
 
-        // 1. Fetch HTML
-        const { data } = await axios.get(url);
+        const { data } = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
         const $ = cheerio.load(data);
 
         let scrapedMatches = [];
 
         $('table tr').each((i, row) => {
             const cols = $(row).find('td');
-            if (cols.length > 0) {
+            if (cols.length > 5) { // Minimum cols for a match row
                 const rowText = $(row).text().replace(/\s+/g, ' ').toUpperCase();
 
                 if (rowText.includes('HUSA') || rowText.includes('HASSANIA')) {
+                    let externalId = $(cols[0]).text().trim();
                     let date = $(cols[1]).text().trim();
                     let time = $(cols[2]).text().trim();
                     let venue = $(cols[3]).text().trim();
@@ -105,44 +116,81 @@ exports.scrapeMatches = async (req, res) => {
                     let scoreHome = $(cols[6]).text().trim();
                     let scoreAway = $(cols[7]).text().trim();
 
-                    const col0Text = $(cols[0]).text().trim();
-                    if (col0Text.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                        date = $(cols[0]).text().trim();
+                    // Handle shift if ID is missing (Date becomes Col 0)
+                    if (externalId.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                        date = externalId;
                         time = $(cols[1]).text().trim();
                         venue = $(cols[2]).text().trim();
+                        home = $(cols[3]).text().trim();
+                        away = $(cols[4]).text().trim();
+                        scoreHome = $(cols[5]).text().trim();
+                        scoreAway = $(cols[6]).text().trim();
+                        externalId = `SCRAPED_${date}_${home.substring(0, 3)}_${away.substring(0, 3)}`;
+                    }
+
+                    // Special case for EXEMPT
+                    if (away.includes('EXEMPT') || home.includes('EXEMPT')) {
+                        return; // Skip exempt weeks
                     }
 
                     let finalScore = '-';
-                    if (scoreHome && scoreAway) {
+                    if (scoreHome && scoreAway && (scoreHome !== '0' || scoreAway !== '0')) {
                         finalScore = `${scoreHome} - ${scoreAway}`;
-                    } else if (scoreHome) {
+                    } else if (scoreHome && scoreHome !== '0') {
                         finalScore = scoreHome;
                     }
 
                     if (date && home && away) {
-                        scrapedMatches.push([date, time, venue, home, away, finalScore]);
+                        scrapedMatches.push({
+                            externalId,
+                            date,
+                            time,
+                            venue,
+                            home,
+                            away,
+                            score: finalScore
+                        });
                     }
                 }
             }
         });
 
         if (scrapedMatches.length > 0) {
-            // UPSERT into database
-            // We use INSERT ... ON DUPLICATE KEY UPDATE
             for (const match of scrapedMatches) {
                 await db.query(`
-                    INSERT INTO match_schedule (date, time, venue, home, away, score)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO match_schedule (external_id, date, time, venue, home, away, score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE 
+                    date = VALUES(date),
                     time = VALUES(time),
                     venue = VALUES(venue),
                     score = VALUES(score)
-                `, match);
+                `, [match.externalId, match.date, match.time, match.venue, match.home, match.away, match.score]);
             }
+
+            // Data Cleanup: Remove old records with '00/00/0000' that now have a real date/ID
+            await db.query(`
+                DELETE FROM match_schedule 
+                WHERE date = '00/00/0000' 
+                AND external_id IS NULL
+            `);
+
+            // Also deduplicate by teams if one has a date and other doesn't
+            await db.query(`
+                DELETE t1 FROM match_schedule t1
+                INNER JOIN match_schedule t2 ON t1.home = t2.home AND t1.away = t2.away
+                WHERE t1.date = '00/00/0000' AND t2.date != '00/00/0000'
+            `);
         }
 
-        // Return the updated schedule from DB
-        const [rows] = await db.query('SELECT * FROM match_schedule ORDER BY id ASC');
+        // Return the updated schedule from DB, ordering by date (00/00/0000 at bottom)
+        const [rows] = await db.query(`
+            SELECT * FROM match_schedule 
+            ORDER BY 
+                CASE WHEN date = '00/00/0000' THEN 1 ELSE 0 END,
+                STR_TO_DATE(NULLIF(date, '00/00/0000'), '%d/%m/%Y') ASC,
+                id ASC
+        `);
         res.json(rows);
 
     } catch (error) {
@@ -154,7 +202,13 @@ exports.scrapeMatches = async (req, res) => {
 // Get Scraped Matches from Database (Fast)
 exports.getCachedMatches = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM match_schedule ORDER BY id ASC');
+        const [rows] = await db.query(`
+            SELECT * FROM match_schedule 
+            ORDER BY 
+                CASE WHEN date = '00/00/0000' THEN 1 ELSE 0 END,
+                STR_TO_DATE(NULLIF(date, '00/00/0000'), '%d/%m/%Y') ASC,
+                id ASC
+        `);
         res.json(rows);
     } catch (error) {
         console.error('Error fetching cached matches:', error.message);

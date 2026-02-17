@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
-import { Send, User, Users, Shield, CheckCircle, Plus, Activity, Mail, Bell, X, ChevronRight, Clock } from 'lucide-react';
+import { Send, User, Users, Shield, CheckCircle, Plus, Activity, Mail, Bell, X, ChevronRight, Clock, History } from 'lucide-react';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import '../../../css/dashboard.css';
 import '../css/report.css';
@@ -178,9 +178,22 @@ const Report = () => {
                     <button
                         className={`filter-btn-v2 ${viewMode === 'status' ? 'active' : ''}`}
                         onClick={() => setViewMode(viewMode === 'status' ? 'create' : 'status')}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '5px 15px', borderRadius: '30px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}
+                        style={{
+                            background: 'rgba(255,255,255,0.05) !important',
+                            border: '1px solid rgba(255,255,255,0.1) !important',
+                            color: '#fff !important',
+                            width: '35px !important',
+                            height: '35px !important',
+                            padding: '0 !important',
+                            display: 'flex !important',
+                            alignItems: 'center !important',
+                            justifyContent: 'center !important',
+                            borderRadius: '50% !important',
+                            cursor: 'pointer !important'
+                        }}
+                        title={viewMode === 'create' ? 'VIEW ARCHIVE' : 'NEW TRANSMISSION'}
                     >
-                        {viewMode === 'create' ? 'VIEW ARCHIVE' : 'NEW TRANSMISSION'}
+                        {viewMode === 'create' ? <History size={18} /> : <Plus size={18} />}
                     </button>
                 </div>
 

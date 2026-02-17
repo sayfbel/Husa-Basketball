@@ -691,6 +691,13 @@
     animation: fadeIn 0.3s ease;
 }
 
+@media (max-width: 990px) {
+    .purchase-modal-overlay {
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+}
+
 .purchase-modal-card {
     background: #111;
     width: 100%;
@@ -912,7 +919,7 @@
 }
 
 /* Mobile Modal Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 990px) {
     .modal-content-grid {
         grid-template-columns: 1fr;
     }
@@ -928,7 +935,18 @@
     }
 
     .order-form-side {
-        padding: 2rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .order-form-side h2 {
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-row-fashion {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
 }
 

@@ -53,6 +53,7 @@ const Overview = () => {
 
     const isPastMatch = (matchDate) => {
         try {
+            if (!matchDate || matchDate.includes('00/00')) return false;
             const d = new Date(matchDate && matchDate.includes('/') ? matchDate.split('/').reverse().join('-') : matchDate);
             if (isNaN(d.getTime())) return false;
             const today = new Date();
@@ -187,7 +188,7 @@ const Overview = () => {
                         </div>
                         <button
                             className="intel-btn-primary"
-                            onClick={() => navigate('/dashboard/player/match')}
+                            onClick={() => navigate('/dashboard/player/match', { state: { targetMatchId: nextMatch?.id } })}
                         >
                             VIEW MATCH INTEL <ChevronRight size={18} />
                         </button>
