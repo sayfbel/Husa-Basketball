@@ -5,7 +5,8 @@ import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
 import '../css/match.css';
 
-import { Search, User, Users, Shield, Activity, Send } from 'lucide-react'; // Added icons
+import Tesseract from 'tesseract.js';
+import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2 } from 'lucide-react'; // Added icons
 
 const Match = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
@@ -13,6 +14,10 @@ const Match = () => {
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedReportMatch, setSelectedReportMatch] = useState(null);
     const [reportContent, setReportContent] = useState("");
+    const [ocrProgress, setOcrProgress] = useState(0);
+    const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+    const [ocrStatus, setOcrStatus] = useState('');
+    const ocrFileInputRef = useRef(null);
 
     // Match State
     const [matches, setMatches] = useState([]);
@@ -116,6 +121,99 @@ const Match = () => {
             return d < today;
         } catch (e) {
             return false;
+        }
+    };
+
+    // --- OCR Logic ---
+    const parseMatchSheet = (text) => {
+        // Helper to extract single fields
+        const extractField = (regex, source = text) => {
+            const match = source.match(regex);
+            return match ? match[1].trim() : "Not found";
+        };
+
+        // Basic Match info patterns from request
+        const date = extractField(/DATE\s*:\s*(.*)/i);
+        const heure = extractField(/HEURE\s*:\s*(.*)/i);
+        const lieu = extractField(/LIEU\s*:\s*(.*)/i);
+
+        // Teams extraction
+        const teamA = extractField(/Equipe A\s*:\s*(.*)/i);
+        const teamB = extractField(/Equipe B\s*:\s*(.*)/i);
+
+        // Final Result extraction
+        const finalResult = text.match(/RESULTAT FINAL\s*Equipe A\s*(.*?)\s*Equipe B\s*(.*)/i);
+        const scoreA = finalResult ? finalResult[1].trim() : "N/A";
+        const scoreB = finalResult ? finalResult[2].trim() : "N/A";
+
+        // Players extraction 
+        const playersASection = text.match(/Equipe A\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Equipe B)/si);
+        const playersBSection = text.match(/Equipe B\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Resultat)/si);
+
+        const cleanPlayers = (pTextMatch) => {
+            if (!pTextMatch || !pTextMatch[1]) return [];
+            return pTextMatch[1].split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 3 && !line.includes('---')); // Basic filter for noise
+        };
+
+        const listA = cleanPlayers(playersASection);
+        const listB = cleanPlayers(playersBSection);
+
+        // Construct the premium tactical intel report
+        let reportStr = `[ BATTLE_INTEL_EXTRACTED ]\n`;
+        reportStr += `MISSION_DATE: ${date}\n`;
+        reportStr += `UPLINK_TIME: ${heure}\n`;
+        reportStr += `ZONE: ${lieu}\n\n`;
+
+        reportStr += `[ ENGAGED_TEAMS ]\n`;
+        reportStr += `ALPHA_UNIT: ${teamA}\n`;
+        reportStr += `BRAVO_UNIT: ${teamB}\n\n`;
+
+        reportStr += `[ OPERATIONAL_OUTCOME ]\n`;
+        reportStr += `ALPHA_SCORE: ${scoreA}\n`;
+        reportStr += `BRAVO_SCORE: ${scoreB}\n\n`;
+
+        if (listA.length > 0) {
+            reportStr += `[ ALPHA_ROSTER ]\n` + listA.slice(0, 12).join('\n') + `\n\n`;
+        }
+        if (listB.length > 0) {
+            reportStr += `[ BRAVO_ROSTER ]\n` + listB.slice(0, 12).join('\n') + `\n\n`;
+        }
+
+        reportStr += `[ DATA_UPLINK_COMPLETE ]\n----------------------------\n`;
+
+        return reportStr;
+    };
+
+    const handleOcrUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsOcrProcessing(true);
+        setOcrStatus('Scanning...');
+        setOcrProgress(0);
+
+        try {
+            const { data: { text } } = await Tesseract.recognize(file, 'fra+eng', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        setOcrProgress(Math.round(m.progress * 100));
+                    }
+                    setOcrStatus(m.status);
+                }
+            });
+
+            const parsed = parseMatchSheet(text);
+            setReportContent(prev => parsed + (prev ? '\n\n' + prev : ''));
+            showNotification("Match sheet intel extracted successfully.", "success");
+            console.log("OCR Result:", text);
+        } catch (err) {
+            showNotification("OCR scan failed. Check image clarity.", "error");
+        } finally {
+            setIsOcrProcessing(false);
+            setOcrStatus('');
+            setOcrProgress(0);
         }
     };
 
@@ -874,107 +972,184 @@ const Match = () => {
                     </div>
                 </div>
             )}
-            {/* Match Paper Modal */}
+            {/* Match Paper Modal - Redesigned for Elite Aesthetic */}
             {showReportModal && selectedReportMatch && (
                 <div className="modal-overlay animate-fade-in" style={{
                     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(15px)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '2rem'
+                    background: 'rgba(2, 2, 2, 0.98)', backdropFilter: 'blur(20px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'
                 }}>
                     <div className="match-paper-card animate-scale-in" style={{
-                        background: '#050505', width: '100%', maxWidth: '650px',
-                        borderRadius: '24px', boxShadow: '0 0 100px rgba(219, 10, 64, 0.15)',
-                        border: '1px solid rgba(219, 10, 64, 0.3)',
-                        position: 'relative', overflow: 'hidden', padding: '2.5rem',
-                        display: 'flex', flexDirection: 'column', color: '#fff'
+                        background: '#080808', width: '100%', maxWidth: '850px',
+                        borderRadius: '0', boxShadow: '0 0 150px rgba(219, 10, 64, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        position: 'relative', overflow: 'hidden', padding: '0',
+                        display: 'flex', flexDirection: 'column', color: '#fff',
+                        minHeight: '600px'
                     }}>
-                        {/* Designer Accents */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#DB0A40' }}></div>
-                        <div style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '0.6rem', color: '#333', letterSpacing: '3px', fontWeight: '900' }}>[ AUTH_SECURED_INTEL ]</div>
+                        {/* Designer Accents - Cyber Corner Marks */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '30px', height: '30px', borderTop: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', top: 0, right: 0, width: '30px', height: '30px', borderTop: '2px solid #DB0A40', borderRight: '2px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '30px', height: '30px', borderBottom: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '30px', height: '30px', borderBottom: '2px solid #DB0A40', borderRight: '2px solid #DB0A40' }}></div>
 
-                        {/* Tactical Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                            <div>
-                                <div className="role-tag coach-tag" style={{ background: '#DB0A40', color: '#fff', fontSize: '0.6rem', padding: '3px 10px', marginBottom: '8px' }}>OFFICIAL LOG</div>
-                                <h1 style={{ margin: 0, fontSize: '1.8rem', letterSpacing: '-1px', fontWeight: '950', textTransform: 'uppercase', fontStyle: 'italic' }}>Match Intel</h1>
-                                <p style={{ color: '#666', fontSize: '0.75rem', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Outcome & Tactical Analysis</p>
-                            </div>
-                            <button
-                                onClick={() => setShowReportModal(false)}
-                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', width: '40px', height: '40px', borderRadius: '50%', color: '#666', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                &times;
-                            </button>
-                        </div>
+                        {/* Top Scanning Line Animation Effect (Simulated with Gradient) */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #DB0A40, transparent)', opacity: 0.5 }}></div>
 
-                        {/* Match Metadata Pill */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
-                                <label style={{ fontSize: '0.55rem', color: '#444', fontWeight: '900', display: 'block', marginBottom: '2px' }}>OPPONENT</label>
-                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home}</span>
-                            </div>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
-                                <label style={{ fontSize: '0.55rem', color: '#444', fontWeight: '900', display: 'block', marginBottom: '2px' }}>ENGAGEMENT_DATE</label>
-                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedReportMatch.date}</span>
-                            </div>
-                            <div style={{ background: 'rgba(219, 10, 64, 0.1)', border: '1px solid rgba(219, 10, 64, 0.2)', padding: '10px 15px', borderRadius: '10px', flex: 1 }}>
-                                <label style={{ fontSize: '0.55rem', color: '#DB0A40', fontWeight: '900', display: 'block', marginBottom: '2px' }}>FINAL_STATUS</label>
-                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#DB0A40' }}>CONCLUDED</span>
-                            </div>
-                        </div>
+                        {/* Layout Split */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1 }}>
+                            {/* Left Side: Metadata & Intel Context */}
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ width: '12px', height: '12px', background: '#DB0A40', clipPath: 'polygon(0% 0%, 100% 0%, 75% 100%, 0% 100%)' }}></div>
+                                        <span style={{ fontSize: '0.65rem', letterSpacing: '3px', color: '#DB0A40', fontWeight: '900' }}>TACTICAL DOSSIER</span>
+                                    </div>
+                                    <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-2px', lineHeight: 0.9, textTransform: 'uppercase' }}>INTEL<br /><span style={{ color: 'rgba(255,255,255,0.3)' }}>LOG</span></h1>
+                                </div>
 
-                        {/* Analysis Input */}
-                        <div style={{ flex: 1 }}>
-                            <label style={{ fontSize: '0.65rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '3px', marginBottom: '1rem', display: 'block' }}>COMPOSE TACTICAL REPORT</label>
-                            <div style={{ position: 'relative' }}>
-                                <textarea
-                                    value={reportContent}
-                                    onChange={(e) => setReportContent(e.target.value)}
-                                    placeholder="Execute final analysis..."
-                                    style={{
-                                        width: '100%', minHeight: '180px', background: 'rgba(255,255,255,0.01)',
-                                        border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem', lineHeight: '1.6',
-                                        fontFamily: '"Geist Mono", "JetBrains Mono", monospace', outline: 'none',
-                                        padding: '1.2rem', borderRadius: '14px', color: '#ccc', resize: 'none'
-                                    }}
-                                />
-                                <div style={{ position: 'absolute', bottom: '10px', right: '15px', pointerEvents: 'none' }}>
-                                    <Activity size={24} color="rgba(219, 10, 64, 0.2)" />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
+                                    <div style={{ opacity: 0.6 }}>
+                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>TARGET_TEAM</label>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid #DB0A40', paddingLeft: '12px' }}>
+                                            {selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home}
+                                        </div>
+                                    </div>
+                                    <div style={{ opacity: 0.6 }}>
+                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>MISSION_DATE</label>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                                            {selectedReportMatch.date}
+                                        </div>
+                                    </div>
+                                    <div style={{ opacity: 0.6 }}>
+                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>CLEARANCE_LEVEL</label>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#DB0A40', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Shield size={14} /> LEVEL_04_COACH
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'auto' }}>
+                                    {/* Scan Action */}
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <input
+                                            type="file"
+                                            ref={ocrFileInputRef}
+                                            onChange={handleOcrUpload}
+                                            style={{ display: 'none' }}
+                                            accept="image/*"
+                                        />
+                                        <button
+                                            onClick={() => ocrFileInputRef.current.click()}
+                                            disabled={isOcrProcessing}
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(219, 10, 64, 0.1)',
+                                                border: '1px solid #DB0A40',
+                                                color: '#fff',
+                                                padding: '1rem',
+                                                borderRadius: '8px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '10px',
+                                                transition: '0.3s',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'}
+                                        >
+                                            {isOcrProcessing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                                            {isOcrProcessing ? ocrStatus : 'Scan Match Sheet'}
+                                        </button>
+
+                                        {isOcrProcessing && (
+                                            <div style={{ marginTop: '10px' }}>
+                                                <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                                                    <div style={{ height: '100%', width: `${ocrProgress}%`, background: '#DB0A40', transition: 'width 0.3s' }}></div>
+                                                </div>
+                                                <div style={{ fontSize: '0.6rem', color: '#444', marginTop: '5px', textAlign: 'right' }}>{ocrProgress}%</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace' }}>
+                                        ENCRYPTION: AES-256-GCM<br />
+                                        STATUS: {isOcrProcessing ? 'PROCESSING...' : 'READY'}<br />
+                                        ORIGIN: HUSA_OPERATIONS
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Footer Actions */}
-                        <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#DB0A40', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                                    <Shield size={18} />
+                            {/* Right Side: Composition Area */}
+                            <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                                    <div>
+                                        <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Compose Briefing</h2>
+                                        <p style={{ color: '#555', fontSize: '0.75rem', margin: '4px 0 0 0' }}>Provide performance analysis and tactical adjustments.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowReportModal(false)}
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', width: '36px', height: '36px', borderRadius: '4px', color: '#777', cursor: 'pointer', transition: '0.2s' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#DB0A40'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#777'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                    >
+                                        &times;
+                                    </button>
                                 </div>
-                                <div>
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fff' }}>STAFF_VERIFIED</div>
-                                    <div style={{ fontSize: '0.65rem', color: '#444' }}>COACH_TRANSMISSION</div>
+
+                                <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', border: '1px solid rgba(219, 10, 64, 0.1)', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(219, 10, 64, 0.01) 1px, rgba(219, 10, 64, 0.01) 2px)', opacity: 0.5 }}></div>
+                                    <textarea
+                                        value={reportContent}
+                                        onChange={(e) => setReportContent(e.target.value)}
+                                        placeholder="Begin tactical analysis input..."
+                                        style={{
+                                            flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
+                                            borderRadius: '0', padding: '1.5rem', color: '#fff', fontSize: '1rem', lineHeight: '1.6',
+                                            resize: 'none', outline: 'none', transition: 'border-color 0.3s', minHeight: '300px',
+                                            fontFamily: 'inherit'
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = 'rgba(219, 10, 64, 0.4)'}
+                                        onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+                                    />
+                                    <div style={{ position: 'absolute', bottom: '15px', right: '15px', opacity: 0.2, display: 'flex', gap: '10px' }}>
+                                        <Activity size={20} />
+                                        <Send size={20} />
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
+                                    <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
+                                        <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
+                                        <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                                    </div>
+                                    <button
+                                        onClick={handleSendMatchReport}
+                                        style={{
+                                            background: '#DB0A40', color: '#fff', border: 'none',
+                                            padding: '1rem 3rem', borderRadius: '4px', fontWeight: '900',
+                                            cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase',
+                                            fontSize: '0.85rem', boxShadow: '0 10px 40px rgba(219, 10, 64, 0.2)',
+                                            display: 'flex', alignItems: 'center', gap: '15px', transition: '0.3s'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 50px rgba(219, 10, 64, 0.3)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(219, 10, 64, 0.2)'; }}
+                                    >
+                                        Transmit ReporT
+                                        <Send size={18} />
+                                    </button>
                                 </div>
                             </div>
-
-                            <button
-                                onClick={handleSendMatchReport}
-                                style={{
-                                    background: '#DB0A40', color: '#fff', border: 'none',
-                                    padding: '12px 30px', borderRadius: '100px', fontWeight: '950',
-                                    cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase',
-                                    fontSize: '0.8rem', boxShadow: '0 8px 30px rgba(219, 10, 64, 0.3)',
-                                    display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02) translateY(-2px)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
-                            >
-                                <Send size={16} />
-                                Transmit
-                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
 
         </div>
     );
