@@ -95,46 +95,50 @@ const Overview = () => {
                         </div>
                     </div>
                 </div>
+
+                <div style={{ position: 'absolute', top: '2rem', right: '2rem', opacity: 0.1, pointerEvents: 'none' }}>
+                    <img src={husaLogo} alt="HUSA" style={{ width: '150px' }} />
+                </div>
             </div>
 
             {/* 2. Elite Status Modules (KPIs) */}
             <div className="dashboard-grid matrix-grid">
-                <div className="status-module glow-red">
+                <div className="status-module glow-red" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div className="module-inner">
                         <Activity className="module-icon" />
                         <span className="module-label">LAB STATUS</span>
                         <h2 className="module-value">OPTIMAL</h2>
-                        <div className="module-progress">
-                            <div className="progress-fill" style={{ width: '94%' }}></div>
+                        <div className="module-progress" style={{ borderRadius: '0' }}>
+                            <div className="progress-fill" style={{ width: '94%', borderRadius: '0' }}></div>
                         </div>
                         <span className="module-sub">SYSTEM STABILITY: 94%</span>
                     </div>
                 </div>
 
-                <div className="status-module glow-white">
+                <div className="status-module glow-white" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div className="module-inner">
                         <Shield className="module-icon" />
                         <span className="module-label">TACTICAL ARCHIVE</span>
                         <h2 className="module-value">{strategies.length}</h2>
-                        <div className="module-tag">VALIDATED SYSTEMS</div>
+                        <div className="module-tag" style={{ borderRadius: '0' }}>VALIDATED SYSTEMS</div>
                     </div>
                 </div>
 
-                <div className="status-module glow-red">
+                <div className="status-module glow-red" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div className="module-inner">
                         <Calendar className="module-icon" />
                         <span className="module-label">CAMPAIGN PACE</span>
                         <h2 className="module-value">{matches.length}</h2>
-                        <div className="module-tag">SCHEDULED EVENTS</div>
+                        <div className="module-tag" style={{ borderRadius: '0' }}>SCHEDULED EVENTS</div>
                     </div>
                 </div>
 
-                <div className="status-module glow-white">
+                <div className="status-module glow-white" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div className="module-inner">
                         <Users className="module-icon" />
                         <span className="module-label">ELITE ROSTER</span>
                         <h2 className="module-value">{players.length}</h2>
-                        <div className="module-tag">COMBAT READY</div>
+                        <div className="module-tag" style={{ borderRadius: '0' }}>COMBAT READY</div>
                     </div>
                 </div>
             </div>
@@ -142,11 +146,11 @@ const Overview = () => {
             {/* 3. Operational Intel Section */}
             <div className="operational-grid">
                 {/* Next Engagement Card */}
-                <div className="intel-card engagement-card">
+                <div className="intel-card engagement-card" style={{ borderRadius: '0', padding: '3rem' }}>
                     {/* Background Logo Watermarks */}
                     <div className="engagement-bg-logos">
-                        <img src={husaLogo} alt="" className="bg-logo-left" />
-                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" onError={handleImageError} />}
+                        <img src={husaLogo} alt="" className="bg-logo-left" style={{ opacity: 0.05 }} />
+                        {opponentLogo && <img src={opponentLogo} alt="" className="bg-logo-right" onError={handleImageError} style={{ opacity: 0.05 }} />}
                     </div>
 
                     <div className="card-glitch-header">NEXT ENGAGEMENT</div>
@@ -182,6 +186,7 @@ const Overview = () => {
                         <button
                             className="intel-btn-primary"
                             onClick={() => navigate('/dashboard/coach/match')}
+                            style={{ borderRadius: '0', padding: '15px 30px' }}
                         >
                             INITIALIZE MATCH PREP <ChevronRight size={18} />
                         </button>
@@ -190,10 +195,10 @@ const Overview = () => {
 
                 <div className="side-intel-stack">
                     {/* Performance Feed */}
-                    <div className="intel-card feed-card">
-                        <div className="feed-header">
+                    <div className="intel-card feed-card" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="feed-header" style={{ marginBottom: '1.5rem' }}>
                             <Zap size={18} className="icon-red" />
-                            <h3>RECENT LAB OUTPUT</h3>
+                            <h3 style={{ fontSize: '1rem', letterSpacing: '2px', fontWeight: '900' }}>RECENT LAB OUTPUT</h3>
                         </div>
                         <div className="feed-list">
                             {strategies.slice(0, 3).map(strategy => (
@@ -215,41 +220,42 @@ const Overview = () => {
                     </div>
 
                     {/* Roster Snap */}
-                    <div className="intel-card squad-snap-card">
-                        <div className="feed-header">
+                    <div className="intel-card squad-snap-card" style={{ borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="feed-header" style={{ marginBottom: '1.5rem' }}>
                             <Star size={18} className="icon-red" />
-                            <h3>ELITE UNIT STATUS</h3>
+                            <h3 style={{ fontSize: '1rem', letterSpacing: '2px', fontWeight: '900' }}>ELITE UNIT STATUS</h3>
                         </div>
                         <div className="squad-avatars">
                             {players.slice(0, 6).map(p => (
-                                <div key={p.id} className="squad-avatar-wrapper">
-                                    <img src={p.photo_url || '/assets/players/default.png'} alt={p.name} />
+                                <div key={p.id} className="squad-avatar-wrapper" style={{ borderRadius: '0', border: '1px solid #DB0A40' }}>
+                                    <img src={p.photo_url || '/assets/players/default.png'} alt={p.name} style={{ borderRadius: '0' }} />
                                 </div>
                             ))}
-                            {players.length > 6 && <div className="squad-more">+{players.length - 6}</div>}
+                            {players.length > 6 && <div className="squad-more" style={{ borderRadius: '0' }}>+{players.length - 6}</div>}
                         </div>
-                        <div className="squad-status-label">
-                            <Zap size={14} /> ALL PERSONNEL COMBAT READY
+                        <div className="squad-status-label" style={{ fontWeight: '900', letterSpacing: '1px' }}>
+                            <Zap size={14} /> PERSONNEL COMBAT READY
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* 4. Communication Hub Bar */}
-            <div className="intel-card transmission-uplink">
+            <div className="intel-card transmission-uplink" style={{ borderRadius: '0', marginTop: '2rem' }}>
                 <div className="transmission-uplink-inner">
                     <div className="transmission-uplink-content">
-                        <div className="transmission-icon-box">
+                        <div className="transmission-icon-box" style={{ borderRadius: '0' }}>
                             <Award size={24} color="#DB0A40" />
                         </div>
                         <div>
-                            <div className="transmission-uplink-title">OFFICIAL TRANSMISSION UPLINK</div>
+                            <div className="transmission-uplink-title" style={{ fontWeight: '900', letterSpacing: '1px' }}>OFFICIAL TRANSMISSION UPLINK</div>
                             <div className="transmission-uplink-sub">Submit technical intelligence directly to club leadership.</div>
                         </div>
                     </div>
                     <button
                         className="intel-btn-primary uplink-btn"
                         onClick={() => navigate('/dashboard/coach/report')}
+                        style={{ borderRadius: '0', padding: '12px 30px' }}
                     >
                         ESTABLISH UPLINK
                     </button>

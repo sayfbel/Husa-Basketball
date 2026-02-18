@@ -4,11 +4,13 @@ import '../../css/dashboard.css'; // Shared premium style
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 
 // Import Sub-Pages
+// Import Sub-Pages
 import Overview from './pages/Overview';
 import Profile from './pages/Profile';
 import Match from './pages/Match';
 import Report from './pages/Report';
 import NewMembers from './pages/NewMembers';
+import StoreManager from './pages/StoreManager';
 
 
 const PresidentDashboard = () => {
@@ -33,6 +35,12 @@ const PresidentDashboard = () => {
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
                         Overview
+                    </NavLink>
+                    <NavLink
+                        to="/dashboard/president/store"
+                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
+                    >
+                        Store
                     </NavLink>
                     <NavLink
                         to="/dashboard/president/profile"
@@ -68,6 +76,7 @@ const PresidentDashboard = () => {
                     <Route path="match" element={<Match />} />
                     <Route path="report" element={<Report />} />
                     <Route path="new-members" element={<NewMembers />} />
+                    <Route path="store" element={<StoreManager />} />
                     {/* Placeholder routes for future expansion */}
                     <Route path="financials" element={<div className="glass-card p-4">Financial Oversight Module Coming Soon</div>} />
                 </Routes>

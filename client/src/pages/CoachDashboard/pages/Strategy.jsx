@@ -6,44 +6,117 @@ import TacticalWorkspace from './TacticalWorkspace.jsx';
 import '../../../css/dashboard.css';
 import '../css/strategy.css';
 import {
-    Trash2
+    Trash2,
+    Clock,
+    Zap,
+    Layout,
+    Shield,
+    Activity
 } from 'lucide-react';
+
+import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
 
 const MiniCourtPreview = ({ tactic }) => {
     const firstFrame = tactic.data[0] || { tokens: [], paths: [] };
     const type = tactic.type || 'full';
     const viewBoxH = type === 'full' ? 560 : 470;
     const viewBoxW = type === 'full' ? 1000 : 500;
-    const themeColor = '#DB0A40';
 
     return (
         <div className="mini-court-preview">
-            <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} style={{ width: '100%', height: '100%' }}>
-                {/* Court Outline Tinted */}
-                <rect width={viewBoxW} height={viewBoxH} fill="none" stroke={themeColor} strokeWidth="3" opacity="0.3" />
+            <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+                <defs>
+                    <filter id="premium-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="15" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <radialGradient id="token-radial" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#DB0A40" />
+                        <stop offset="100%" stopColor="#7a0624" />
+                    </radialGradient>
+                </defs>
 
-                {/* Center Line for Full Court */}
-                {viewBoxW === 1000 && <line x1="500" y1="0" x2="500" y2="560" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />}
+                {/* Court Outline Subtle */}
+                <rect width={viewBoxW} height={viewBoxH} fill="#0a0a0a" />
 
-                {/* Center Circle Tinted */}
-                <circle cx={viewBoxW / 2} cy={viewBoxW === 1000 ? 280 : 205} r={viewBoxW === 1000 ? 70 : 60} fill="none" stroke={themeColor} strokeWidth="3" opacity="0.3" />
+                {/* HUSA Background Logo */}
+                <image
+                    href={husaLogo}
+                    x={viewBoxW / 2 - 180}
+                    y={viewBoxH / 2 - 180}
+                    width="360"
+                    height="360"
+                    opacity="0.05"
+                    style={{ filter: 'grayscale(1) brightness(0.3)' }}
+                />
 
+                {/* Court Lines - Tactical Grey */}
+                <rect width={viewBoxW} height={viewBoxH} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="6" />
+                {type === 'full' ? (
+                    <>
+                        <line x1="500" y1="0" x2="500" y2="560" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <circle cx="500" cy="280" r="70" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <path d="M 0 450 Q 300 280 0 110" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <path d="M 1000 450 Q 700 280 1000 110" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                    </>
+                ) : (
+                    <>
+                        <path d="M 0 350 Q 250 205 0 60" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <rect x="0" y="150" width="160" height="100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                    </>
+                )}
+
+                {/* Tokens with High-Quality Glow */}
                 {firstFrame.tokens.map((token, idx) => (
-                    <circle
-                        key={idx}
-                        cx={`${token.x * (viewBoxW / 100)}`}
-                        cy={`${token.y * (viewBoxH / 100)}`}
-                        r="18"
-                        fill={token.type === 'offense' ? '#DB0A40' : token.type === 'defense' ? '#111' : '#f97316'}
-                        stroke={token.type === 'defense' ? 'rgba(255,255,255,0.5)' : 'none'}
-                        strokeWidth="2"
-                    />
+                    <g key={idx}>
+                        {token.type === 'offense' ? (
+                            <>
+                                <circle
+                                    cx={`${token.x * (viewBoxW / 100)}`}
+                                    cy={`${token.y * (viewBoxH / 100)}`}
+                                    r="28"
+                                    fill="none"
+                                    stroke="#DB0A40"
+                                    strokeWidth="2"
+                                    opacity="0.5"
+                                    filter="url(#premium-glow)"
+                                />
+                                <circle
+                                    cx={`${token.x * (viewBoxW / 100)}`}
+                                    cy={`${token.y * (viewBoxH / 100)}`}
+                                    r="14"
+                                    fill="url(#token-radial)"
+                                    filter="url(#premium-glow)"
+                                />
+                                <circle
+                                    cx={`${token.x * (viewBoxW / 100)}`}
+                                    cy={`${token.y * (viewBoxH / 100)}`}
+                                    r="8"
+                                    fill="#fff"
+                                    opacity="0.2"
+                                />
+                            </>
+                        ) : (
+                            <circle
+                                cx={`${token.x * (viewBoxW / 100)}`}
+                                cy={`${token.y * (viewBoxH / 100)}`}
+                                r="12"
+                                fill="#222"
+                                stroke="rgba(255,255,255,0.2)"
+                                strokeWidth="1"
+                            />
+                        )}
+                    </g>
                 ))}
+
+                {/* Connected Lines (Dashed Network) */}
                 {firstFrame.paths.map((d, idx) => (
-                    <path key={idx} d={d} fill="none" stroke="#fcd34d" strokeWidth="5" opacity="0.7" />
+                    <path key={idx} d={d} fill="none" stroke="#DB0A40" strokeWidth="2" strokeDasharray="5,5" opacity="0.3" />
                 ))}
             </svg>
-            {/* Bottom Gradient Overlay */}
             <div className="preview-gradient-overlay" />
         </div>
     );
@@ -123,21 +196,43 @@ const Strategy = () => {
     const halfCourtTactics = savedTactics.filter(t => t.type === 'half');
 
     return (
-        <div className="strategy-container">
-            <div className="section-header-row">
-                <div className="role-tag coach-tag">Performance Lab</div>
-                <h1>Tactical Strategy</h1>
-                <p>Design, archive, and simulate professional systems.</p>
+        <div className="overview-container dashboard-fashion-theme animate-fade-in">
+            {/* Cinematic Header */}
+            <div className="section-header-modern">
+                <div className="watermark-bg">STRATEGY</div>
+
+                <div style={{ position: 'absolute', top: '2rem', right: '2rem', opacity: 0.1, pointerEvents: 'none' }}>
+                    <img src={husaLogo} alt="HUSA" style={{ width: '150px' }} />
+                </div>
+
+                <div className="header-content-box">
+                    <span className="premium-label">PERFORMANCE LAB</span>
+                    <h1 className="hero-dashboard-title">
+                        TACTICAL <br />
+                        <span className="accent-text">COMMAND</span>
+                    </h1>
+                    <div className="header-status-bar">
+                        <div className="status-item">
+                            <div className="pulse-dot"></div>
+                            <span>SYSTEM READY: ARCHIVE SYNCED</span>
+                        </div>
+                        <div className="divider"></div>
+                        <div className="status-item">
+                            <Clock size={14} />
+                            <span>LIVE OPS: ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Full Court Registry */}
-            <div className="strategy-registry-card">
-                <div className="card-header-flex">
-                    <div>
-                        <h2 className="prep-title-box">Full Court Systems</h2>
-                        <p className="archive-subtitle">Archive of 5v5 transition and offensive systems.</p>
+            <div className="" style={{ marginBottom: '2rem', padding: '2rem', borderRadius: '0' }}>
+                <div className="feed-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <Zap size={20} className="icon-red" />
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', letterSpacing: '2px' }}>FULL COURT SYSTEMS</h3>
                     </div>
-                    <span className="live-indicator">REGISTRY</span>
+                    <span className="premium-label" style={{ margin: 0 }}>REGISTRY</span>
                 </div>
 
                 {fullCourtTactics.length === 0 ? (
@@ -145,19 +240,17 @@ const Strategy = () => {
                         <p style={{ color: '#555', fontStyle: 'italic', margin: 0 }}>No full court systems saved yet.</p>
                     </div>
                 ) : (
-                    <div className="strategy-grid">
+                    <div className="strategy-grid" style={{ overflowY: 'visible', maxHeight: 'none' }}>
                         {fullCourtTactics.map(tactic => (
                             <div key={tactic.id} className="tactic-item-premium" onClick={() => loadTactic(tactic)}>
-                                <MiniCourtPreview tactic={tactic} />
-                                <div className="tactic-info-box">
-                                    <div style={{ flex: 1 }}>
-                                        <h4 className="tactic-name-label">{tactic.name}</h4>
-                                        <span className="tactic-action-hint">Click to Load</span>
-                                    </div>
-                                    <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
-                                        <Trash2 size={16} />
-                                    </button>
+                                <div className="tactic-header-premium">
+                                    <h4 className="tactic-name-label">{tactic.name}</h4>
+                                    <span className="tactic-action-hint">READY TO LOAD</span>
                                 </div>
+                                <MiniCourtPreview tactic={tactic} />
+                                <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -175,13 +268,13 @@ const Strategy = () => {
             />
 
             {/* Half Court Registry */}
-            <div className="strategy-registry-card" style={{ marginTop: '3rem' }}>
-                <div className="card-header-flex">
-                    <div>
-                        <h2 className="prep-title-box">Half Court Drills</h2>
-                        <p className="archive-subtitle">Collection of specialized 3v3 sets and training drills.</p>
+            <div className="" style={{ marginTop: '3rem', marginBottom: '2rem', padding: '2rem', borderRadius: '0' }}>
+                <div className="feed-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <Layout size={20} className="icon-red" />
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', letterSpacing: '2px' }}>HALF COURT DRILLS</h3>
                     </div>
-                    <span className="live-indicator">DRILLS</span>
+                    <span className="premium-label" style={{ margin: 0 }}>DRILLS</span>
                 </div>
 
                 {halfCourtTactics.length === 0 ? (
@@ -189,19 +282,17 @@ const Strategy = () => {
                         <p style={{ color: '#555', fontStyle: 'italic', margin: 0 }}>No half court drills saved yet.</p>
                     </div>
                 ) : (
-                    <div className="strategy-grid">
+                    <div className="strategy-grid" style={{ overflowY: 'visible', maxHeight: 'none' }}>
                         {halfCourtTactics.map(tactic => (
                             <div key={tactic.id} className="tactic-item-premium" onClick={() => loadTactic(tactic)}>
-                                <MiniCourtPreview tactic={tactic} />
-                                <div className="tactic-info-box">
-                                    <div style={{ flex: 1 }}>
-                                        <h4 className="tactic-name-label">{tactic.name}</h4>
-                                        <span className="tactic-action-hint">Click to Load</span>
-                                    </div>
-                                    <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
-                                        <Trash2 size={16} />
-                                    </button>
+                                <div className="tactic-header-premium">
+                                    <h4 className="tactic-name-label">{tactic.name}</h4>
+                                    <span className="tactic-action-hint">READY TO LOAD</span>
                                 </div>
+                                <MiniCourtPreview tactic={tactic} />
+                                <button onClick={(e) => deleteTactic(tactic.id, e)} className="delete-tactic-btn">
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
                         ))}
                     </div>

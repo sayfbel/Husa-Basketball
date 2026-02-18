@@ -467,7 +467,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     };
 
     return (
-        <div className="dashboard-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="intel-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0' }}>
             {/* Header */}
             {/* Header */}
             <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -479,7 +479,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                 </div>
 
                 {/* Systems Archive Strip */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -494,7 +494,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
                     <div className="full-custom-scroll" style={{ display: 'flex', gap: '15px', overflowX: 'auto', padding: '10px' }}>
                         {strategies.filter(s => s.type === 'full').length === 0 ? (
-                            <div style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem', width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                            <div style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', padding: '1rem', width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '0' }}>
                                 No full court systems created yet. Go to Strategy page to build your playbook.
                             </div>
                         ) : (
@@ -509,7 +509,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                             height: '120px',
                                             position: 'relative',
                                             background: '#222',
-                                            borderRadius: '10px',
+                                            borderRadius: '0',
                                             cursor: 'pointer',
                                             overflow: 'hidden',
                                             border: isSelected ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)',
@@ -551,8 +551,8 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                         }}>
                                             <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{s.name}</div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                                                <span style={{ fontSize: '0.7rem', color: '#aaa', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>5v5 Full</span>
-                                                <span style={{ fontSize: '0.7rem', color: '#666' }}>{(s.data || []).length} Frames</span>
+                                                <span style={{ fontSize: '0.7rem', color: '#aaa', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '0' }}>5v5 FULL</span>
+                                                <span style={{ fontSize: '0.7rem', color: '#666' }}>{(s.data || []).length} FRAMES</span>
                                             </div>
                                         </div>
 
@@ -606,7 +606,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                         padding: '8px',
                                         background: onCourt ? 'rgba(76, 209, 55, 0.1)' : (isStarter ? 'rgba(252, 211, 77, 0.05)' : 'rgba(255,255,255,0.03)'),
                                         border: isStarter ? '1px solid #fcd34d' : (onCourt ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.05)'),
-                                        borderRadius: '8px',
+                                        borderRadius: '0',
                                         cursor: onCourt ? 'default' : 'pointer',
                                         opacity: onCourt ? 0.6 : 1,
                                         boxShadow: isStarter ? '0 0 5px rgba(252, 211, 77, 0.2)' : 'none'
@@ -634,13 +634,16 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                 padding: '8px',
                                 background: 'rgba(255,255,255,0.03)',
                                 border: '1px solid rgba(255,255,255,0.05)',
-                                borderRadius: '8px',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 textAlign: 'center',
-                                color: '#fff'
+                                color: '#fff',
+                                fontWeight: '900',
+                                letterSpacing: '1px',
+                                fontSize: '0.8rem'
                             }}
                         >
-                            Add Ball 🏀
+                            ADD BALL 🏀
                         </div>
 
                         {/* Defense Players - Generic */}
@@ -682,23 +685,23 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
                     {/* Toolbar */}
                     <div style={{ padding: '10px', background: '#151515', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '6px', padding: '4px' }}>
+                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px' }}>
                             <button className={`tool-btn ${mode === 'move' ? 'active' : ''}`} onClick={() => setMode('move')}><Move size={18} /></button>
                             <button className={`tool-btn ${mode === 'draw' ? 'active' : ''}`} onClick={() => setMode('draw')}><Pencil size={18} /></button>
-                            <button className={`tool-btn ${mode === 'erase' ? 'active' : ''}`} onClick={() => setMode('erase')}><Eraser size={18} /></button>
+                            <button className={`tool-btn ${mode === 'erase' ? 'active' : ''}`} onClick={() => setMode('erase')} style={{ borderRadius: '0' }}><Eraser size={18} /></button>
                         </div>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '6px', padding: '4px', display: 'flex', alignItems: 'center' }}>
-                            <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}><SkipBack size={18} /></button>
-                            <button className="tool-btn" onClick={togglePlay}>{isPlaying ? <Pause size={18} /> : <Play size={18} />}</button>
-                            <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}><SkipForward size={18} /></button>
-                            <span style={{ fontSize: '0.8rem', color: '#888', margin: '0 8px' }}>{currentFrameIndex + 1}/{frames.length}</span>
-                            <button className="tool-btn" onClick={addFrame}><Plus size={18} /></button>
+                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                            <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))} style={{ borderRadius: '0' }}><SkipBack size={18} /></button>
+                            <button className="tool-btn" onClick={togglePlay} style={{ borderRadius: '0' }}>{isPlaying ? <Pause size={18} /> : <Play size={18} />}</button>
+                            <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))} style={{ borderRadius: '0' }}><SkipForward size={18} /></button>
+                            <span style={{ fontSize: '0.8rem', color: '#888', margin: '0 8px', fontWeight: '900' }}>{currentFrameIndex + 1}/{frames.length}</span>
+                            <button className="tool-btn" onClick={addFrame} style={{ borderRadius: '0' }}><Plus size={18} /></button>
                         </div>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '6px', padding: '4px' }}>
-                            <button className="tool-btn" onClick={handleUndo} disabled={history.length === 0} title="Undo last action"><Undo2 size={18} /></button>
-                            <button className="tool-btn" onClick={handleReset} title="Reset Board (Clear all)"><RotateCcw size={18} /></button>
-                            <button className="tool-btn" onClick={deleteFrame}><Trash2 size={18} /></button>
-                            <button className="tool-btn" onClick={handleSaveClick}><Save size={18} /></button>
+                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px' }}>
+                            <button className="tool-btn" onClick={handleUndo} disabled={history.length === 0} title="Undo last action" style={{ borderRadius: '0' }}><Undo2 size={18} /></button>
+                            <button className="tool-btn" onClick={handleReset} title="Reset Board (Clear all)" style={{ borderRadius: '0' }}><RotateCcw size={18} /></button>
+                            <button className="tool-btn" onClick={deleteFrame} style={{ borderRadius: '0' }}><Trash2 size={18} /></button>
+                            <button className="tool-btn" onClick={handleSaveClick} style={{ borderRadius: '0' }}><Save size={18} /></button>
                         </div>
                         {pendingSubstitute && (
                             <div style={{

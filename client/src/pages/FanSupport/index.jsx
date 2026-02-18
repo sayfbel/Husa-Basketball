@@ -18,7 +18,9 @@ const FanSupport = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [matches, setMatches] = useState([]);
     const [rankings, setRankings] = useState([]);
+    const [products, setProducts] = useState([]); // Dynamic products
     const [loadingMatches, setLoadingMatches] = useState(true);
+    const [activeImage, setActiveImage] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -29,44 +31,39 @@ const FanSupport = () => {
         color: 'Red'
     });
 
-    const products = [
-        {
-            id: 1,
-            name: "HUSA Official Kit (Promo)",
-            price: "150 DH",
-            image: RedJerseyFlyer,
-            variants: {
-                Red: RedJerseyFlyer,
-                White: WhiteJerseyFlyer
-            }
-        },
-        {
-            id: 2,
-            name: "HUSA Official Kit (Match)",
-            price: "250 DH",
-            image: RedJerseyPhoto,
-            variants: {
-                Red: RedJerseyPhoto,
-                White: WhiteJerseyPhoto
-            }
-        }
-    ];
-
     useEffect(() => {
-        const fetchMatchData = async () => {
+        const fetchData = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/matches/schedule');
-                setMatches(res.data || []);
+                const [matchRes, rankRes, storeRes] = await Promise.all([
+                    axios.get('http://localhost:5000/api/matches/schedule'),
+                    axios.get('http://localhost:5000/api/rankings'),
+                    axios.get('http://localhost:5000/api/store')
+                ]);
 
-                const rankRes = await axios.get('http://localhost:5000/api/rankings');
+                setMatches(matchRes.data || []);
                 setRankings(rankRes.data || []);
+
+                // Parse product images
+                const processedProducts = (storeRes.data || []).map(p => {
+                    let images = [];
+                    try {
+                        images = JSON.parse(p.image_url);
+                        if (!Array.isArray(images)) images = [p.image_url];
+                    } catch (e) {
+                        // If not JSON, assume single string
+                        images = p.image_url ? [p.image_url] : [];
+                    }
+                    return { ...p, images, image_url: images[0] || '' };
+                });
+
+                setProducts(processedProducts);
             } catch (err) {
-                console.error("Error fetching match data:", err);
+                console.error("Error fetching data:", err);
             } finally {
                 setLoadingMatches(false);
             }
         };
-        fetchMatchData();
+        fetchData();
     }, []);
 
     const handleImageError = (e) => {
@@ -105,6 +102,7 @@ const FanSupport = () => {
 
     const handleBuyClick = (product) => {
         setSelectedProduct(product);
+        setActiveImage(product.image_url || null);
         setIsModalOpen(true);
         // Pre-select color based on product name
         if (product.name.toLowerCase().includes('white')) {
@@ -166,14 +164,24 @@ const FanSupport = () => {
                             {products.map(product => (
                                 <div key={product.id} className="product-card">
                                     <div className="product-image-container">
-                                        <img src={product.image} alt={product.name} className="product-image" />
+                                        <img src={product.image_url || husaLogo} alt={product.name} className="product-image" onError={handleImageError} />
+                                        {!product.in_stock && (
+                                            <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                                        )}
                                         <div className="product-overlay">
-                                            <button className="btn-buy" onClick={() => handleBuyClick(product)}>Buy Now</button>
+                                            <button
+                                                className="btn-buy"
+                                                onClick={() => handleBuyClick(product)}
+                                                disabled={!product.in_stock}
+                                                style={{ opacity: !product.in_stock ? 0.5 : 1, cursor: !product.in_stock ? 'not-allowed' : 'pointer' }}
+                                            >
+                                                {product.in_stock ? 'Buy Now' : 'Out of Stock'}
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="product-info">
                                         <h3>{product.name}</h3>
-                                        <span className="price">{product.price}</span>
+                                        <span className="price">{product.price} DH</span>
                                     </div>
                                 </div>
                             ))}
@@ -298,12 +306,33 @@ const FanSupport = () => {
                         <div className="modal-content-grid">
                             <div className="product-preview-side">
                                 <img
-                                    src={selectedProduct.variants ? selectedProduct.variants[formData.color] : selectedProduct.image}
+                                    src={activeImage || selectedProduct.image_url || husaLogo}
                                     alt={selectedProduct.name}
+                                    onError={(e) => { e.target.src = husaLogo; }}
+                                    style={{ objectFit: 'cover', height: '300px', width: '100%', borderRadius: '8px' }}
                                 />
+                                {selectedProduct.images && selectedProduct.images.length > 1 && (
+                                    <div className="modal-thumbnails" style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto' }}>
+                                        {selectedProduct.images.map((img, idx) => (
+                                            <img
+                                                key={idx}
+                                                src={img}
+                                                onClick={() => setActiveImage(img)}
+                                                style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    border: activeImage === img ? '2px solid #DB0A40' : '1px solid #ccc'
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                                 <div className="preview-info">
                                     <h3>{selectedProduct.name}</h3>
-                                    <span className="preview-price">{selectedProduct.price}</span>
+                                    <span className="preview-price">{selectedProduct.price} DH</span>
                                 </div>
                             </div>
 

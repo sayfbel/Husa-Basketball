@@ -15,8 +15,10 @@ import {
     Save,
     X,
     Undo2,
-    RotateCcw
+    RotateCcw,
+    Repeat
 } from 'lucide-react';
+import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
 
 const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm, savedTactics, fetchTactics }) => {
     // Initial positions
@@ -260,7 +262,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                     }
                     return prev + 1;
                 });
-            }, 800);
+            }, 1200);
         } else {
             clearInterval(playInterval.current);
         }
@@ -308,100 +310,84 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
 
     return (
         <>
-            <div id={`workspace-${type}`} className="strategy-card" style={{ width: '100%', marginBottom: '2rem' }}>
-                <div className="card-header-flex">
-                    <h2>{title}</h2>
-                    <span className="live-indicator">ACTIVE</span>
+            <div id={`workspace-${type}`} className="intel-card" style={{ width: '100%', padding: '0', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                <div className="briefing-banner" style={{ background: 'transparent', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderRadius: '0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#fff', position: 'absolute', right: '1rem' }}>
+                        <div className="pulse-dot" style={{ background: '#DB0A40', boxShadow: '0 0 10px #DB0A40' }}></div>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '800', letterSpacing: '1px' }}>SYSTEM LIVE</span>
+                    </div>
                 </div>
 
-                {/* Bench Area */}
-                <div className="strategy-bench">
-                    <div className="bench-group">
-                        {[1, 2, 3, 4, 5].map(num => {
+                {/* Bench Area - Premium Pill */}
+                <div className="strategy-bench-premium" style={{ marginBottom: '2rem' }}>
+                    <div className="bench-group-premium">
+                        {[1, 2, 3, 4, 5].map((num) => {
                             const active = isTokenActive('offense', `${num}`);
                             return (
                                 <div
                                     key={`bench-p-${num}`}
-                                    className={`bench-token t-offense ${active ? 'disabled' : ''}`}
-                                    style={{
-                                        opacity: active ? 0.3 : 1,
-                                        cursor: active ? 'not-allowed' : 'grab',
-                                        filter: active ? 'grayscale(100%)' : 'none'
-                                    }}
+                                    className={`bench-token-premium ${active ? 'disabled' : ''} ${!active && num === 1 ? 'active' : ''}`}
                                     onMouseDown={(e) => !active && handleBenchTokenMouseDown(e, 'offense', `${num}`)}
                                 >
                                     {num}
                                 </div>
                             );
                         })}
-                    </div>
-                    <div className="bench-separator"></div>
-                    <div className="bench-group">
-                        {[1, 2, 3, 4, 5].map(num => {
-                            const active = isTokenActive('defense', `D${num}`);
+                        {[1, 2, 3, 4, 5].map((num) => {
+                            const label = `D${num}`;
+                            const active = isTokenActive('defense', `${label}`);
                             return (
                                 <div
                                     key={`bench-d-${num}`}
-                                    className={`bench-token t-defense ${active ? 'disabled' : ''}`}
-                                    style={{
-                                        opacity: active ? 0.3 : 1,
-                                        cursor: active ? 'not-allowed' : 'grab',
-                                        filter: active ? 'grayscale(100%)' : 'none'
-                                    }}
-                                    onMouseDown={(e) => !active && handleBenchTokenMouseDown(e, 'defense', `D${num}`)}
+                                    className={`bench-token-premium ${active ? 'disabled' : ''}`}
+                                    onMouseDown={(e) => !active && handleBenchTokenMouseDown(e, 'defense', `${label}`)}
                                 >
-                                    D{num}
+                                    {label}
                                 </div>
                             );
                         })}
                     </div>
-                    <div className="bench-separator"></div>
+                    <div className="bench-separator-premium"></div>
                     <div
-                        className={`bench-token t-ball ${isTokenActive('ball', '🏀') ? 'disabled' : ''}`}
+                        className={`bench-token-premium t-ball ${isTokenActive('ball', '🏀') ? 'disabled' : ''}`}
                         onMouseDown={(e) => !isTokenActive('ball', '🏀') && handleBenchTokenMouseDown(e, 'ball', '🏀')}
-                        style={{
-                            cursor: isTokenActive('ball', '🏀') ? 'not-allowed' : 'grab',
-                            opacity: isTokenActive('ball', '🏀') ? 0.3 : 1,
-                            filter: isTokenActive('ball', '🏀') ? 'grayscale(100%)' : 'none'
-                        }}
+                        style={{ background: 'transparent', fontSize: '1.5rem', border: 'none', padding: 0 }}
                     >
                         🏀
                     </div>
                 </div>
 
-                <div className="court-and-sidebar">
+                <div className="court-and-sidebar" style={{ padding: '0', borderRadius: '1.5rem', background: '#111', border: '10px solid #222', boxSizing: 'content-box', maxWidth: '100%', overflow: 'hidden' }}>
                     {/* Active Players Sidebar */}
                     <div className="active-players-sidebar full-custom-scroll" style={{
-                        maxHeight: type === 'full' ? '560px' : '470px'
+                        maxHeight: type === 'full' ? '560px' : '470px',
+                        width: '120px',
+                        padding: '0',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRight: '1px solid rgba(255,255,255,0.05)',
+                        marginRight: '0',
+                        borderRadius: '0'
                     }}>
-                        <h3 className="sidebar-group-title">On Court</h3>
-                        {currentTokens.length === 0 && <p className="no-players-hint">No players</p>}
-                        {currentTokens.map((token, idx) => (
-                            <div key={idx} className="sidebar-token-row">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="sidebar-tab-premium on-court">ON COURT</div>
+                        <div className="sidebar-tab-premium vacant" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>VACANT</div>
+
+                        <div style={{ padding: '10px' }}>
+                            {currentTokens.map((token, idx) => (
+                                <div key={idx} style={{ marginBottom: '10px', position: 'relative' }}>
                                     <div className={`player-token ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`}
-                                        style={{ position: 'relative', width: '20px', height: '20px', fontSize: '0.6rem', transform: 'none', top: 'auto', left: 'auto' }}>
+                                        style={{ position: 'relative', width: '32px', height: '32px', fontSize: '0.9rem', transform: 'none', top: 'auto', left: 'auto', borderRadius: '50%', fontWeight: '900', margin: '0 auto' }}>
                                         {token.label}
                                     </div>
-                                    <span className="sidebar-token-label">
-                                        {token.type === 'offense' ? (
-                                            token.label == '1' ? 'Point Guard (1)' :
-                                                token.label == '2' ? 'Shooting Guard (2)' :
-                                                    token.label == '3' ? 'Small Forward (3)' :
-                                                        token.label == '4' ? 'Power Forward (4)' :
-                                                            token.label == '5' ? 'Center (5)' : token.label
-                                        ) : token.label}
-                                    </span>
+                                    <button
+                                        onClick={() => removeToken(token.id)}
+                                        className="remove-token-btn"
+                                        style={{ position: 'absolute', top: '-2px', right: '18px', background: '#fff', color: '#DB0A40', padding: '0', width: '12px', height: '12px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        <X size={6} />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => removeToken(token.id)}
-                                    className="remove-token-btn"
-                                    title="Remove from court"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
 
                     <div
@@ -409,47 +395,101 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                         ref={courtRef}
                         onMouseDown={handleBoardMouseDown}
                         style={{
-                            cursor: mode === 'draw' ? 'crosshair' : (mode === 'erase' ? 'not-allowed' : 'default')
+                            cursor: mode === 'draw' ? 'crosshair' : (mode === 'erase' ? 'not-allowed' : 'default'),
+                            borderRadius: '0',
+                            background: '#0a0a0a',
+                            border: 'none',
+                            boxShadow: 'none'
                         }}
                     >
                         {/* Drawing Layer */}
                         <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} className={`drawing-layer ${mode === 'draw' || mode === 'erase' ? 'active' : ''}`}>
+                            <defs>
+                                <filter id="path-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                                <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#DB0A40" />
+                                </marker>
+                            </defs>
                             {currentPaths.map((d, i) => (
                                 <g key={i} onMouseEnter={(e) => handlePathHover(i, e)} onMouseDown={(e) => handlePathClick(i, e)} style={{ cursor: mode === 'erase' ? 'pointer' : 'default' }}>
                                     <path d={d} stroke="transparent" strokeWidth="20" fill="none" />
-                                    <path d={d} className="drawing-path" style={{ stroke: mode === 'erase' ? '#ff4d4d' : '#fcd34d' }} />
+                                    <path d={d} className="drawing-path" style={{
+                                        stroke: mode === 'erase' ? '#ff4d4d' : '#DB0A40',
+                                        filter: mode === 'erase' ? 'none' : 'url(#path-glow)',
+                                        markerEnd: mode === 'draw' ? 'url(#arrowhead)' : 'none'
+                                    }} />
                                 </g>
                             ))}
-                            {currentPath && <path d={currentPath} className="drawing-path" style={{ opacity: 0.5 }} />}
+                            {currentPath && <path d={currentPath} className="drawing-path" style={{ opacity: 0.5, stroke: '#DB0A40' }} />}
                         </svg>
 
                         {/* Court SVG */}
-                        {type === 'full' ? (
-                            <svg viewBox="0 0 1000 560" className="basketball-court-svg" style={{ pointerEvents: 'none' }}>
-                                <rect width="1000" height="560" fill="#1a1a1a" />
-                                <rect x="25" y="25" width="950" height="510" fill="none" stroke="#fff" strokeWidth="5" />
-                                <line x1="500" y1="25" x2="500" y2="535" stroke="#fff" strokeWidth="5" />
-                                <circle cx="500" cy="280" r="70" fill="none" stroke="#DB0A40" strokeWidth="5" />
-                                <rect x="25" y="205" width="190" height="150" fill="rgba(219, 10, 64, 0.3)" stroke="#fff" strokeWidth="5" />
-                                <path d="M 215,205 A 75,75 0 0 1 215,355" fill="none" stroke="#fff" strokeWidth="5" />
-                                <path d="M 25,80 L 240,80 A 250,250 0 0 1 240,480 L 25,480" fill="none" stroke="#fff" strokeWidth="5" />
-                                <circle cx="75" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="5" />
-                                <rect x="785" y="205" width="190" height="150" fill="rgba(219, 10, 64, 0.3)" stroke="#fff" strokeWidth="5" />
-                                <path d="M 785,205 A 75,75 0 0 0 785,355" fill="none" stroke="#fff" strokeWidth="5" />
-                                <path d="M 975,80 L 760,80 A 250,250 0 0 0 760,480 L 975,480" fill="none" stroke="#fff" strokeWidth="5" />
-                                <circle cx="925" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="5" />
-                            </svg>
-                        ) : (
-                            <svg viewBox="0 0 500 470" className="basketball-court-svg" style={{ pointerEvents: 'none' }}>
-                                <rect width="500" height="470" fill="#1a1a1a" />
-                                <rect x="15" y="15" width="470" height="440" fill="none" stroke="#fff" strokeWidth="4" />
-                                <rect x="165" y="15" width="170" height="190" fill="rgba(219, 10, 64, 0.3)" stroke="#fff" strokeWidth="4" />
-                                <circle cx="250" cy="205" r="60" fill="none" stroke="#fff" strokeWidth="4" />
-                                <path d="M 30,15 L 30,230 A 250,250 0 0 0 470,230 L 470,15" fill="none" stroke="#fff" strokeWidth="4" />
-                                <circle cx="250" cy="55" r="12" fill="none" stroke="#fff" strokeWidth="4" />
-                                <line x1="220" y1="40" x2="280" y2="40" stroke="#fff" strokeWidth="4" />
-                            </svg>
-                        )}
+                        <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} className="basketball-court-svg" style={{ pointerEvents: 'none' }}>
+                            <rect width={viewBox.w} height={viewBox.h} fill="#0a0a0a" />
+
+                            {/* Team Logo Watermark in Center (Full Court Only) */}
+                            {type === 'full' && (
+                                <image
+                                    href={husaLogo}
+                                    x="420"
+                                    y="205"
+                                    width="160"
+                                    height="150"
+                                    opacity="1"
+                                />
+                            )}
+
+                            {type === 'full' ? (
+                                <>
+                                    <rect x="25" y="25" width="950" height="510" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <line x1="500" y1="25" x2="500" y2="535" stroke="#fff" strokeWidth="4" />
+                                    <circle cx="500" cy="280" r="70" className="court-center-circle" />
+
+                                    {/* Painted Areas with All Side White Borders */}
+                                    <g>
+                                        <rect x="25" y="205" width="190" height="150" className="court-painted-area" />
+                                        <line x1="25" y1="205" x2="215" y2="205" stroke="#fff" strokeWidth="4" />
+                                        <line x1="25" y1="355" x2="215" y2="355" stroke="#fff" strokeWidth="4" />
+                                        <line x1="25" y1="205" x2="25" y2="355" stroke="#fff" strokeWidth="4" />
+                                        <line x1="215" y1="205" x2="215" y2="355" stroke="#fff" strokeWidth="4" />
+                                    </g>
+                                    <g>
+                                        <rect x="785" y="205" width="190" height="150" className="court-painted-area" />
+                                        <line x1="785" y1="205" x2="975" y2="205" stroke="#fff" strokeWidth="4" />
+                                        <line x1="785" y1="355" x2="975" y2="355" stroke="#fff" strokeWidth="4" />
+                                        <line x1="785" y1="205" x2="785" y2="355" stroke="#fff" strokeWidth="4" />
+                                        <line x1="975" y1="205" x2="975" y2="355" stroke="#fff" strokeWidth="4" />
+                                    </g>
+
+                                    <path d="M 215,205 A 75,75 0 0 1 215,355" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <path d="M 25,80 L 240,80 A 250,250 0 0 1 240,480 L 25,480" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <circle cx="75" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="4" />
+
+                                    <path d="M 785,205 A 75,75 0 0 0 785,355" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <path d="M 975,80 L 760,80 A 250,250 0 0 0 760,480 L 975,480" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <circle cx="925" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="4" />
+                                </>
+                            ) : (
+                                <>
+                                    <rect x="15" y="15" width="470" height="440" fill="none" stroke="#fff" strokeWidth="4" />
+                                    {/* Half Court Painted Area with Borders */}
+                                    <g>
+                                        <rect x="165" y="15" width="170" height="190" className="court-painted-area" />
+                                        <line x1="165" y1="15" x2="335" y2="15" stroke="#fff" strokeWidth="4" />
+                                        <line x1="165" y1="205" x2="335" y2="205" stroke="#fff" strokeWidth="4" />
+                                        <line x1="165" y1="15" x2="165" y2="205" stroke="#fff" strokeWidth="4" />
+                                        <line x1="335" y1="15" x2="335" y2="205" stroke="#fff" strokeWidth="4" />
+                                    </g>
+                                    <circle cx="250" cy="205" r="60" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <path d="M 30,15 L 30,230 A 250,250 0 0 0 470,230 L 470,15" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <circle cx="250" cy="55" r="12" fill="none" stroke="#fff" strokeWidth="4" />
+                                    <line x1="220" y1="40" x2="280" y2="40" stroke="#fff" strokeWidth="4" />
+                                </>
+                            )}
+                        </svg>
 
                         {/* Draggable Tokens */}
                         {currentTokens.map(token => (
@@ -463,6 +503,8 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                     zIndex: draggingId === token.id ? 10 : 2,
                                     pointerEvents: mode === 'move' ? 'auto' : 'none',
                                     opacity: mode === 'erase' ? 0.5 : 1,
+                                    borderRadius: '0',
+                                    fontWeight: '900',
                                     transition: draggingId === token.id ? 'none' : (isPlaying ? 'all 800ms ease' : 'all 300ms ease')
                                 }}
                                 onMouseDown={(e) => handleTokenMouseDown(e, token.id)}
@@ -473,49 +515,87 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                     </div>
                 </div>
 
-                {/* Controller Panel */}
-                <div className="tactic-controls">
-                    <div className="controls-row">
-                        <div className="tools-group">
-                            <button className={`tool-btn ${mode === 'move' ? 'active' : ''}`} onClick={() => setMode('move')} title="Move Players"><Move size={20} /></button>
-                            <button className={`tool-btn ${mode === 'draw' ? 'active' : ''}`} onClick={() => setMode('draw')} title="Draw Lines"><Pencil size={20} /></button>
-                            <button className={`tool-btn ${mode === 'erase' ? 'active' : ''}`} onClick={() => setMode('erase')} title="Eraser"><Eraser size={20} /></button>
+                {/* Controller Panel - Premium Toolbar */}
+                <div className="tactic-toolbar-premium">
+                    <div className="bench-group-premium" style={{ gap: '1.5rem' }}>
+                        <button className="tool-btn-premium" onClick={handleUndo} title="Undo"><Undo2 size={24} /></button>
+                        <button className={`tool-btn-premium ${mode === 'draw' ? 'active' : ''}`} onClick={() => setMode('draw')}><Pencil size={24} /></button>
+                        <button className={`tool-btn-premium ${mode === 'erase' ? 'active' : ''}`} onClick={() => setMode('erase')}><Eraser size={24} /></button>
+                        <button className="tool-btn-premium" onClick={() => handleReset()}><Repeat size={24} /></button>
+                    </div>
+
+                    <div className="bench-separator-premium"></div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        <button
+                            className="tool-btn-premium active"
+                            onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}
+                        >
+                            <SkipBack size={20} />
+                        </button>
+
+                        <div style={{ color: '#fff', fontSize: '0.8rem', fontWeight: '800', letterSpacing: '2px', opacity: 0.9 }}>
+                            <span style={{ opacity: 0.4 }}>METRIC FLIGHT</span> {currentFrameIndex + 1} // {frames.length}
                         </div>
 
-                        <div className="timeline-controls">
-                            <button className="frame-btn" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}><SkipBack size={18} /></button>
-                            <button className="frame-btn play-btn" onClick={togglePlay}>{isPlaying ? <Pause size={20} fill="black" /> : <Play size={20} fill="black" />}</button>
-                            <button className="frame-btn" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}><SkipForward size={18} /></button>
-                            <div className="frame-counter"><span>FRAME</span>{currentFrameIndex + 1} / {frames.length}</div>
-                            <button className="frame-btn" onClick={addFrame} title="Add New Frame"><Plus size={18} /></button>
-                        </div>
-
-                        <div className="save-controls">
-                            <button className="control-btn btn-reset" onClick={handleUndo} disabled={history.length === 0} title="Undo Action"><Undo2 size={18} /></button>
-                            <button className="control-btn btn-reset" onClick={handleReset} title="Clear Board"><RotateCcw size={18} /></button>
-                            <button className="control-btn btn-reset" onClick={deleteFrame} disabled={frames.length <= 1} title="Delete Frame"><Trash2 size={18} /></button>
-                            <button className="control-btn btn-save" onClick={handleSaveClick} title="Save Play"><Save size={18} style={{ marginRight: '6px' }} /> SAVE</button>
+                        <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+                            <button className="tool-btn-premium" onClick={togglePlay}>
+                                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                            </button>
+                            <button className="tool-btn-premium" onClick={addFrame}>
+                                <Plus size={20} />
+                            </button>
+                            <button
+                                className="tool-btn-premium"
+                                onClick={deleteFrame}
+                                disabled={frames.length <= 1}
+                                style={{ fontSize: '1.8rem', fontWeight: '200', lineHeight: '0' }}
+                            >
+                                -
+                            </button>
+                            <button
+                                className="tool-btn-premium active"
+                                onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}
+                            >
+                                <SkipForward size={20} />
+                            </button>
                         </div>
                     </div>
+
+                    <div className="bench-separator-premium"></div>
+
+                    <button className="commit-btn-premium" onClick={handleSaveClick} style={{ fontFamily: 'Orbitron, sans-serif' }}>COMMIT SYSTEM</button>
                 </div>
 
             </div>
 
             {/* Save Modal (Local to Workspace) - Moved outside strategy-card and into a Portal */}
             {showSaveModal && createPortal(
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-                    <div className="dashboard-card" style={{ width: '400px', maxWidth: '90%', border: '1px solid rgba(255,49,49,0.2)', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 style={{ margin: 0, border: 'none', color: '#fff' }}>Save {title}</h2>
-                            <button onClick={() => setShowSaveModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+                    <div className="intel-card" style={{ width: '500px', maxWidth: '90%', border: '1px solid rgba(219,10,64,0.3)', borderRadius: '0', padding: '0', overflow: 'hidden', boxShadow: '0 0 100px rgba(219,10,64,0.1)' }}>
+                        <div className="briefing-banner" style={{ background: 'linear-gradient(90deg, #222 0%, #111 100%)', padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '0' }}>
+                            <div>
+                                <h2 style={{ margin: 0, border: 'none', color: '#fff', fontSize: '1.2rem', fontWeight: '900', letterSpacing: '2px' }}>SAVE {title.toUpperCase()}</h2>
+                                <p style={{ margin: '5px 0 0 0', fontSize: '0.65rem', color: '#DB0A40', fontWeight: 'bold' }}>SYSTEM UPLINK ENCRYPTION</p>
+                            </div>
+                            <button onClick={() => setShowSaveModal(false)} style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer' }}><X size={20} /></button>
                         </div>
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>System Name</label>
-                            <input type="text" value={tacticName} onChange={(e) => setTacticName(e.target.value)} placeholder="e.g. Baseline Out" maxLength={50} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px', fontSize: '1rem' }} />
-                        </div>
-                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
 
-                            <button onClick={confirmSave} className="control-btn btn-save" disabled={!tacticName.trim()} style={{ background: '#ff3131' }}>CONFIRM SAVE</button>
+                        <div style={{ padding: '2.5rem' }}>
+                            <div style={{ marginBottom: '2.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '1rem', color: '#444', textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '3px' }}>SYSTEM DESIGNATION</label>
+                                <input
+                                    type="text"
+                                    value={tacticName}
+                                    onChange={(e) => setTacticName(e.target.value)}
+                                    placeholder="Briefing Title..."
+                                    maxLength={50}
+                                    style={{ width: '100%', padding: '18px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', borderRadius: '0', fontSize: '1rem' }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                <button onClick={confirmSave} className="intel-btn-primary" disabled={!tacticName.trim()} style={{ width: '100%', padding: '20px', justifyContent: 'center', letterSpacing: '2px', fontWeight: '900', borderRadius: '0' }}>SAVE SYSTEM DATA</button>
+                            </div>
                         </div>
                     </div>
                 </div>,

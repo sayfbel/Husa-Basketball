@@ -109,6 +109,11 @@ const Overview = () => {
             {/* 1. Cinematic Header */}
             <div className="section-header-modern">
                 <div className="watermark-bg">HUSA</div>
+
+                <div style={{ position: 'absolute', top: '2rem', right: '2rem', opacity: 0.1, pointerEvents: 'none' }}>
+                    <img src={husaLogo} alt="HUSA" style={{ width: '150px' }} />
+                </div>
+
                 <div className="header-content-box">
                     <span className="premium-label">EXECUTIVE COMMAND CENTER</span>
                     <h1 className="hero-dashboard-title">

@@ -1,0 +1,1 @@
+﻿const db = require('./config/db'); async function clearStore() { try { await db.query('DELETE FROM store_products'); console.log('Cleared store products'); process.exit(0); } catch (e) { console.error(e); process.exit(1); } } clearStore();

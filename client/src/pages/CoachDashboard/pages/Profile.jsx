@@ -16,10 +16,13 @@ import {
     ChevronRight,
     Zap,
     Briefcase,
-    BookOpen
+    BookOpen,
+    Shield
 } from 'lucide-react';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import '../../../css/dashboard.css';
+
+import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
 
 const Profile = () => {
     const { currentUser } = useAuth();
@@ -97,127 +100,226 @@ const Profile = () => {
     if (loading) return <div className="animate-fade-in" style={{ padding: '2rem', color: '#fff' }}>Loading coach profile...</div>;
 
     return (
-        <div className="animate-fade-in">
-            <div className="section-header-row">
-                <div className="role-tag coach-tag">COACH PROFILE</div>
-                <h1>System Commander</h1>
-                <p>Manage your professional profile and personal tactical archive.</p>
-            </div>
-
-            <div className="dashboard-grid">
-                {/* Main Identity Card */}
-                <div className="dashboard-card" style={{ gridColumn: 'span 2' }}>
-                    <div className="card-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.1rem', border: 'none', padding: 0 }}>Personal informations</h2>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {isEditing ? (
-                                <>
-                                    <button onClick={handleSave} style={{ background: '#ff3131', border: 'none', color: '#fff', width: '45px', height: '45px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(255, 49, 49, 0.3)' }}>
-                                        <Save size={18} style={{ margin: 'auto' }} />
-                                    </button>
-                                    <button onClick={() => setIsEditing(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', width: '45px', height: '45px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <X size={18} style={{ margin: 'auto' }} />
-                                    </button>
-                                </>
-                            ) : (
-                                <button onClick={() => setIsEditing(true)} style={{ color: '#fff', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', width: '45px', height: '45px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Edit2 size={18} style={{ margin: 'auto' }} />
-                                </button>
-                            )}
+        <div className="overview-container dashboard-fashion-theme animate-fade-in">
+            {/* Header */}
+            <div className="section-header-modern">
+                <div className="watermark-bg">COACH</div>
+                <div className="header-content-box">
+                    <span className="premium-label">TACTICAL DOSSIER</span>
+                    <h1 className="hero-dashboard-title">
+                        HEAD COACH <br />
+                        <span className="accent-text">PROFILE</span>
+                    </h1>
+                    <div className="header-status-bar">
+                        <div className="status-item">
+                            <Briefcase size={14} />
+                            <span>{coachData.role?.toUpperCase() || 'HEAD COACH'}</span>
                         </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
-                        <div style={{
-                            width: '180px',
-                            height: '180px',
-                            borderRadius: '24px',
-                            overflow: 'hidden',
-                            border: '2px solid var(--dash-primary)',
-                            background: '#0a0a0a',
-                            position: 'relative',
-                            boxShadow: '0 10px 30px rgba(219, 10, 64, 0.2)'
-                        }}>
-                            <img
-                                src={coachData.photo_url}
-                                alt={coachData.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => {
-                                    e.target.src = '/assets/players/default.png';
-                                }}
-                            />
-                            <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(219, 10, 64, 0.8)', color: '#fff', textAlign: 'center', padding: '5px', fontSize: '0.7rem', fontWeight: 'bold' }}>OFFICIAL STAFF</div>
-                        </div>
-
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ flex: 1 }}>
-                                    {isEditing ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <label style={{ fontSize: '0.6rem', color: '#ff3131', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '5px' }}>STAFF IDENTITY</label>
-                                            <input
-                                                type="text"
-                                                value={coachData.name}
-                                                onChange={(e) => setCoachData({ ...coachData, name: e.target.value })}
-                                                style={{
-                                                    width: '100%',
-                                                    background: 'transparent',
-                                                    border: 'none',
-                                                    borderBottom: '2px solid #ff3131',
-                                                    color: '#fff',
-                                                    padding: '5px 0',
-                                                    fontSize: '2.5rem',
-                                                    fontWeight: '950',
-                                                    letterSpacing: '-1.5px',
-                                                    outline: 'none',
-                                                    fontFamily: 'inherit'
-                                                }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-1.5px', textTransform: 'uppercase' }}>{coachData.name}</h1>
-                                            <div style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                color: '#ff3131',
-                                                fontWeight: '800',
-                                                fontSize: '0.9rem',
-                                                marginTop: '5px',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '2px'
-                                            }}>
-                                                <Briefcase size={14} /> {coachData.role} • {coachData.department}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {isEditing ? (
-                                <div style={{ marginTop: '20px' }}>
-                                    <label style={{ fontSize: '0.7rem', color: '#666', fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>DESCRIPTION / PHILOSOPHY</label>
-                                    <textarea
-                                        value={coachData.bio}
-                                        onChange={(e) => setCoachData({ ...coachData, bio: e.target.value })}
-                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--dash-border)', color: '#aaa', padding: '12px', borderRadius: '8px', minHeight: '100px', resize: 'none' }}
-                                    />
-                                </div>
-                            ) : (
-                                <p style={{ color: '#888', marginTop: '20px', maxWidth: '800px', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                                    {coachData.bio}
-                                </p>
-                            )}
+                        <div className="status-item">
+                            <BookOpen size={14} />
+                            <span>{coachData.department?.toUpperCase() || 'COACHING STAFF'}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Physical Bio */}
-                <div className="dashboard-card shadow-module">
-                    <div className="card-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.1rem', border: 'none', padding: 0 }}>Physical Intel</h2>
-                        <Ruler size={18} color="#ff3131" />
+                <div style={{ position: 'absolute', top: '2rem', right: '2rem', opacity: 0.1, pointerEvents: 'none' }}>
+                    <img src={husaLogo} alt="HUSA" style={{ width: '150px' }} />
+                </div>
+
+                {/* Header Actions */}
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+                    {isEditing ? (
+                        <>
+                            <button
+                                onClick={handleSave}
+                                className="intel-btn-primary"
+                                style={{ background: '#DB0A40', borderColor: '#DB0A40' }}
+                            >
+                                <Save size={18} style={{ marginRight: '8px' }} /> SAVE RECORDS
+                            </button>
+                            <button
+                                onClick={() => setIsEditing(false)}
+                                className="intel-btn-primary"
+                                style={{ background: '#fff', color: '#000', borderColor: '#fff', borderRadius: '0' }}
+                            >
+                                <X size={18} style={{ marginRight: '8px' }} /> CANCEL
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="intel-btn-primary"
+                            style={{ borderRadius: '0' }}
+                        >
+                            <Edit2 size={18} style={{ marginRight: '8px' }} /> EDIT PROFILE
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="dashboard-grid" style={{ alignItems: 'flex-start' }}>
+                {/* Identity Card */}
+                <div className="intel-card" style={{ gridColumn: 'span 3', display: 'flex', flexDirection: 'column', padding: '3rem', borderRadius: '0' }}>
+                    <div style={{ display: 'flex', gap: '50px', alignItems: 'flex-start' }}>
+                        {/* Left Side: Photo & Quick Stats */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '280px', flexShrink: 0 }}>
+                            <div style={{
+                                width: '100%',
+                                height: '340px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                background: '#0a0a0a',
+                                position: 'relative',
+                                overflow: 'visible',
+                                borderRadius: '0'
+                            }}>
+                                <img
+                                    src={coachData.photo_url}
+                                    alt={coachData.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    onError={(e) => { e.target.src = '/assets/players/default.png'; }}
+                                />
+
+                                {/* Red Corner Accents */}
+                                <div style={{ position: 'absolute', top: '-5px', left: '-5px', width: '20px', height: '20px', borderTop: '3px solid #DB0A40', borderLeft: '3px solid #DB0A40' }}></div>
+                                <div style={{ position: 'absolute', bottom: '-5px', right: '-5px', width: '20px', height: '20px', borderBottom: '3px solid #DB0A40', borderRight: '3px solid #DB0A40' }}></div>
+
+                                {/* STAFF Label Overlay */}
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '30px',
+                                    left: '0',
+                                    background: '#DB0A40',
+                                    color: '#fff',
+                                    padding: '6px 15px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '900',
+                                    letterSpacing: '1px',
+                                    borderRadius: '0'
+                                }}>
+                                    OFFICIAL STAFF
+                                </div>
+                            </div>
+
+                            {/* Role/Assignment stat boxes below image */}
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{
+                                    flex: 1,
+                                    background: 'rgba(255,255,255,0.03)',
+                                    padding: '15px',
+                                    borderLeft: '2px solid #DB0A40',
+                                    borderRadius: '0'
+                                }}>
+                                    <span style={{ display: 'block', fontSize: '0.6rem', color: '#666', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '1px' }}>CURRENT ROLE</span>
+                                    <span style={{ fontSize: '1rem', fontWeight: '900', color: '#fff' }}>{coachData.role}</span>
+                                </div>
+                                <div style={{
+                                    flex: 1,
+                                    background: 'rgba(255,255,255,0.03)',
+                                    padding: '15px',
+                                    borderLeft: '2px solid #DB0A40',
+                                    borderRadius: '0'
+                                }}>
+                                    <span style={{ display: 'block', fontSize: '0.6rem', color: '#666', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '1px' }}>ASSIGNMENT</span>
+                                    <span style={{ fontSize: '1rem', fontWeight: '900', color: '#fff' }}>Technical</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Side: Identity Info */}
+                        <div style={{ flex: 1, paddingTop: '10px' }}>
+                            {isEditing ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.66rem', color: '#DB0A40', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>FULL IDENTITY</label>
+                                        <input
+                                            type="text"
+                                            value={coachData.name}
+                                            onChange={(e) => setCoachData({ ...coachData, name: e.target.value })}
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(0,0,0,0.2)',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderLeft: '2px solid #DB0A40',
+                                                color: '#fff',
+                                                padding: '15px',
+                                                fontSize: '1.5rem',
+                                                fontWeight: '800',
+                                                letterSpacing: '-0.5px',
+                                                outline: 'none',
+                                                fontFamily: 'inherit'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>OFFICIAL ROLE</label>
+                                            <input
+                                                type="text"
+                                                value={coachData.role}
+                                                onChange={(e) => setCoachData({ ...coachData, role: e.target.value })}
+                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '0' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>DEPARTMENT</label>
+                                            <input
+                                                type="text"
+                                                value={coachData.department}
+                                                onChange={(e) => setCoachData({ ...coachData, department: e.target.value })}
+                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '0' }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                                        <div style={{ width: '40px', height: '2px', background: '#DB0A40' }}></div>
+                                        <span style={{ fontSize: '0.8rem', color: '#888', letterSpacing: '2px', fontWeight: '600' }}>HUSA BASKETBALL CLUB</span>
+                                    </div>
+                                    <h1 style={{ margin: 0, fontSize: '5rem', fontWeight: '900', lineHeight: '0.9', letterSpacing: '-2px', textTransform: 'uppercase', color: 'white' }}>
+                                        {coachData.name.split(' ')[0]} <br />
+                                        <span style={{ color: 'transparent', WebkitTextStroke: '2px #fff' }}>{coachData.name.split(' ').slice(1).join(' ')}</span>
+                                    </h1>
+                                </>
+                            )}
+
+                            <div style={{ marginTop: '40px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '30px' }}>
+                                {isEditing ? (
+                                    <div>
+                                        <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>COACHING PHILOSOPHY</label>
+                                        <textarea
+                                            value={coachData.bio}
+                                            onChange={(e) => setCoachData({ ...coachData, bio: e.target.value })}
+                                            rows="6"
+                                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', padding: '15px', borderRadius: '0', resize: 'none', lineHeight: '1.6', fontSize: '1rem' }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h3 style={{ fontSize: '1rem', color: '#fff', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '1px', marginBottom: '15px' }}>PROFESSIONAL BRIEF</h3>
+                                        <p style={{ color: '#888', lineHeight: '1.8', fontSize: '1.1rem', maxWidth: '800px', margin: 0 }}>
+                                            {coachData.bio}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Status & Metrics */}
+                <div className="intel-card" style={{ borderRadius: '0' }}>
+                    <div className="card-header-modern" style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>STATUS & METRICS</h2>
+                    </div>
+
+                    <div className="stat-item">
+                        <span>Office Status</span>
+                        <strong style={{ color: '#4cd137', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4cd137', boxShadow: '0 0 10px #4cd137' }}></div>
+                            ACTIVE DUTY
+                        </strong>
                     </div>
 
                     <div className="stat-item">
@@ -227,10 +329,10 @@ const Profile = () => {
                                 type="text"
                                 value={coachData.height}
                                 onChange={(e) => setCoachData({ ...coachData, height: e.target.value })}
-                                style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #ff3131', color: '#fff', textAlign: 'right', outline: 'none', width: '80px' }}
+                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 10px', borderRadius: '0', width: '120px', textAlign: 'right', fontSize: '0.9rem' }}
                             />
                         ) : (
-                            <strong style={{ color: '#fff' }}>{coachData.height}</strong>
+                            <strong>{coachData.height}</strong>
                         )}
                     </div>
 
@@ -241,10 +343,10 @@ const Profile = () => {
                                 type="text"
                                 value={coachData.weight}
                                 onChange={(e) => setCoachData({ ...coachData, weight: e.target.value })}
-                                style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #ff3131', color: '#fff', textAlign: 'right', outline: 'none', width: '80px' }}
+                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 10px', borderRadius: '0', width: '120px', textAlign: 'right', fontSize: '0.9rem' }}
                             />
                         ) : (
-                            <strong style={{ color: '#fff' }}>{coachData.weight}</strong>
+                            <strong>{coachData.weight}</strong>
                         )}
                     </div>
 
@@ -255,19 +357,18 @@ const Profile = () => {
                                 type="text"
                                 value={coachData.age}
                                 onChange={(e) => setCoachData({ ...coachData, age: e.target.value })}
-                                style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #ff3131', color: '#fff', textAlign: 'right', outline: 'none', width: '80px' }}
+                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 10px', borderRadius: '0', width: '80px', textAlign: 'right', fontSize: '0.9rem' }}
                             />
                         ) : (
-                            <strong style={{ color: '#fff' }}>{coachData.age} Yrs</strong>
+                            <strong>{coachData.age} Yrs</strong>
                         )}
                     </div>
                 </div>
 
-                {/* Contact Information */}
-                <div className="dashboard-card shadow-module">
-                    <div className="card-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.1rem', border: 'none', padding: 0 }}>Direct Communication</h2>
-                        <Mail size={18} color="#ff3131" />
+                {/* Official Channels */}
+                <div className="intel-card" style={{ borderRadius: '0' }}>
+                    <div className="card-header-modern" style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>COMMS CHANNELS</h2>
                     </div>
 
                     <div className="stat-item">
@@ -277,10 +378,10 @@ const Profile = () => {
                                 type="email"
                                 value={coachData.email}
                                 onChange={(e) => setCoachData({ ...coachData, email: e.target.value })}
-                                style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #ff3131', color: '#fff', textAlign: 'right', outline: 'none', width: '220px' }}
+                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 12px', borderRadius: '0', width: '100%', fontSize: '0.9rem' }}
                             />
                         ) : (
-                            <span style={{ fontSize: '0.95rem', color: '#aaa', fontWeight: '600' }}>{coachData.email}</span>
+                            <span style={{ fontSize: '0.85rem', color: '#fff', fontFamily: 'monospace' }}>{coachData.email}</span>
                         )}
                     </div>
 
@@ -291,25 +392,24 @@ const Profile = () => {
                                 type="text"
                                 value={coachData.phone}
                                 onChange={(e) => setCoachData({ ...coachData, phone: e.target.value })}
-                                style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #ff3131', color: '#fff', textAlign: 'right', outline: 'none', width: '180px' }}
+                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 12px', borderRadius: '0', width: '100%', fontSize: '0.9rem' }}
                             />
                         ) : (
-                            <strong style={{ color: '#fff' }}>{coachData.phone}</strong>
+                            <span style={{ fontSize: '0.85rem', color: '#fff', fontFamily: 'monospace' }}>{coachData.phone}</span>
                         )}
+                    </div>
+
+                    <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(219, 10, 64, 0.05)', border: '1px dashed #DB0A40', borderRadius: '0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#DB0A40', marginBottom: '5px' }}>
+                            <Shield size={14} />
+                            <span style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>SECURITY PROTOCOL</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#aaa' }}>
+                            All communications on these channels are encrypted and monitored by club security operations.
+                        </p>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                .shadow-module {
-                    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.2) 100%) !important;
-                }
-                .coach-tag {
-                    border-color: #ff3131 !important;
-                    color: #ff3131 !important;
-                    box-shadow: 0 0 20px rgba(255, 49, 49, 0.15) !important;
-                }
-            `}</style>
         </div>
     );
 };

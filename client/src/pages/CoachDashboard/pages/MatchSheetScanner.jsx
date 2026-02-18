@@ -148,13 +148,13 @@ const MatchSheetScanner = () => {
         }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '3rem' }}>
-                    <div style={{ background: '#DB0A40', padding: '12px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '4rem' }}>
+                    <div style={{ background: '#DB0A40', padding: '15px', borderRadius: '0' }}>
                         <Scan size={32} color="#fff" />
                     </div>
                     <div>
-                        <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '950', letterSpacing: '-1px' }}>MATCH SHEET INTEL</h1>
-                        <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '2px' }}>OCR-Powered Tactical Data Extraction</p>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '3px' }}>INTEL EXTRACTION SYSTEM</span>
+                        <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-1px', textTransform: 'uppercase' }}>MATCH SHEET <span style={{ color: '#DB0A40' }}>SCANNER</span></h1>
                     </div>
                 </div>
 
@@ -165,12 +165,12 @@ const MatchSheetScanner = () => {
                         <div
                             onClick={() => fileInputRef.current.click()}
                             style={{
-                                background: 'rgba(255,255,255,0.02)', border: '2px dashed rgba(219, 10, 64, 0.3)',
-                                borderRadius: '24px', padding: '4rem 2rem', textAlign: 'center', cursor: 'pointer',
+                                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(219, 10, 64, 0.3)',
+                                borderRadius: '0', padding: '5rem 2rem', textAlign: 'center', cursor: 'pointer',
                                 transition: '0.3s', position: 'relative'
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#DB0A40'}
-                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(219, 10, 64, 0.3)'}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#DB0A40'; e.currentTarget.style.background = 'rgba(219, 10, 64, 0.03)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(219, 10, 64, 0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
                         >
                             <input
                                 type="file"
@@ -180,13 +180,18 @@ const MatchSheetScanner = () => {
                                 accept="image/*"
                             />
                             {image ? (
-                                <img src={image} alt="Preview" style={{ maxWidth: '100%', borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} />
+                                <img src={image} alt="Preview" style={{ maxWidth: '100%', borderRadius: '0', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }} />
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                                    <Upload size={48} color="#DB0A40" />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <Upload size={56} color="#DB0A40" />
+                                        <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '24px', height: '24px', background: '#DB0A40', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0', fontSize: '10px' }}>
+                                            <Plus size={14} />
+                                        </div>
+                                    </div>
                                     <div>
-                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Drop Match Sheet Image</div>
-                                        <div style={{ color: '#666', marginTop: '5px' }}>Supported: PNG, JPG (High resolution recommended)</div>
+                                        <div style={{ fontSize: '1.4rem', fontWeight: '900', letterSpacing: '1px' }}>UPLINK MATCH SHEET</div>
+                                        <div style={{ color: '#444', marginTop: '8px', fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>ALPHA-VISUAL SYNC: READY</div>
                                     </div>
                                 </div>
                             )}
@@ -194,61 +199,61 @@ const MatchSheetScanner = () => {
 
                         {/* Progress Panel */}
                         {isProcessing && (
-                            <div style={{ background: 'rgba(219, 10, 64, 0.05)', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(219, 10, 64, 0.2)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <Loader2 size={20} className="animate-spin" color="#DB0A40" />
-                                        <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{status.toUpperCase()}</span>
+                            <div style={{ background: 'rgba(219, 10, 64, 0.05)', borderRadius: '0', padding: '2rem', border: '1px solid rgba(219, 10, 64, 0.2)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <Loader2 size={24} className="animate-spin" color="#DB0A40" />
+                                        <span style={{ fontWeight: '900', fontSize: '0.8rem', letterSpacing: '2px', color: '#DB0A40' }}>{status.toUpperCase()}</span>
                                     </div>
-                                    <span style={{ color: '#DB0A40', fontWeight: 'bold' }}>{progress}%</span>
+                                    <span style={{ color: '#fff', fontWeight: '900', fontSize: '1.2rem' }}>{progress}%</span>
                                 </div>
-                                <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '100px', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '0', overflow: 'hidden' }}>
                                     <div style={{ width: `${progress}%`, height: '100%', background: '#DB0A40', transition: 'width 0.3s ease' }}></div>
                                 </div>
                             </div>
                         )}
 
                         {error && (
-                            <div style={{ background: 'rgba(219, 10, 64, 0.1)', border: '1px solid #DB0A40', borderRadius: '12px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '10px', color: '#DB0A40' }}>
-                                <AlertCircle size={20} />
-                                <span>{error}</span>
+                            <div style={{ background: 'rgba(219, 10, 64, 0.1)', border: '1px solid #DB0A40', borderRadius: '0', padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '15px', color: '#DB0A40' }}>
+                                <AlertCircle size={24} />
+                                <span style={{ fontWeight: '900', letterSpacing: '1px' }}>SCAN_ERROR: {error.toUpperCase()}</span>
                             </div>
                         )}
 
                         {/* Results Preview */}
                         {extractedData && (
-                            <div className="animate-fade-in" style={{ background: '#111', borderRadius: '24px', padding: '2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
-                                    <Database size={20} color="#DB0A40" />
-                                    <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Extracted Schema</h3>
+                            <div className="animate-fade-in" style={{ background: '#111', borderRadius: '0', padding: '2.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1.5rem' }}>
+                                    <Database size={24} color="#DB0A40" />
+                                    <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '900' }}>EXTRACTED INTEL SCHEMA</h3>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2rem' }}>
                                     <div>
-                                        <label style={{ color: '#444', fontSize: '0.7rem', fontWeight: 'bold' }}>MATCH_INFO</label>
-                                        <pre style={{ background: '#080808', padding: '1rem', borderRadius: '12px', fontSize: '0.8rem', color: '#aaa', overflowX: 'auto' }}>
+                                        <label style={{ color: '#444', fontSize: '0.65rem', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>MISSION_PROFILE</label>
+                                        <pre style={{ background: '#080808', padding: '1.5rem', borderRadius: '0', fontSize: '0.8rem', color: '#aaa', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.03)' }}>
                                             {JSON.stringify(extractedData.match_info, null, 2)}
                                         </pre>
                                     </div>
                                     <div>
-                                        <label style={{ color: '#444', fontSize: '0.7rem', fontWeight: 'bold' }}>FINAL_RESULT</label>
-                                        <div style={{ background: '#080808', padding: '1rem', borderRadius: '12px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '2rem', fontWeight: '950', color: '#DB0A40' }}>
-                                                {extractedData.final_score.team_a} - {extractedData.final_score.team_b}
+                                        <label style={{ color: '#444', fontSize: '0.65rem', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>FINAL_BATTLE_RESULT</label>
+                                        <div style={{ background: '#080808', padding: '2rem', borderRadius: '0', textAlign: 'center', border: '1px solid rgba(219, 10, 64, 0.2)' }}>
+                                            <div style={{ fontSize: '3rem', fontWeight: '950', color: '#DB0A40', letterSpacing: '-2px' }}>
+                                                {extractedData.final_score.team_a} : {extractedData.final_score.team_b}
                                             </div>
-                                            <div style={{ fontSize: '0.7rem', color: '#444' }}>VERIFIED TOTALS</div>
+                                            <div style={{ fontSize: '0.6rem', color: '#444', fontWeight: '900', letterSpacing: '3px', marginTop: '10px' }}>VERIFIED_TOTALS</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ marginTop: '1.5rem' }}>
-                                    <label style={{ color: '#444', fontSize: '0.7rem', fontWeight: 'bold' }}>PLAYER_LOGS_SAMPLE</label>
-                                    <div style={{ background: '#080808', padding: '1rem', borderRadius: '12px', fontSize: '0.8rem', color: '#aaa' }}>
+                                <div style={{ mt: '2rem' }}>
+                                    <label style={{ color: '#444', fontSize: '0.65rem', fontWeight: '900', letterSpacing: '2px', display: 'block', marginBottom: '10px', marginTop: '20px' }}>ASSET_FEED_SAMPLE</label>
+                                    <div style={{ background: '#080808', padding: '1.5rem', borderRadius: '0', fontSize: '0.85rem', color: '#aaa', border: '1px solid rgba(255,255,255,0.03)' }}>
                                         {extractedData.team_a.players.slice(0, 3).map((p, i) => (
-                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                                <span>{p.name} (#{p.number})</span>
-                                                <span style={{ color: '#DB0A40' }}>LIC: {p.license}</span>
+                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,10,64,0.05)' }}>
+                                                <span style={{ fontWeight: '800' }}>{p.name.toUpperCase()} <span style={{ color: '#444' }}>(#{p.number})</span></span>
+                                                <span style={{ color: '#DB0A40', fontWeight: '900', fontSize: '0.75rem' }}>LIC: {p.license}</span>
                                             </div>
                                         ))}
-                                        <div style={{ padding: '8px 0', textAlign: 'center', color: '#444' }}>... and {extractedData.team_a.players.length + extractedData.team_b.players.length - 3} more entries extracted</div>
+                                        <div style={{ padding: '15px 0 0 0', textAlign: 'center', color: '#333', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px' }}>... AND {extractedData.team_a.players.length + extractedData.team_b.players.length - 3} MORE ENTRIES EXTRACTED</div>
                                     </div>
                                 </div>
                             </div>
@@ -256,22 +261,23 @@ const MatchSheetScanner = () => {
                     </div>
 
                     {/* Sidebar Actions */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div style={{ background: '#111', borderRadius: '24px', padding: '2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem' }}>Actions</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        <div style={{ background: '#111', borderRadius: '0', padding: '2.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.2rem', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>Operational Actions</h3>
                             <button
                                 onClick={processImage}
                                 disabled={!image || isProcessing}
                                 style={{
                                     width: '100%', background: image && !isProcessing ? '#DB0A40' : '#222',
-                                    color: '#fff', border: 'none', padding: '1.2rem', borderRadius: '12px',
-                                    fontWeight: 'bold', cursor: image && !isProcessing ? 'pointer' : 'not-allowed',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                    transition: '0.3s', boxShadow: image && !isProcessing ? '0 10px 20px rgba(219, 10, 64, 0.2)' : 'none'
+                                    color: '#fff', border: 'none', padding: '1.5rem', borderRadius: '0',
+                                    fontWeight: '950', cursor: image && !isProcessing ? 'pointer' : 'not-allowed',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px',
+                                    transition: '0.3s', boxShadow: image && !isProcessing ? '0 15px 40px rgba(219, 10, 64, 0.3)' : 'none',
+                                    letterSpacing: '2px', textTransform: 'uppercase'
                                 }}
                             >
-                                {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Activity size={20} />}
-                                START SCANNER
+                                {isProcessing ? <Loader2 size={24} className="animate-spin" /> : <Activity size={24} />}
+                                INITIATE SCAN
                             </button>
 
                             <p style={{ fontSize: '0.75rem', color: '#444', marginTop: '1.5rem', lineHeight: '1.5' }}>
@@ -279,15 +285,15 @@ const MatchSheetScanner = () => {
                             </p>
                         </div>
 
-                        <div style={{ background: 'rgba(219, 10, 64, 0.03)', borderRadius: '24px', padding: '2rem', border: '1px solid rgba(219, 10, 64, 0.1)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem', color: '#DB0A40' }}>
-                                <CheckCircle size={18} />
-                                <span style={{ fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '1px' }}>SYSTEM STATUS</span>
+                        <div style={{ background: 'rgba(219, 10, 64, 0.03)', borderRadius: '0', padding: '2.5rem', border: '1px solid rgba(219, 10, 64, 0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '1.5rem', color: '#DB0A40' }}>
+                                <CheckCircle size={24} />
+                                <span style={{ fontWeight: '950', fontSize: '0.8rem', letterSpacing: '3px' }}>SYSTEM STATUS</span>
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                                Engine: Tesseract 5.0<br />
-                                Language: FR/EN<br />
-                                Output: Structured JSON
+                            <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: '700', lineHeight: '2' }}>
+                                <span style={{ color: '#444' }}>ENGINE:</span> TESSERACT 5.0<br />
+                                <span style={{ color: '#444' }}>REGION:</span> FR / WORLD<br />
+                                <span style={{ color: '#444' }}>UPLINK:</span> ACTIVE JSON
                             </div>
                         </div>
                     </div>

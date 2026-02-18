@@ -9,7 +9,7 @@
 
 .court-and-sidebar {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     padding: 1rem;
 }
 
@@ -75,23 +75,28 @@
 /* Tactic Item Premium */
 .tactic-item-premium {
     position: relative;
-    background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(15, 15, 15, 0.95));
-    padding: 0.8rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0a0a0a;
+    padding: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    min-height: 120px;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .tactic-item-premium:hover {
-    transform: translateY(-5px) scale(1.02);
-    border-color: var(--dash-primary);
-    box-shadow: 0 10px 30px rgba(219, 10, 64, 0.2);
+    transform: translateY(-8px);
+    border-color: rgba(219, 10, 64, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(219, 10, 64, 0.1);
+}
+
+.tactic-header-premium {
+    position: relative;
+    z-index: 5;
+    margin-bottom: 2rem;
 }
 
 .tactic-info-box {
@@ -106,10 +111,11 @@
 .tactic-name-label {
     margin: 0;
     color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .tactic-action-hint {
@@ -122,22 +128,28 @@
 }
 
 .delete-tactic-btn {
-    background: rgba(255, 77, 77, 0.15);
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: #DB0A40;
     border: none;
-    color: #ff4d4d;
+    color: #fff;
     cursor: pointer;
-    width: 32px;
-    height: 32px;
+    width: 42px;
+    height: 42px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.3s;
+    z-index: 10;
+    box-shadow: 0 0 15px rgba(219, 10, 64, 0.4);
 }
 
 .delete-tactic-btn:hover {
-    background: #ff4d4d !important;
-    color: #fff !important;
+    background: #f00 !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 25px rgba(219, 10, 64, 0.6);
 }
 
 /* Mini Court Preview */
@@ -155,15 +167,66 @@
 
 .preview-gradient-overlay {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
-    height: 70%;
-    background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.4), transparent);
-    z-index: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 20%, rgba(10, 10, 10, 0.6) 100%);
+    z-index: 1;
 }
 
-/* Tactical Workspace Sidebar (On Court) */
+/* Premium Tactical Tokens */
+.player-token {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    /* Circle on court */
+    font-family: 'Orbitron', sans-serif;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+}
+
+.player-token.p-offense {
+    background: #DB0A40 !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 20px rgba(219, 10, 64, 0.4) !important;
+}
+
+.player-token.p-offense::after {
+    content: '';
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(219, 10, 64, 0.5);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: tactical-pulse 2s infinite;
+}
+
+@keyframes tactical-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+
+.player-token.p-defense {
+    background: #222 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #888 !important;
+}
+
+.player-token.p-ball {
+    font-size: 1.8rem !important;
+}
+
 .active-players-sidebar {
     width: 220px;
     border-radius: 12px;
@@ -256,8 +319,216 @@
 .court-board.interactive-board {
     flex: 1;
     position: relative;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
-    background: #1a1a1a;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    background: #0a0a0a;
+    box-shadow: none;
+}
+
+/* Premium Operational Lab Styles */
+.strategy-bench-premium {
+    background: #111;
+    border-radius: 50px;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 1.5rem auto;
+    width: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.bench-group-premium {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.bench-token-premium {
+    width: 42px;
+    height: 42px;
+    background: #222;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: grab;
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.bench-token-premium:hover {
+    background: #333;
+    transform: translateY(-2px);
+}
+
+.bench-token-premium.active {
+    background: #DB0A40;
+    box-shadow: 0 0 20px rgba(219, 10, 64, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bench-token-premium.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: #151515;
+}
+
+.bench-separator-premium {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 0.5rem;
+}
+
+/* Premium Toolbar */
+.tactic-toolbar-premium {
+    background: #111;
+    border-radius: 50px;
+    padding: 0.6rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin: 2rem auto;
+    width: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.tool-btn-premium {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-btn-premium:hover {
+    opacity: 1;
+    color: #DB0A40;
+}
+
+.tool-btn-premium.active {
+    opacity: 1;
+    color: #DB0A40;
+    filter: drop-shadow(0 0 8px rgba(219, 10, 64, 0.5));
+}
+
+.commit-btn-premium {
+    background: #DB0A40;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    font-weight: 950;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(219, 10, 64, 0.3);
+}
+
+.commit-btn-premium:hover {
+    background: #f00;
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(219, 10, 64, 0.5);
+}
+
+/* Sidebar Tabs */
+.sidebar-tab-premium {
+    padding: 1rem;
+    font-size: 0.7rem;
+    font-weight: 950;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-left: 4px solid transparent;
+    transition: all 0.3s;
+}
+
+.sidebar-tab-premium.active {
+    background: rgba(219, 10, 64, 0.1);
+    color: #fff;
+    border-left-color: #DB0A40;
+}
+
+.sidebar-tab-premium.on-court {
+    background: #DB0A40;
+    color: #fff;
+    padding: 1rem;
+    width: 100%;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.sidebar-tab-premium.vacant {
+    background: #151515;
+    color: #444;
+    padding: 1rem;
+    text-align: center;
+    border: none;
+}
+
+/* Sidebar Token Item Premium */
+.sidebar-token-item-v3 {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: #DB0A40;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px auto;
+    box-shadow: 0 5px 15px rgba(219, 10, 64, 0.3);
+}
+
+.sidebar-token-number {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 950;
+}
+
+.sidebar-token-remove-v3 {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #DB0A40;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 900;
+    transition: 0.2s;
+}
+
+.sidebar-token-remove-v3:hover {
+    background: #f00;
+    transform: scale(1.1);
+}
+
+/* Court Refinements */
+.court-painted-area {
+    fill: rgba(219, 10, 64, 0.4);
+    stroke: none;
+}
+
+.court-center-circle {
+    fill: rgba(219, 10, 64, 0.6);
+    stroke: #fff;
+    stroke-width: 4;
 }

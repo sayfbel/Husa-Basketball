@@ -11,6 +11,8 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+app.use('/uploads', express.static('uploads')); // Serve uploaded images
+
 // Placeholder routes
 app.get('/', (req, res) => {
     res.send('HUSA Basketball API is running');
@@ -41,8 +43,10 @@ const reservationController = require('./controllers/reservationController');
 const storeReservationController = require('./controllers/storeReservationController');
 const reportController = require('./controllers/reportController');
 const rankingController = require('./controllers/rankingController');
+const storeController = require('./controllers/storeController');
 
 app.use('/api/strategies', require('./routes/strategyRoutes'));
+app.use('/api/store', require('./routes/storeRoutes'));
 
 app.listen(PORT, async () => {
     // console.log(`Server running on port ${PORT}`);
@@ -54,6 +58,7 @@ app.listen(PORT, async () => {
         await matchController.initTable();
         await reservationController.initTable();
         await storeReservationController.initTable();
+        await storeController.initTable(); // Initialize Products Table
         await reportController.initTable();
         await rankingController.initTable();
         await rankingController.scrapeAndSave(); // Initial scrape if empty

@@ -6,7 +6,8 @@ import '../../../css/dashboard.css';
 import '../css/match.css';
 
 import Tesseract from 'tesseract.js';
-import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2 } from 'lucide-react'; // Added icons
+import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2, X } from 'lucide-react'; // Added icons
+import TacticalModal from '../../../components/UI/TacticalModal';
 
 const Match = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
@@ -363,13 +364,15 @@ const Match = () => {
                             background: 'rgba(255,255,255,0.05)',
                             border: '1px solid rgba(255,255,255,0.1)',
                             color: '#fff',
-                            padding: '8px 16px',
-                            borderRadius: '6px',
+                            padding: '8px 20px',
+                            borderRadius: '0',
                             cursor: 'pointer',
-                            fontSize: '0.85rem'
+                            fontSize: '0.85rem',
+                            fontWeight: '900',
+                            letterSpacing: '1px'
                         }}
                     >
-                        {loadingMatches ? 'Syncing...' : 'Refresh Schedule'}
+                        {loadingMatches ? 'SYNCING...' : 'REFRESH SCHEDULE'}
                     </button>
                 </div>
 
@@ -405,7 +408,7 @@ const Match = () => {
                                         flex: '0 0 280px',
                                         background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e',
                                         border: isActive ? '2px solid #DB0A40' : (isPast ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)'),
-                                        borderRadius: '16px',
+                                        borderRadius: '0',
                                         padding: '1.5rem',
                                         cursor: 'pointer',
                                         position: 'relative',
@@ -437,11 +440,13 @@ const Match = () => {
                                     <div style={{
                                         alignSelf: 'flex-start',
                                         background: 'rgba(255,255,255,0.05)',
-                                        padding: '4px 10px',
-                                        borderRadius: '20px',
+                                        padding: '4px 12px',
+                                        borderRadius: '0',
                                         fontSize: '0.75rem',
                                         color: '#aaa',
-                                        border: '1px solid rgba(255,255,255,0.05)'
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        fontWeight: '900',
+                                        letterSpacing: '1px'
                                     }}>
                                         {dateDisplay}
                                     </div>
@@ -449,17 +454,17 @@ const Match = () => {
                                     {/* Teams */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '1.1rem', fontWeight: isHome ? '800' : '500', color: isHome ? '#fff' : '#ccc' }}>
-                                                {match.home}
+                                            <span style={{ fontSize: '1.1rem', fontWeight: isHome ? '900' : '600', color: isHome ? '#fff' : '#ccc', letterSpacing: '-0.5px' }}>
+                                                {match.home.toUpperCase()}
                                             </span>
-                                            {isHome && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DB0A40' }}></div>}
+                                            {isHome && <div style={{ width: '8px', height: '8px', background: '#DB0A40' }}></div>}
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: 'bold' }}>VS</div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '1.1rem', fontWeight: !isHome ? '800' : '500', color: !isHome ? '#fff' : '#ccc' }}>
-                                                {match.away}
+                                            <span style={{ fontSize: '1.1rem', fontWeight: !isHome ? '900' : '600', color: !isHome ? '#fff' : '#ccc', letterSpacing: '-0.5px' }}>
+                                                {match.away.toUpperCase()}
                                             </span>
-                                            {!isHome && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DB0A40' }}></div>}
+                                            {!isHome && <div style={{ width: '8px', height: '8px', background: '#DB0A40' }}></div>}
                                         </div>
                                     </div>
 
@@ -488,7 +493,7 @@ const Match = () => {
 
             {/* 2. Squad Management Section (Only visible if match selected) */}
             {activeMatch && (
-                <div id="squad-section" className="dashboard-card animate-fade-in" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(219, 10, 64, 0.3)' }}>
+                <div id="squad-section" className="intel-card animate-fade-in" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(219, 10, 64, 0.3)', borderRadius: '0' }}>
                     {/* Header */}
                     <div style={{ padding: '1.5rem', background: 'rgba(219, 10, 64, 0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -503,25 +508,11 @@ const Match = () => {
                                     <>
                                         <button
                                             onClick={handleEditSquad}
-                                            style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                                            style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 20px', borderRadius: '0', cursor: 'pointer', fontWeight: '900', fontSize: '0.8rem', letterSpacing: '1px' }}
                                         >
-                                            Back to Squad
+                                            BACK TO SQUAD
                                         </button>
-                                        <button
-                                            onClick={handleSaveMatchSetup}
-                                            style={{
-                                                background: '#fcd34d',
-                                                color: '#000',
-                                                border: 'none',
-                                                padding: '10px 24px',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                boxShadow: '0 4px 12px rgba(252, 211, 77, 0.3)'
-                                            }}
-                                        >
-                                            Save Setup
-                                        </button>
+
                                     </>
                                 )}
                             </div>
@@ -630,13 +621,14 @@ const Match = () => {
                                                     background: '#DB0A40',
                                                     color: '#fff',
                                                     border: 'none',
-                                                    padding: '8px 24px',
-                                                    borderRadius: '6px',
+                                                    padding: '10px 30px',
+                                                    borderRadius: '0',
                                                     cursor: 'pointer',
-                                                    fontWeight: 'bold'
+                                                    fontWeight: '900',
+                                                    letterSpacing: '1px'
                                                 }}
                                             >
-                                                Next: Select Starters &rarr;
+                                                INITIALIZE STARTING 5 &rarr;
                                             </button>
                                         )}
                                     </div>
@@ -972,183 +964,160 @@ const Match = () => {
                     </div>
                 </div>
             )}
-            {/* Match Paper Modal - Redesigned for Elite Aesthetic */}
-            {showReportModal && selectedReportMatch && (
-                <div className="modal-overlay animate-fade-in" style={{
-                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    background: 'rgba(2, 2, 2, 0.98)', backdropFilter: 'blur(20px)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'
-                }}>
-                    <div className="match-paper-card animate-scale-in" style={{
-                        background: '#080808', width: '100%', maxWidth: '850px',
-                        borderRadius: '0', boxShadow: '0 0 150px rgba(219, 10, 64, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        position: 'relative', overflow: 'hidden', padding: '0',
-                        display: 'flex', flexDirection: 'column', color: '#fff',
-                        minHeight: '600px'
-                    }}>
-                        {/* Designer Accents - Cyber Corner Marks */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: '30px', height: '30px', borderTop: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40' }}></div>
-                        <div style={{ position: 'absolute', top: 0, right: 0, width: '30px', height: '30px', borderTop: '2px solid #DB0A40', borderRight: '2px solid #DB0A40' }}></div>
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '30px', height: '30px', borderBottom: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40' }}></div>
-                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '30px', height: '30px', borderBottom: '2px solid #DB0A40', borderRight: '2px solid #DB0A40' }}></div>
-
-                        {/* Top Scanning Line Animation Effect (Simulated with Gradient) */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #DB0A40, transparent)', opacity: 0.5 }}></div>
-
-                        {/* Layout Split */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1 }}>
-                            {/* Left Side: Metadata & Intel Context */}
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '12px', height: '12px', background: '#DB0A40', clipPath: 'polygon(0% 0%, 100% 0%, 75% 100%, 0% 100%)' }}></div>
-                                        <span style={{ fontSize: '0.65rem', letterSpacing: '3px', color: '#DB0A40', fontWeight: '900' }}>TACTICAL DOSSIER</span>
-                                    </div>
-                                    <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-2px', lineHeight: 0.9, textTransform: 'uppercase' }}>INTEL<br /><span style={{ color: 'rgba(255,255,255,0.3)' }}>LOG</span></h1>
+            {/* Match Paper Modal - Redesigned with reusable component */}
+            <TacticalModal isOpen={showReportModal && selectedReportMatch} onClose={() => setShowReportModal(false)}>
+                {selectedReportMatch && (
+                    <>
+                        {/* Left Side: Metadata & Intel Context */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '12px', height: '12px', background: '#DB0A40', clipPath: 'polygon(0% 0%, 100% 0%, 75% 100%, 0% 100%)' }}></div>
+                                    <span style={{ fontSize: '0.65rem', letterSpacing: '3px', color: '#DB0A40', fontWeight: '900' }}>TACTICAL DOSSIER</span>
                                 </div>
+                                <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-2px', lineHeight: 0.9, textTransform: 'uppercase' }}>INTEL<br /><span style={{ color: 'rgba(255,255,255,0.3)' }}>LOG</span></h1>
+                            </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
-                                    <div style={{ opacity: 0.6 }}>
-                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>TARGET_TEAM</label>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid #DB0A40', paddingLeft: '12px' }}>
-                                            {selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home}
-                                        </div>
-                                    </div>
-                                    <div style={{ opacity: 0.6 }}>
-                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>MISSION_DATE</label>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
-                                            {selectedReportMatch.date}
-                                        </div>
-                                    </div>
-                                    <div style={{ opacity: 0.6 }}>
-                                        <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>CLEARANCE_LEVEL</label>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#DB0A40', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Shield size={14} /> LEVEL_04_COACH
-                                        </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
+                                <div style={{ opacity: 0.6 }}>
+                                    <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>TARGET_TEAM</label>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid #DB0A40', paddingLeft: '12px' }}>
+                                        {selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home}
                                     </div>
                                 </div>
-
-                                <div style={{ marginTop: 'auto' }}>
-                                    {/* Scan Action */}
-                                    <div style={{ marginBottom: '2rem' }}>
-                                        <input
-                                            type="file"
-                                            ref={ocrFileInputRef}
-                                            onChange={handleOcrUpload}
-                                            style={{ display: 'none' }}
-                                            accept="image/*"
-                                        />
-                                        <button
-                                            onClick={() => ocrFileInputRef.current.click()}
-                                            disabled={isOcrProcessing}
-                                            style={{
-                                                width: '100%',
-                                                background: 'rgba(219, 10, 64, 0.1)',
-                                                border: '1px solid #DB0A40',
-                                                color: '#fff',
-                                                padding: '1rem',
-                                                borderRadius: '8px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 'bold',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '10px',
-                                                transition: '0.3s',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '1px'
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'}
-                                        >
-                                            {isOcrProcessing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                            {isOcrProcessing ? ocrStatus : 'Scan Match Sheet'}
-                                        </button>
-
-                                        {isOcrProcessing && (
-                                            <div style={{ marginTop: '10px' }}>
-                                                <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
-                                                    <div style={{ height: '100%', width: `${ocrProgress}%`, background: '#DB0A40', transition: 'width 0.3s' }}></div>
-                                                </div>
-                                                <div style={{ fontSize: '0.6rem', color: '#444', marginTop: '5px', textAlign: 'right' }}>{ocrProgress}%</div>
-                                            </div>
-                                        )}
+                                <div style={{ opacity: 0.6 }}>
+                                    <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>MISSION_DATE</label>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: '800', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                                        {selectedReportMatch.date}
                                     </div>
-
-                                    <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace' }}>
-                                        ENCRYPTION: AES-256-GCM<br />
-                                        STATUS: {isOcrProcessing ? 'PROCESSING...' : 'READY'}<br />
-                                        ORIGIN: HUSA_OPERATIONS
+                                </div>
+                                <div style={{ opacity: 0.6 }}>
+                                    <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>CLEARANCE_LEVEL</label>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#DB0A40', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Shield size={14} /> LEVEL_04_COACH
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Right Side: Composition Area */}
-                            <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                                    <div>
-                                        <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Compose Briefing</h2>
-                                        <p style={{ color: '#555', fontSize: '0.75rem', margin: '4px 0 0 0' }}>Provide performance analysis and tactical adjustments.</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowReportModal(false)}
-                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', width: '36px', height: '36px', borderRadius: '4px', color: '#777', cursor: 'pointer', transition: '0.2s' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#DB0A40'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#777'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-
-                                <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', border: '1px solid rgba(219, 10, 64, 0.1)', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(219, 10, 64, 0.01) 1px, rgba(219, 10, 64, 0.01) 2px)', opacity: 0.5 }}></div>
-                                    <textarea
-                                        value={reportContent}
-                                        onChange={(e) => setReportContent(e.target.value)}
-                                        placeholder="Begin tactical analysis input..."
-                                        style={{
-                                            flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
-                                            borderRadius: '0', padding: '1.5rem', color: '#fff', fontSize: '1rem', lineHeight: '1.6',
-                                            resize: 'none', outline: 'none', transition: 'border-color 0.3s', minHeight: '300px',
-                                            fontFamily: 'inherit'
-                                        }}
-                                        onFocus={(e) => e.target.style.borderColor = 'rgba(219, 10, 64, 0.4)'}
-                                        onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+                            <div style={{ marginTop: 'auto' }}>
+                                {/* Scan Action */}
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <input
+                                        type="file"
+                                        ref={ocrFileInputRef}
+                                        onChange={handleOcrUpload}
+                                        style={{ display: 'none' }}
+                                        accept="image/*"
                                     />
-                                    <div style={{ position: 'absolute', bottom: '15px', right: '15px', opacity: 0.2, display: 'flex', gap: '10px' }}>
-                                        <Activity size={20} />
-                                        <Send size={20} />
-                                    </div>
+                                    <button
+                                        onClick={() => ocrFileInputRef.current.click()}
+                                        disabled={isOcrProcessing}
+                                        style={{
+                                            width: '100%',
+                                            background: 'rgba(219, 10, 64, 0.1)',
+                                            border: '1px solid #DB0A40',
+                                            color: '#fff',
+                                            padding: '1rem',
+                                            borderRadius: '0',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '900',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            transition: '0.3s',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '2px'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'}
+                                    >
+                                        {isOcrProcessing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                                        {isOcrProcessing ? ocrStatus : 'Scan Match Sheet'}
+                                    </button>
+
+                                    {isOcrProcessing && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '0', overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${ocrProgress}%`, background: '#DB0A40', transition: 'width 0.3s' }}></div>
+                                            </div>
+                                            <div style={{ fontSize: '0.6rem', color: '#444', marginTop: '5px', textAlign: 'right', fontWeight: '900' }}>{ocrProgress}%</div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
-                                        <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
-                                        <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
-                                    </div>
-                                    <button
-                                        onClick={handleSendMatchReport}
-                                        style={{
-                                            background: '#DB0A40', color: '#fff', border: 'none',
-                                            padding: '1rem 3rem', borderRadius: '4px', fontWeight: '900',
-                                            cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase',
-                                            fontSize: '0.85rem', boxShadow: '0 10px 40px rgba(219, 10, 64, 0.2)',
-                                            display: 'flex', alignItems: 'center', gap: '15px', transition: '0.3s'
-                                        }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 50px rgba(219, 10, 64, 0.3)'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(219, 10, 64, 0.2)'; }}
-                                    >
-                                        Transmit ReporT
-                                        <Send size={18} />
-                                    </button>
+                                <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace' }}>
+                                    ENCRYPTION: AES-256-GCM<br />
+                                    STATUS: {isOcrProcessing ? 'PROCESSING...' : 'READY'}<br />
+                                    ORIGIN: HUSA_OPERATIONS
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
+
+                        {/* Right Side: Composition Area */}
+                        <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                                <div>
+                                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Compose Briefing</h2>
+                                    <p style={{ color: '#555', fontSize: '0.75rem', margin: '4px 0 0 0' }}>Provide performance analysis and tactical adjustments.</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowReportModal(false)}
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', width: '36px', height: '36px', borderRadius: '0', color: '#777', cursor: 'pointer', transition: '0.2s' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#DB0A40'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#777'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', border: '1px solid rgba(219, 10, 64, 0.1)', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(219, 10, 64, 0.01) 1px, rgba(219, 10, 64, 0.01) 2px)', opacity: 0.5 }}></div>
+                                <textarea
+                                    value={reportContent}
+                                    onChange={(e) => setReportContent(e.target.value)}
+                                    placeholder="Begin tactical analysis input..."
+                                    style={{
+                                        flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
+                                        borderRadius: '0', padding: '1.5rem', color: '#fff', fontSize: '1rem', lineHeight: '1.6',
+                                        resize: 'none', outline: 'none', transition: 'border-color 0.3s', minHeight: '300px',
+                                        fontFamily: 'inherit'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = 'rgba(219, 10, 64, 0.4)'}
+                                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+                                />
+                                <div style={{ position: 'absolute', bottom: '15px', right: '15px', opacity: 0.2, display: 'flex', gap: '10px' }}>
+                                    <Activity size={20} />
+                                    <Send size={20} />
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
+                                <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
+                                    <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
+                                    <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                                </div>
+                                <button
+                                    onClick={handleSendMatchReport}
+                                    style={{
+                                        background: '#DB0A40', color: '#fff', border: 'none',
+                                        padding: '1rem 3.5rem', borderRadius: '0', fontWeight: '900',
+                                        cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase',
+                                        fontSize: '0.85rem', boxShadow: '0 10px 40px rgba(219, 10, 64, 0.2)',
+                                        display: 'flex', alignItems: 'center', gap: '15px', transition: '0.3s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 50px rgba(219, 10, 64, 0.3)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(219, 10, 64, 0.2)'; }}
+                                >
+                                    TRANSMIT INTEL
+                                    <Send size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </TacticalModal>
 
 
         </div>
