@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
 import '../css/match.css';
+import PlayerCard from '../../Squad/components/PlayerCard';
+import '../../Squad/css/squad.css';
 
-import Tesseract from 'tesseract.js';
-import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2, X } from 'lucide-react'; // Added icons
+import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2, X, Calendar, ChevronRight } from 'lucide-react'; // Added icons
 import TacticalModal from '../../../components/UI/TacticalModal';
 
+
 const Match = () => {
+    const navigate = useNavigate();
     const { showNotification } = useNotification?.() || { showNotification: (msg) => { } };
     const [players, setPlayers] = useState([]);
     const [showReportModal, setShowReportModal] = useState(false);
@@ -32,6 +36,7 @@ const Match = () => {
     const [activePosition, setActivePosition] = useState(0); // 0-4 (corresponds to Pos 1-5)
     const [isSquadConfirmed, setIsSquadConfirmed] = useState(false);
     const [searchTerm, setSearchTerm] = useState(""); // Added search term
+    const [loadingDeployment, setLoadingDeployment] = useState(false);
 
     // Strategy State
     const [fullCourtStrategies, setFullCourtStrategies] = useState([]);
@@ -125,92 +130,57 @@ const Match = () => {
         }
     };
 
-    // --- OCR Logic ---
-    const parseMatchSheet = (text) => {
-        // Helper to extract single fields
-        const extractField = (regex, source = text) => {
-            const match = source.match(regex);
-            return match ? match[1].trim() : "Not found";
-        };
-
-        // Basic Match info patterns from request
-        const date = extractField(/DATE\s*:\s*(.*)/i);
-        const heure = extractField(/HEURE\s*:\s*(.*)/i);
-        const lieu = extractField(/LIEU\s*:\s*(.*)/i);
-
-        // Teams extraction
-        const teamA = extractField(/Equipe A\s*:\s*(.*)/i);
-        const teamB = extractField(/Equipe B\s*:\s*(.*)/i);
-
-        // Final Result extraction
-        const finalResult = text.match(/RESULTAT FINAL\s*Equipe A\s*(.*?)\s*Equipe B\s*(.*)/i);
-        const scoreA = finalResult ? finalResult[1].trim() : "N/A";
-        const scoreB = finalResult ? finalResult[2].trim() : "N/A";
-
-        // Players extraction 
-        const playersASection = text.match(/Equipe A\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Equipe B)/si);
-        const playersBSection = text.match(/Equipe B\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Resultat)/si);
-
-        const cleanPlayers = (pTextMatch) => {
-            if (!pTextMatch || !pTextMatch[1]) return [];
-            return pTextMatch[1].split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 3 && !line.includes('---')); // Basic filter for noise
-        };
-
-        const listA = cleanPlayers(playersASection);
-        const listB = cleanPlayers(playersBSection);
-
-        // Construct the premium tactical intel report
-        let reportStr = `[ BATTLE_INTEL_EXTRACTED ]\n`;
-        reportStr += `MISSION_DATE: ${date}\n`;
-        reportStr += `UPLINK_TIME: ${heure}\n`;
-        reportStr += `ZONE: ${lieu}\n\n`;
-
-        reportStr += `[ ENGAGED_TEAMS ]\n`;
-        reportStr += `ALPHA_UNIT: ${teamA}\n`;
-        reportStr += `BRAVO_UNIT: ${teamB}\n\n`;
-
-        reportStr += `[ OPERATIONAL_OUTCOME ]\n`;
-        reportStr += `ALPHA_SCORE: ${scoreA}\n`;
-        reportStr += `BRAVO_SCORE: ${scoreB}\n\n`;
-
-        if (listA.length > 0) {
-            reportStr += `[ ALPHA_ROSTER ]\n` + listA.slice(0, 12).join('\n') + `\n\n`;
-        }
-        if (listB.length > 0) {
-            reportStr += `[ BRAVO_ROSTER ]\n` + listB.slice(0, 12).join('\n') + `\n\n`;
-        }
-
-        reportStr += `[ DATA_UPLINK_COMPLETE ]\n----------------------------\n`;
-
-        return reportStr;
-    };
-
     const handleOcrUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         setIsOcrProcessing(true);
-        setOcrStatus('Scanning...');
-        setOcrProgress(0);
+        setOcrStatus('Initializing Scanner...');
+        setOcrProgress(5);
 
         try {
-            const { data: { text } } = await Tesseract.recognize(file, 'fra+eng', {
-                logger: m => {
+            // Run OCR in the browser using tesseract.js (no server binary needed)
+            const Tesseract = await import('tesseract.js');
+
+            setOcrStatus('Scanning Document...');
+
+            const { data } = await Tesseract.recognize(file, 'fra+eng', {
+                logger: (m) => {
                     if (m.status === 'recognizing text') {
-                        setOcrProgress(Math.round(m.progress * 100));
+                        setOcrProgress(Math.round(5 + m.progress * 80)); // 5→85%
+                    } else if (m.status === 'loading tesseract core') {
+                        setOcrStatus('Loading Engine...');
+                    } else if (m.status === 'initializing tesseract') {
+                        setOcrStatus('Initializing...');
                     }
-                    setOcrStatus(m.status);
                 }
             });
 
-            const parsed = parseMatchSheet(text);
-            setReportContent(prev => parsed + (prev ? '\n\n' + prev : ''));
-            showNotification("Match sheet intel extracted successfully.", "success");
-            console.log("OCR Result:", text);
+            const rawText = data.text;
+            const ocrConfidence = Math.round(data.confidence);
+
+            setOcrProgress(88);
+            setOcrStatus('Parsing FRMBB Structure...');
+
+            // Send extracted text to backend for structured parsing & validation
+            const res = await axios.post('http://localhost:5000/api/ocr/parse', {
+                text: rawText,
+                confidence: ocrConfidence
+            });
+
+            setOcrProgress(100);
+            setOcrStatus('Intel Extracted');
+
+            showNotification("Match sheet tactical data extracted successfully.", "success");
+
+            setTimeout(() => {
+                navigate('/dashboard/coach/match-sheet-page', { state: { matchData: res.data } });
+            }, 1000);
+
         } catch (err) {
-            showNotification("OCR scan failed. Check image clarity.", "error");
+            console.error("Scanner Error:", err);
+            const errorMessage = err.response?.data?.message || "Tactical scan failed. Verify image clarity.";
+            showNotification(errorMessage, "error");
         } finally {
             setIsOcrProcessing(false);
             setOcrStatus('');
@@ -325,6 +295,7 @@ const Match = () => {
     const handleSaveMatchSetup = async () => {
         if (!activeMatch) return;
 
+        setLoadingDeployment(true);
         try {
             const payload = {
                 matchData: activeMatch,
@@ -337,8 +308,9 @@ const Match = () => {
             const res = await axios.post('http://localhost:5000/api/matches/save', payload);
             showNotification("Match setup saved successfully!", "success");
         } catch (err) {
-
             showNotification("Failed to save match setup.", "error");
+        } finally {
+            setLoadingDeployment(false);
         }
     };
 
@@ -348,31 +320,45 @@ const Match = () => {
 
 
     return (
-        <div className="dashboard-grid-vertical" style={{ display: 'flex', padding: '3rem 0', flexDirection: 'column', gap: '2rem' }}>
+        <div className="overview-container dashboard-fashion-theme" style={{ padding: '0' }}>
+            {/* 1. Cinematic Header */}
+            <div className="section-header-modern">
+                <div className="watermark-bg">MISSION</div>
+                <div className="header-content-box">
+                    <span className="premium-label">TACTICAL OPS COMMAND</span>
+                    <h1 className="hero-dashboard-title">
+                        MATCH <br />
+                        <span className="accent-text">ENGAGEMENT</span>
+                    </h1>
+                    <div className="header-status-bar">
+                        <div className="status-item">
+                            <div className="pulse-dot"></div>
+                            <span>MISSION READY</span>
+                        </div>
+                        <div className="divider"></div>
+                        <div className="status-item">
+                            <Shield size={14} />
+                            <span>ENCRYPTED UPLINK</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            {/* 1. Schedule & Match Selection */}
-            <div className="dashboard-card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+
+            {/* 3. Schedule & Match Selection */}
+            <div className="intel-card" style={{ margin: '0 2rem 2rem 2rem', padding: '2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#fff' }}>Match Schedule</h2>
-                        <p style={{ color: '#888', fontSize: '0.9rem', margin: '5px 0 0 0' }}>Select a match to manage the squad and strategy.</p>
+                        <h2 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '900', letterSpacing: '2px' }}>OPERATIONAL SCHEDULE</h2>
+                        <p style={{ color: '#444', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px', margin: '5px 0 0 0' }}>SELECT ENGAGEMENT FOR PARAMETER CONFIGURATION</p>
                     </div>
                     <button
                         onClick={fetchScrapedMatches}
                         disabled={loadingMatches}
-                        style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#fff',
-                            padding: '8px 20px',
-                            borderRadius: '0',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '900',
-                            letterSpacing: '1px'
-                        }}
+                        className="intel-btn-primary"
+                        style={{ padding: '10px 25px', fontSize: '0.7rem' }}
                     >
-                        {loadingMatches ? 'SYNCING...' : 'REFRESH SCHEDULE'}
+                        {loadingMatches ? 'SYNCING...' : 'SYNC DATA UPLINK'}
                     </button>
                 </div>
 
@@ -387,294 +373,202 @@ const Match = () => {
                             const isActive = activeMatch === match;
                             const isPast = isPastMatch(match.date);
 
-                            // Parse date if possible, otherwise use string
+                            // Parse date if possible
                             let dateDisplay = match.date;
                             try {
                                 const d = new Date(match.date && match.date.includes('/') ? match.date.split('/').reverse().join('-') : match.date);
                                 if (!isNaN(d.getTime())) {
-                                    const day = String(d.getDate()).padStart(2, '0');
-                                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                                    const year = d.getFullYear();
-                                    dateDisplay = `${day}/${month}/${year}`;
+                                    dateDisplay = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
                                 }
-                            } catch (e) { /* ignore */ }
+                            } catch (e) { }
 
                             return (
                                 <div
                                     key={idx}
                                     onClick={() => handleSelectMatch(match)}
-                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''} ${isPast ? 'past-match-card' : ''}`}
+                                    className={`intel-card ${isActive ? 'active-border-glow' : ''}`}
                                     style={{
-                                        flex: '0 0 280px',
-                                        background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e',
-                                        border: isActive ? '2px solid #DB0A40' : (isPast ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)'),
-                                        borderRadius: '0',
+                                        flex: '0 0 300px',
+                                        background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, #111 100%)' : 'rgba(255,255,255,0.02)',
+                                        border: isActive ? '1px solid #DB0A40' : '1px solid rgba(255,255,255,0.05)',
                                         padding: '1.5rem',
                                         cursor: 'pointer',
-                                        position: 'relative',
-                                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        gap: '1rem',
-                                        boxShadow: isActive ? '0 10px 30px rgba(219, 10, 64, 0.2)' : '0 4px 6px rgba(0,0,0,0.2)',
-                                        transform: isActive ? 'translateY(-4px)' : 'none',
-                                        filter: isPast ? 'grayscale(0.7) opacity(0.6)' : 'none'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!isActive) {
-                                            e.currentTarget.style.transform = 'translateY(-4px)';
-                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-                                            e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isActive) {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.2)';
-                                        }
+                                        gap: '1.5rem',
+                                        opacity: isPast ? 0.4 : 1,
+                                        filter: isPast ? 'grayscale(1)' : 'none'
                                     }}
                                 >
-                                    {/* Date Badge */}
-                                    <div style={{
-                                        alignSelf: 'flex-start',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        padding: '4px 12px',
-                                        borderRadius: '0',
-                                        fontSize: '0.75rem',
-                                        color: '#aaa',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        fontWeight: '900',
-                                        letterSpacing: '1px'
-                                    }}>
-                                        {dateDisplay}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '2px' }}>{dateDisplay}</div>
+                                        {isActive && <div className="pulse-dot"></div>}
                                     </div>
 
-                                    {/* Teams */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '1.1rem', fontWeight: isHome ? '900' : '600', color: isHome ? '#fff' : '#ccc', letterSpacing: '-0.5px' }}>
-                                                {match.home.toUpperCase()}
-                                            </span>
-                                            {isHome && <div style={{ width: '8px', height: '8px', background: '#DB0A40' }}></div>}
+                                            <span style={{ fontSize: '1rem', fontWeight: '900', color: isHome ? '#fff' : '#444', letterSpacing: '1px' }}>{match.home.toUpperCase()}</span>
+                                            {isHome && <Shield size={14} color="#DB0A40" />}
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#666', fontWeight: 'bold' }}>VS</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ height: '1px', flex: 1, background: 'rgba(255,255,255,0.05)' }}></div>
+                                            <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#222' }}>BATTLE</span>
+                                            <div style={{ height: '1px', flex: 1, background: 'rgba(255,255,255,0.05)' }}></div>
+                                        </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '1.1rem', fontWeight: !isHome ? '900' : '600', color: !isHome ? '#fff' : '#ccc', letterSpacing: '-0.5px' }}>
-                                                {match.away.toUpperCase()}
-                                            </span>
-                                            {!isHome && <div style={{ width: '8px', height: '8px', background: '#DB0A40' }}></div>}
+                                            <span style={{ fontSize: '1rem', fontWeight: '900', color: !isHome ? '#fff' : '#444', letterSpacing: '1px' }}>{match.away.toUpperCase()}</span>
+                                            {!isHome && <Shield size={14} color="#DB0A40" />}
                                         </div>
                                     </div>
 
-                                    {/* Action Status */}
-                                    <div style={{
-                                        marginTop: 'auto',
-                                        paddingTop: '1rem',
-                                        borderTop: '1px solid rgba(255,255,255,0.05)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <span style={{ fontSize: '0.8rem', color: isActive ? '#DB0A40' : (isPast ? '#444' : '#666'), fontWeight: '600' }}>
-                                            {isActive ? 'Currently Managing' : (isPast ? 'Match Concluded' : 'Click to Manage')}
+                                    <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', color: isActive ? '#DB0A40' : '#333', letterSpacing: '1px' }}>
+                                            {isActive ? 'STATUS: ACTIVE' : (isPast ? 'MISSION: COMPLETE' : 'STATUS: READY')}
                                         </span>
-                                        {isActive && <Shield size={16} color="#DB0A40" />}
+                                        <ChevronRight size={14} color={isActive ? '#DB0A40' : '#222'} />
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
                 ) : (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matches found.</div>
+                    <div className="intel-card" style={{ textAlign: 'center', padding: '4rem', color: '#222', fontSize: '0.8rem', fontWeight: '900', letterSpacing: '2px' }}>NO DATA AVAILABLE</div>
                 )}
             </div>
 
-            {/* 2. Squad Management Section (Only visible if match selected) */}
+            {/* 4. Squad Management Section */}
             {activeMatch && (
-                <div id="squad-section" className="intel-card animate-fade-in" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(219, 10, 64, 0.3)', borderRadius: '0' }}>
-                    {/* Header */}
-                    <div style={{ padding: '1.5rem', background: 'rgba(219, 10, 64, 0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <h2 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Match Preparation</h2>
-                                <p style={{ color: '#aaa', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
-                                    vs <span style={{ color: '#DB0A40', fontWeight: 'bold' }}>{activeMatch.home.includes('HUSA') ? activeMatch.away : activeMatch.home}</span>
-                                </p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                {isSquadConfirmed && (
-                                    <>
-                                        <button
-                                            onClick={handleEditSquad}
-                                            style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '8px 20px', borderRadius: '0', cursor: 'pointer', fontWeight: '900', fontSize: '0.8rem', letterSpacing: '1px' }}
-                                        >
-                                            BACK TO SQUAD
-                                        </button>
-
-                                    </>
-                                )}
-                            </div>
+                <div id="squad-section" className="intel-card" style={{ margin: '0 2rem 3rem 2rem', padding: '0', overflow: 'visible', border: '1px solid rgba(219, 10, 64, 0.2)' }}>
+                    <div style={{ padding: '2rem', background: 'linear-gradient(90deg, rgba(219, 10, 64, 0.05) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '4px' }}>PRE-MATCH INTEL</span>
+                            <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '950', letterSpacing: '-1px' }}>
+                                VS {activeMatch.home.includes('HUSA') ? activeMatch.away.toUpperCase() : activeMatch.home.toUpperCase()}
+                            </h2>
                         </div>
+                        {isSquadConfirmed && (
+                            <button onClick={handleEditSquad} className="intel-btn-secondary" style={{ padding: '10px 25px', fontSize: '0.7rem' }}>
+                                RECONFIGURE SQUAD
+                            </button>
+                        )}
                     </div>
 
-                    <div style={{ padding: '2rem' }}>
-                        {/* Stepper */}
-                        <div className="stepper-container">
-                            <div className={`step-item ${!isSquadConfirmed ? 'active' : 'completed'}`}>
-                                <div className="step-circle">1</div>
-                                <div className="step-label">Summon Squad</div>
+                    <div style={{ padding: '2.5rem' }}>
+                        {/* Custom Fashion Stepper */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '2rem', marginBottom: '3rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', opacity: !isSquadConfirmed ? 1 : 0.4 }}>
+                                <div style={{ width: '40px', height: '40px', background: !isSquadConfirmed ? '#DB0A40' : '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', border: '1px solid #DB0A40' }}>01</div>
+                                <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px', color: '#fff' }}>SUMMON <br /> SQUAD</span>
                             </div>
-                            <div style={{ width: '100px', height: '2px', background: 'rgba(255,255,255,0.1)', margin: '0 1rem' }}>
-                                <div style={{ height: '100%', width: isSquadConfirmed ? '100%' : '0%', background: '#4cd137', transition: 'all 0.5s' }} />
+                            <div style={{ height: '1px', width: '60px', background: 'rgba(255,255,255,0.1)' }}></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', opacity: isSquadConfirmed ? 1 : 0.2 }}>
+                                <div style={{ width: '40px', height: '40px', background: isSquadConfirmed ? '#DB0A40' : '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', border: '1px solid #DB0A40' }}>02</div>
+                                <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px', color: '#fff' }}>STRATEGIC <br /> STARTING 5</span>
                             </div>
-                            <div className={`step-item ${isSquadConfirmed ? 'active' : ''}`}>
-                                <div className="step-circle">2</div>
-                                <div className="step-label">Starting 5</div>
-                            </div>
+                            <button
+                                onClick={handleConfirmSquad}
+                                className="intel-btn-primary"
+                                style={{ width: '50%', padding: '20px', letterSpacing: '3px', fontWeight: '950' }}
+                                disabled={selectedPlayers.length === 0}
+                            >
+                                CONFIRM SQUAD &rarr;
+                            </button>
                         </div>
 
-                        {/* STEP 1: SQUAD SELECTION */}
-                        {!isSquadConfirmed && (
-                            <div className="squad-selection-container animate-fade-in">
-                                {/* Left: Player Pool */}
-                                <div className="player-pool-sidebar">
-                                    <div className="pool-search">
-                                        <div style={{ position: 'relative' }}>
-                                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-                                            <input
-                                                type="text"
-                                                placeholder="Search players..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                style={{ paddingLeft: '34px' }}
-                                            />
-                                        </div>
+                        {!isSquadConfirmed ? (
+                            <div className="squad-selection-premium" style={{ display: 'grid', gridTemplateColumns: '1fr 450px', gap: '3rem' }}>
+                                {/* Left: Personnel Pool */}
+                                <div>
+                                    <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+                                        <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#444' }} />
+                                        <input
+                                            type="text"
+                                            placeholder="FILTER PERSONNEL..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            style={{ width: '100%', padding: '18px 18px 18px 45px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.8rem', fontWeight: '900', letterSpacing: '2px' }}
+                                        />
                                     </div>
-                                    <div className="pool-list full-custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gridAutoRows: 'max-content', alignContent: 'start', gap: '10px', padding: '10px' }}>
+                                    <div className="full-custom-scroll" style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '20px',
+                                        maxHeight: '700px',
+                                        overflowY: 'auto',
+                                        padding: '1rem'
+                                    }}>
                                         {availablePlayers.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
-                                            <div
+                                            <PlayerCard
                                                 key={p.id}
-                                                className="pool-player-card animate-scale-in"
+                                                disableFlip={true}
                                                 onClick={() => handleSummon(p.id)}
-                                                style={{
-                                                    background: 'rgba(255,255,255,0.03)',
-                                                    border: '1px solid rgba(255,255,255,0.05)',
-                                                    borderRadius: '12px',
-                                                    padding: '1rem 0.5rem',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    textAlign: 'center',
-                                                    position: 'relative',
-                                                    transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)'
+                                                player={{
+                                                    ...p,
+                                                    number: p.jersey_number?.toString().padStart(2, '0') || '--',
+                                                    image: p.photo_url || null,
+                                                    role: p.position || 'Player'
                                                 }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.borderColor = '#4cd137';
-                                                    e.currentTarget.style.background = 'rgba(76, 209, 55, 0.05)';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(0)';
-                                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                                                }}
-                                            >
-                                                {/* Plus Icon Overlay */}
-                                                <div style={{ position: 'absolute', top: '8px', right: '8px', color: '#4cd137', opacity: 0.5 }}>
-                                                    <Users size={12} />
-                                                </div>
-
-                                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.1)' }}>
-                                                    <img src={p.photo_url || "/assets/players/default.png"} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                </div>
-                                                <div style={{ width: '100%' }}>
-                                                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ')[0]}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ').slice(1).join(' ')}</div>
-                                                    <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '4px' }}>#{p.jersey_number} • {p.position}</div>
-                                                </div>
-                                            </div>
+                                            />
                                         ))}
-                                        {availablePlayers.length === 0 && <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', color: '#666' }}>No available players.</div>}
                                     </div>
                                 </div>
 
-                                {/* Right: The Squad Grid */}
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>Summoned Squad ({selectedPlayers.length}/12)</h3>
-                                        {selectedPlayers.length > 0 && (
-                                            <button
-                                                onClick={() => {
-                                                    if (selectedPlayers.length === 0) {
-                                                        showNotification("Select players first", "warning");
-                                                        return;
-                                                    }
-                                                    handleConfirmSquad();
-                                                }}
-                                                className="animate-pulse"
-                                                style={{
-                                                    background: '#DB0A40',
-                                                    color: '#fff',
-                                                    border: 'none',
-                                                    padding: '10px 30px',
-                                                    borderRadius: '0',
-                                                    cursor: 'pointer',
-                                                    fontWeight: '900',
-                                                    letterSpacing: '1px'
-                                                }}
-                                            >
-                                                INITIALIZE STARTING 5 &rarr;
-                                            </button>
-                                        )}
+                                    <div className="intel-card" style={{ background: 'rgba(219, 10, 64, 0.05)', padding: '1.5rem 2rem', border: '1px solid rgba(219, 10, 64, 0.1)', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ fontSize: '0.8rem', fontWeight: '900', letterSpacing: '2px', color: '#fff', margin: 0 }}>SUMMONED SQUAD [{selectedPlayers.length}/12]</h3>
+                                        <Users size={18} color="#DB0A40" />
                                     </div>
-                                    <div className="squad-grid-view full-custom-scroll" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', flex: 1 }}>
-                                        {/* Render 12 Slots */}
-                                        {Array.from({ length: 12 }).map((_, idx) => {
-                                            const player = summonedPlayers[idx];
-                                            return (
-                                                <div key={idx} className={`squad-slot ${player ? 'filled' : ''}`} onClick={() => player && handleDismiss(player.id)}>
-                                                    {player ? (
-                                                        <div className="slot-player-content">
-                                                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', marginBottom: '0.5rem' }}>
-                                                                <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                            </div>
-                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', textAlign: 'center', lineHeight: '1.2' }}>{player.name}</div>
-                                                            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>#{player.jersey_number}</div>
-
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                top: '5px',
-                                                                right: '5px',
-                                                                background: 'rgba(0,0,0,0.5)',
-                                                                borderRadius: '50%',
-                                                                width: '20px',
-                                                                height: '20px',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                fontSize: '0.8rem',
-                                                                opacity: 0
-                                                            }}>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <span>{idx + 1}</span>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                    <div className="full-custom-scroll" style={{
+                                        maxHeight: '700px',
+                                        overflowY: 'auto',
+                                        padding: '1.5rem',
+                                        background: 'rgba(0,0,0,0.2)',
+                                        border: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        <div className='card-list' style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(2, 1fr)',
+                                            gap: '15px'
+                                        }}>
+                                            {Array.from({ length: 12 }).map((_, idx) => {
+                                                const player = summonedPlayers[idx];
+                                                if (player) {
+                                                    return (
+                                                        <PlayerCard
+                                                            key={player.id}
+                                                            disableFlip={true}
+                                                            onClick={() => handleDismiss(player.id)}
+                                                            player={{
+                                                                ...player,
+                                                                number: player.jersey_number?.toString().padStart(2, '0') || '--',
+                                                                image: player.photo_url || null,
+                                                                role: player.position || 'Player'
+                                                            }}
+                                                        />
+                                                    );
+                                                }
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        style={{
+                                                            height: '250px',
+                                                            background: 'rgba(255,255,255,0.01)',
+                                                            border: '1px dashed rgba(255,255,255,0.05)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        <span style={{ fontSize: '0.6rem', color: '#111', fontWeight: '900', letterSpacing: '2px' }}>EMPTY_SLOT</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* STEP 2: STARTER SELECTION */}
-                        {isSquadConfirmed && (
+                        ) : (
                             <div className="starter-selection-container animate-fade-in">
                                 {/* Top: Court Stage */}
                                 <div className="court-stage">
@@ -691,7 +585,7 @@ const Match = () => {
                                         </svg>
                                     </div>
 
-                                    <div className="starters-slots-container">
+                                    <div className="starters-slots-container squad-selection-premium">
                                         {/* 5 Slots for Starters */}
                                         {Array.from({ length: 5 }).map((_, idx) => {
                                             const starterId = starters[idx];
@@ -701,94 +595,67 @@ const Match = () => {
                                             return (
                                                 <div
                                                     key={idx}
-                                                    className={`starter-slot-fancy ${!starter ? 'empty' : ''} ${isActive ? 'active-slot' : ''}`}
+                                                    className={`starter-slot-wrapper ${isActive ? 'active-slot' : ''}`}
                                                     onClick={() => setActivePosition(idx)}
-                                                    style={{
-                                                        border: isActive ? '3px solid #fcd34d' : '2px dashed rgba(252, 211, 77, 0.3)',
-                                                        background: isActive ? 'rgba(252, 211, 77, 0.15)' : (starter ? 'rgba(252, 211, 77, 0.1)' : 'rgba(255, 255, 255, 0.05)'),
-                                                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                                                        position: 'relative',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        overflow: 'visible',
-                                                        boxShadow: isActive ? '0 0 20px rgba(252, 211, 77, 0.2)' : 'none'
-                                                    }}
                                                 >
-                                                    {/* Large Position Number Background */}
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '50%',
-                                                        left: '50%',
-                                                        transform: 'translate(-50%, -50%)',
-                                                        fontSize: '6rem',
-                                                        fontWeight: '950',
-                                                        color: '#fcd34d',
-                                                        opacity: starter ? 0.1 : 0.2,
-                                                        lineHeight: 1,
-                                                        pointerEvents: 'none',
-                                                        zIndex: 0,
-                                                        fontFamily: '"Impact", "Oswald", sans-serif',
-                                                        fontStyle: 'italic'
-                                                    }}>
-                                                        {idx + 1}
-                                                    </div>
-
                                                     {starter ? (
-                                                        <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', width: '100%' }}>
-                                                            {/* Remove Button */}
+                                                        <div style={{ position: 'relative' }}>
+                                                            <PlayerCard
+                                                                disableFlip={true}
+                                                                player={{
+                                                                    ...starter,
+                                                                    number: starter.jersey_number?.toString().padStart(2, '0') || '--',
+                                                                    image: starter.photo_url || null,
+                                                                    role: 'POS ' + (idx + 1)
+                                                                }}
+                                                            />
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); toggleStarter(starterId); }}
                                                                 style={{
                                                                     position: 'absolute',
-                                                                    top: '-15px',
-                                                                    right: '5px',
-                                                                    background: 'rgba(219, 10, 64, 0.8)',
+                                                                    top: '-10px',
+                                                                    right: '-10px',
+                                                                    background: '#DB0A40',
                                                                     border: 'none',
                                                                     color: '#fff',
-                                                                    width: '20px',
-                                                                    height: '20px',
+                                                                    width: '24px',
+                                                                    height: '24px',
                                                                     borderRadius: '50%',
-                                                                    fontSize: '12px',
+                                                                    zIndex: 10,
                                                                     cursor: 'pointer',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
-                                                                    justifyContent: 'center'
+                                                                    justifyContent: 'center',
+                                                                    fontWeight: 'bold',
+                                                                    boxShadow: '0 0 10px rgba(0,0,0,0.5)'
                                                                 }}
                                                             >
                                                                 &times;
                                                             </button>
-
-                                                            <div style={{ width: '75px', height: '75px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #fcd34d', marginBottom: '8px', boxShadow: '0 0 15px rgba(252, 211, 77, 0.4)' }}>
-                                                                <img src={starter.photo_url || "/assets/players/default.png"} alt={starter.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                            </div>
-                                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{starter.name}</div>
-                                                            <div style={{ fontSize: '0.8rem', color: '#fcd34d', fontWeight: 'bold' }}>#{starter.jersey_number}</div>
-                                                            <div style={{ fontSize: '0.7rem', color: '#aaa', textTransform: 'uppercase', marginTop: '2px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Pos {idx + 1}</div>
                                                         </div>
                                                     ) : (
-                                                        <div style={{ zIndex: 1, textAlign: 'center' }}>
-                                                            <div style={{ color: '#fcd34d', fontSize: '2.5rem', fontWeight: '900', lineHeight: 1 }}>{idx + 1}</div>
-                                                            <div style={{ color: '#fcd34d', opacity: 0.6, fontSize: '0.7rem', fontWeight: 'bold', marginTop: '5px' }}>SELECT PLAYER</div>
+                                                        <div className="player-card empty-starter-slot">
+                                                            <div className="empty-slot-number">{idx + 1}</div>
+                                                            <div className="empty-slot-label">SELECT PLAYER</div>
                                                         </div>
                                                     )}
 
                                                     {isActive && (
                                                         <div className="animate-pulse" style={{
                                                             position: 'absolute',
-                                                            bottom: '-12px',
-                                                            background: '#fcd34d',
-                                                            color: '#000',
-                                                            padding: '4px 12px',
-                                                            borderRadius: '20px',
-                                                            fontSize: '0.65rem',
+                                                            bottom: '-15px',
+                                                            left: '50%',
+                                                            transform: 'translateX(-50%)',
+                                                            background: '#da0a40',
+                                                            color: '#fff',
+                                                            padding: '2px 10px',
+                                                            borderRadius: '4px',
+                                                            fontSize: '0.6rem',
                                                             fontWeight: '900',
-                                                            textTransform: 'uppercase',
-                                                            boxShadow: '0 4px 10px rgba(252, 211, 77, 0.4)',
-                                                            zIndex: 2
+                                                            zIndex: 5,
+                                                            whiteSpace: 'nowrap'
                                                         }}>
-                                                            ACTIVE POS
+                                                            ACTIVE POSITION
                                                         </div>
                                                     )}
                                                 </div>
@@ -796,31 +663,34 @@ const Match = () => {
                                         })}
                                     </div>
 
-                                    <div style={{ position: 'absolute', top: '20px', left: '0', right: '0', textAlign: 'center', pointerEvents: 'none' }}>
-                                        <h3 style={{ margin: 0, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.8 }}>Starting V</h3>
+                                    <div className="court-title-container">
+                                        <h3 className="court-title">Starting V</h3>
                                     </div>
                                 </div>
 
                                 {/* Bottom: Bench */}
-                                <div className="bench-section">
-                                    <h3 style={{ margin: 0, color: '#aaa', fontSize: '1rem', textTransform: 'uppercase' }}>Bench Rotation ({selectedPlayers.filter(id => !starters.includes(id)).length})</h3>
+                                <div className="bench-section squad-selection-premium">
+                                    <h3 className="bench-title">
+                                        Bench Rotation ({selectedPlayers.filter(id => !starters.includes(id)).length})
+                                    </h3>
                                     <div className="bench-carousel full-custom-scroll">
                                         {summonedPlayers.filter(p => !starters.includes(p.id)).map(p => (
-                                            <div
+                                            <PlayerCard
                                                 key={p.id}
-                                                className="bench-card"
+                                                disableFlip={true}
                                                 onClick={() => toggleStarter(p.id)}
-                                            >
-                                                <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', marginBottom: '8px', border: '2px solid rgba(255,255,255,0.1)' }}>
-                                                    <img src={p.photo_url || "/assets/players/default.png"} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                </div>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#fff', textAlign: 'center', width: '100%', marginBottom: '4px' }}>{p.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#888' }}>#{p.jersey_number}</div>
-                                                <div style={{ fontSize: '0.7rem', color: '#666', textAlign: 'center', textTransform: 'uppercase' }}>{p.position}</div>
-                                            </div>
+                                                player={{
+                                                    ...p,
+                                                    number: p.jersey_number?.toString().padStart(2, '0') || '--',
+                                                    image: p.photo_url || null,
+                                                    role: p.position || 'Player'
+                                                }}
+                                            />
                                         ))}
                                         {summonedPlayers.filter(p => !starters.includes(p.id)).length === 0 && (
-                                            <div style={{ padding: '1rem', color: '#666', fontStyle: 'italic' }}>Everyone is starting? Add more players to squad.</div>
+                                            <div className="empty-bench-placeholder">
+                                                No bench units assigned. Expand squad to add depth.
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -830,66 +700,77 @@ const Match = () => {
                 </div>
             )}
 
-            {/* 3. Strategy Board (Only if squad is confirmed) */}
+            {/* 5. Strategy Board (Only if squad is confirmed) */}
             {isSquadConfirmed && summonedPlayers.length > 0 && (
-                <div id="tactical-board-section" className="animate-slide-up">
-                    <div className="section-header-row" style={{ marginTop: '3rem', marginBottom: '1rem' }}>
-                        <div className="role-tag coach-tag">System</div>
-                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Tactical Board</h2>
+                <div id="tactical-board-section" className="intel-card" style={{ margin: '3rem 2rem', padding: '0', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(10,10,10,0.4)' }}>
+                    <div style={{ padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        <div className="pulse-dot"></div>
+                        <h2 style={{ fontSize: '0.9rem', fontWeight: '950', letterSpacing: '4px', margin: 0, color: '#fff' }}>TACTICAL PROJECTION BOARD</h2>
                     </div>
 
-                    <MatchTacticsBoard
-                        summonedPlayers={summonedPlayers}
-                        starters={starters}
-                        strategies={fullCourtStrategies}
-                        showNotification={showNotification}
-                        fetchStrategies={fetchStrategies}
-                        // Optional: Pass function to let board notify parent of active strategy
-                        onStrategyLoaded={(id) => setActiveStrategyId(id)}
-                    />
+                    <div style={{ padding: '2.5rem' }}>
+                        <MatchTacticsBoard
+                            summonedPlayers={summonedPlayers}
+                            starters={starters}
+                            strategies={fullCourtStrategies}
+                            showNotification={showNotification}
+                            fetchStrategies={fetchStrategies}
+                            onStrategyLoaded={(id) => setActiveStrategyId(id)}
+                        />
+                    </div>
                 </div>
             )}
 
-            {/* 4. Tactical Briefing & Transmission */}
-            {isSquadConfirmed && starters.every(id => id !== null) && (
-                <div id="briefing-section" className="animate-fade-in" style={{ marginTop: '4rem', paddingBottom: '5rem' }}>
-                    <div className="section-header-row" style={{ marginBottom: '2rem' }}>
-                        <div className="role-tag coach-tag">Briefing</div>
-                        <h2 style={{ fontSize: '1.8rem', margin: 0 }}>Tactical Briefing & Deployment</h2>
-                        <p style={{ margin: '5px 0 0 0', color: '#888' }}>Finalize the package to be transmitted to the squad.</p>
+            {/* 6. Tactical Briefing & Transmission */}
+            {isSquadConfirmed && starters.every(id => id !== null && id !== undefined) && (
+                <div id="briefing-section" className="intel-card" style={{ margin: '3rem 2rem 5rem 2rem', padding: '0', border: '1px solid rgba(219, 10, 64, 0.4)', background: 'rgba(10,10,10,0.6)' }}>
+                    <div style={{ padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '4px' }}>OPERATIONAL DEPLOYMENT</span>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '950', margin: 0, color: '#fff', letterSpacing: '-0.5px' }}>TACTICAL BRIEFING & TRANSMISSION</h2>
+                        </div>
+                        <Shield size={24} color="#DB0A40" style={{ opacity: 0.5 }} />
                     </div>
 
-                    <div className="briefing-container shadow-premium" style={{ background: '#111', borderRadius: '24px', padding: '2.5rem', border: '1px solid rgba(255,215,0,0.1)' }}>
-                        <div className="briefing-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px' }}>
+                    <div style={{ padding: '3.5rem' }}>
+                        <div className="briefing-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '4rem' }}>
 
                             {/* Left Side: The Selection Review */}
                             <div className="briefing-selection-review">
-                                <h3 style={{ color: '#ffd700', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <Shield size={18} /> Official Starting Five
-                                </h3>
-                                <div className="briefing-starters-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', marginBottom: '3rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '2rem' }}>
+                                    <div style={{ height: '1px', width: '30px', background: '#DB0A40' }}></div>
+                                    <h3 style={{ color: '#fff', textTransform: 'uppercase', letterSpacing: '3px', fontSize: '0.8rem', fontWeight: '950', margin: 0 }}>OFFICIAL STARTING FIVE</h3>
+                                </div>
+
+                                <div className="briefing-starters-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', marginBottom: '4rem' }}>
                                     {starters.map((id, idx) => {
                                         const p = players.find(player => player.id === id);
                                         return (
-                                            <div key={idx} style={{ textAlign: 'center', background: 'rgba(255,215,0,0.03)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,215,0,0.1)' }}>
-                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 10px', border: '2px solid #ffd700' }}>
+                                            <div key={idx} className="intel-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', padding: '20px 10px', borderRadius: '0', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                <div style={{ width: '60px', height: '60px', margin: '0 auto 15px', background: '#000', border: '1px solid #DB0A40', padding: '3px' }}>
                                                     <img src={p?.photo_url || '/assets/players/default.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
-                                                <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>{p?.name.split(' ')[0]}</div>
-                                                <div style={{ color: '#ffd700', fontSize: '0.75rem', fontWeight: 'bold' }}>POS {idx + 1}</div>
+                                                <div style={{ color: '#fff', fontSize: '0.8rem', fontWeight: '950', letterSpacing: '1px' }}>{p?.name.split(' ')[0].toUpperCase()}</div>
+                                                <div style={{ color: '#444', fontSize: '0.6rem', fontWeight: '900', marginTop: '5px' }}>POS {idx + 1}</div>
                                             </div>
                                         );
                                     })}
                                 </div>
 
-                                <h3 style={{ color: '#888', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Strategic Rotation (Bench)</h3>
-                                <div className="briefing-bench-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '2rem' }}>
+                                    <div style={{ height: '1px', width: '30px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                    <h3 style={{ color: '#555', textTransform: 'uppercase', letterSpacing: '3px', fontSize: '0.75rem', fontWeight: '950', margin: 0 }}>STRATEGIC ROTATION</h3>
+                                </div>
+
+                                <div className="briefing-bench-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '15px' }}>
                                     {summonedPlayers.filter(p => !starters.includes(p.id)).map(p => (
-                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <img src={p.photo_url || '/assets/players/default.png'} alt="" style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover' }} />
+                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ width: '30px', height: '30px', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                <img src={p.photo_url || '/assets/players/default.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
                                             <div>
-                                                <div style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 'bold' }}>{p.name.split(' ')[0]}</div>
-                                                <div style={{ color: '#666', fontSize: '0.65rem' }}>#{p.jersey_number} - {p.position}</div>
+                                                <div style={{ color: '#fff', fontSize: '0.7rem', fontWeight: '950' }}>{p.name.split(' ')[0].toUpperCase()}</div>
+                                                <div style={{ color: '#333', fontSize: '0.55rem', fontWeight: '900' }}>#{p.jersey_number} // {p.position}</div>
                                             </div>
                                         </div>
                                     ))}
@@ -897,79 +778,62 @@ const Match = () => {
                             </div>
 
                             {/* Right Side: System Selection */}
-                            <div className="briefing-systems-selection" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem' }}>Attach Systems</h3>
-                                <p style={{ color: '#666', fontSize: '0.8rem', marginBottom: '1.5rem' }}>Select the technical systems to be deployed for this match.</p>
+                            <div className="intel-card" style={{ background: '#080808', padding: '2rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h3 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: '950', letterSpacing: '2px', margin: 0 }}>ATTACH SYSTEMS</h3>
+                                    <Activity size={16} color="#DB0A40" />
+                                </div>
+                                <p style={{ color: '#444', fontSize: '0.65rem', lineHeight: '1.6', fontWeight: '900', marginBottom: '2rem', letterSpacing: '1px' }}>SELECT TECHNICAL SYSTEMS FOR DEPLOYMENT PARAMETERS.</p>
 
-                                <div className="briefing-systems-list full-custom-scroll" style={{ maxHeight: '400px', overflowY: 'auto', display: 'grid', gap: '10px' }}>
+                                <div className="briefing-systems-list full-custom-scroll" style={{ flex: 1, maxHeight: '350px', overflowY: 'auto', display: 'grid', gap: '10px', paddingRight: '8px' }}>
                                     {fullCourtStrategies.map(s => {
                                         const isSelected = selectedBriefingStrategies.includes(s.id);
                                         return (
                                             <div
                                                 key={s.id}
-                                                onClick={() => {
-                                                    setSelectedBriefingStrategies(prev =>
-                                                        prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id]
-                                                    );
-                                                }}
+                                                onClick={() => toggleStrategyBriefing(s.id)}
                                                 style={{
-                                                    padding: '12px',
-                                                    background: isSelected ? 'rgba(219, 10, 64, 0.1)' : 'rgba(255,255,255,0.02)',
+                                                    padding: '15px',
+                                                    background: isSelected ? 'rgba(219,10,64,0.1)' : 'rgba(255,255,255,0.01)',
                                                     border: isSelected ? '1px solid #DB0A40' : '1px solid rgba(255,255,255,0.05)',
-                                                    borderRadius: '12px',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s',
+                                                    transition: '0.3s',
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center'
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isSelected ? '#DB0A40' : '#333' }} />
-                                                    <span style={{ color: isSelected ? '#fff' : '#aaa', fontSize: '0.85rem', fontWeight: isSelected ? 'bold' : 'normal' }}>{s.name}</span>
+                                                <div>
+                                                    <div style={{ color: '#fff', fontSize: '0.75rem', fontWeight: '950', letterSpacing: '1px' }}>{s.name.toUpperCase()}</div>
+                                                    <div style={{ color: isSelected ? '#DB0A40' : '#333', fontSize: '0.55rem', fontWeight: '900', marginTop: '4px' }}>{s.type.toUpperCase()} // UPLINK_READY</div>
                                                 </div>
-                                                {isSelected && <Shield size={14} color="#DB0A40" />}
+                                                <div style={{ width: '12px', height: '12px', background: isSelected ? '#DB0A40' : 'transparent', border: '1px solid #DB0A40' }}></div>
                                             </div>
                                         );
                                     })}
-                                    {fullCourtStrategies.length === 0 && (
-                                        <div style={{ textAlign: 'center', padding: '2rem', color: '#444', fontSize: '0.8rem', fontStyle: 'italic' }}>No systems available.</div>
-                                    )}
                                 </div>
 
                                 <button
                                     onClick={handleSaveMatchSetup}
-                                    className="shiny-btn"
-                                    style={{
-                                        width: '100%',
-                                        marginTop: '2rem',
-                                        background: '#DB0A40',
-                                        color: '#fff',
-                                        border: 'none',
-                                        padding: '15px',
-                                        borderRadius: '12px',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 10px 20px rgba(219, 10, 64, 0.3)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '10px'
-                                    }}
+                                    disabled={loadingDeployment}
+                                    className="intel-btn-primary"
+                                    style={{ width: '100%', marginTop: '2rem', padding: '20px', fontWeight: '950', letterSpacing: '2px' }}
                                 >
-                                    SAVE & TRANSMIT BRIEFING
+                                    {loadingDeployment ? 'ESTABLISHING LINK...' : 'EXECUTE MISSION DEPLOYMENT'}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
             {/* Match Paper Modal - Redesigned with reusable component */}
             <TacticalModal isOpen={showReportModal && selectedReportMatch} onClose={() => setShowReportModal(false)}>
                 {selectedReportMatch && (
                     <>
                         {/* Left Side: Metadata & Intel Context */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                            {/* ... (keep modal content) */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <div style={{ width: '12px', height: '12px', background: '#DB0A40', clipPath: 'polygon(0% 0%, 100% 0%, 75% 100%, 0% 100%)' }}></div>
@@ -1000,7 +864,7 @@ const Match = () => {
                             </div>
 
                             <div style={{ marginTop: 'auto' }}>
-                                {/* Scan Action */}
+                                {/* Scan/Upload Action */}
                                 <div style={{ marginBottom: '2rem' }}>
                                     <input
                                         type="file"
@@ -1014,42 +878,46 @@ const Match = () => {
                                         disabled={isOcrProcessing}
                                         style={{
                                             width: '100%',
-                                            background: 'rgba(219, 10, 64, 0.1)',
+                                            background: isOcrProcessing ? 'rgba(219, 10, 64, 0.05)' : 'rgba(219, 10, 64, 0.1)',
                                             border: '1px solid #DB0A40',
                                             color: '#fff',
                                             padding: '1rem',
                                             borderRadius: '0',
                                             fontSize: '0.75rem',
                                             fontWeight: '900',
-                                            cursor: 'pointer',
+                                            cursor: isOcrProcessing ? 'not-allowed' : 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '10px',
                                             transition: '0.3s',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '2px'
+                                            letterSpacing: '2px',
+                                            position: 'relative',
+                                            overflow: 'hidden'
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'}
+                                        onMouseEnter={e => !isOcrProcessing && (e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)')}
+                                        onMouseLeave={e => !isOcrProcessing && (e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)')}
                                     >
+                                        {isOcrProcessing && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                height: '100%',
+                                                width: `${ocrProgress}%`,
+                                                background: 'rgba(219, 10, 64, 0.2)',
+                                                transition: 'width 0.3s ease'
+                                            }}></div>
+                                        )}
                                         {isOcrProcessing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                        {isOcrProcessing ? ocrStatus : 'Scan Match Sheet'}
+                                        {isOcrProcessing ? ocrStatus : 'Scan FRMBB Match Sheet'}
                                     </button>
-
-                                    {isOcrProcessing && (
-                                        <div style={{ marginTop: '10px' }}>
-                                            <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '0', overflow: 'hidden' }}>
-                                                <div style={{ height: '100%', width: `${ocrProgress}%`, background: '#DB0A40', transition: 'width 0.3s' }}></div>
-                                            </div>
-                                            <div style={{ fontSize: '0.6rem', color: '#444', marginTop: '5px', textAlign: 'right', fontWeight: '900' }}>{ocrProgress}%</div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace' }}>
                                     ENCRYPTION: AES-256-GCM<br />
-                                    STATUS: {isOcrProcessing ? 'PROCESSING...' : 'READY'}<br />
+                                    STATUS: READY<br />
                                     ORIGIN: HUSA_OPERATIONS
                                 </div>
                             </div>
@@ -1094,10 +962,6 @@ const Match = () => {
                             </div>
 
                             <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
-                                <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
-                                    <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
-                                    <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
-                                </div>
                                 <button
                                     onClick={handleSendMatchReport}
                                     style={{
@@ -1118,8 +982,6 @@ const Match = () => {
                     </>
                 )}
             </TacticalModal>
-
-
         </div>
     );
 };

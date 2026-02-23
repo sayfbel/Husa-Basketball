@@ -30,6 +30,7 @@ app.use('/api/reservations', require('./routes/reservationRoutes'));
 app.use('/api/store-reservations', require('./routes/storeReservationRoutes'));
 app.use('/api/staff', require('./routes/staffRoutes'));
 app.use('/api/rankings', require('./routes/rankingRoutes'));
+app.use('/api/ocr', require('./routes/ocrRoutes'));
 
 // app.use('/api/news', require('./routes/news'));
 

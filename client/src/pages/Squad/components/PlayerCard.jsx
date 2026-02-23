@@ -2,12 +2,22 @@ import React, { useState } from 'react';
 import { User } from 'lucide-react';
 
 
-const PlayerCard = ({ player, isStaff }) => {
+const PlayerCard = ({ player, isStaff, onClick, disableFlip }) => {
     const [isFlipped, setIsFlipped] = useState(false);
+
+    const handleClick = (e) => {
+        if (onClick) {
+            onClick(e);
+        }
+        if (!disableFlip) {
+            setIsFlipped(!isFlipped);
+        }
+    };
+
     return (
         <div
-            className={`player-card ${isStaff ? 'coach-card' : ''} ${isFlipped ? 'flipped' : ''}`}
-            onClick={() => setIsFlipped(!isFlipped)}
+            className={`player-card ${isStaff ? 'coach-card' : ''} ${isFlipped && !disableFlip ? 'flipped' : ''}`}
+            onClick={handleClick}
         >
             <div className="card-inner-wrapper">
                 {/* Front Side */}

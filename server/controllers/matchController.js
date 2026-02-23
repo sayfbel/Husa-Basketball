@@ -81,6 +81,7 @@ exports.initTable = async () => {
             await db.query('ALTER TABLE match_schedule ADD UNIQUE KEY unique_external_id (external_id)');
         } catch (err) { }
 
+
         console.log('Match tables initialized');
     } catch (error) {
         console.error('Error initializing match tables:', error);
@@ -249,14 +250,21 @@ exports.saveMatchSquad = async (req, res) => {
 
         // 1. Create Match if ID not provided (scraped match being saved for first time)
         if (!finalMatchId && matchData) {
-            const [day, month, year] = matchData.date.split('/');
-            const formattedDate = `${year}-${month}-${day}`;
-            const formattedTime = matchData.time ? `${matchData.time}:00` : '00:00:00';
-            const dbDateTime = `${formattedDate} ${formattedTime}`;
+            let dbDateTime;
+            if (matchData.date && matchData.date !== "N/A" && matchData.date.includes('/')) {
+                const [day, month, year] = matchData.date.split('/');
+                const formattedDate = `${year}-${month}-${day}`;
+                const formattedTime = matchData.time ? `${matchData.time}:00` : '00:00:00';
+                dbDateTime = `${formattedDate} ${formattedTime}`;
+            } else {
+                // Fallback to today if date is invalid
+                const d = new Date();
+                dbDateTime = d.toISOString().slice(0, 10) + ' 00:00:00';
+            }
 
-            const opponent = (matchData.home.includes('HUSA') || matchData.home.includes('Hassania'))
-                ? matchData.away
-                : matchData.home;
+            const opponent = (matchData.home && (matchData.home.includes('HUSA') || matchData.home.includes('Hassania')))
+                ? (matchData.away || 'Unknown Opponent')
+                : (matchData.home || 'Unknown Opponent');
 
             const [existing] = await db.query(
                 'SELECT id FROM matches WHERE date = ? AND opponent = ?',
@@ -387,3 +395,4 @@ exports.getPlayerMatches = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
