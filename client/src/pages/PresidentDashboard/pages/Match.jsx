@@ -178,9 +178,6 @@ const Match = () => {
                                                 {match.home} <span style={{ color: '#DB0A40', margin: '0 5px' }}>VS</span> {match.away}
                                             </div>
                                         </div>
-                                        <div style={{ background: '#000', padding: '5px 10px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                            <span style={{ fontSize: '0.6rem', fontWeight: 'bold', color: '#4cd137' }}>READY</span>
-                                        </div>
                                     </div>
                                 ))}
                                 {upcomingMatches.length > displayLimit && (

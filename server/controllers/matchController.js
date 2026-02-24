@@ -11,8 +11,6 @@ exports.initTable = async () => {
                 id VARCHAR(36) PRIMARY KEY,
                 opponent VARCHAR(255) NOT NULL,
                 date DATETIME NOT NULL,
-                location VARCHAR(255),
-                score VARCHAR(50) DEFAULT '-',
                 status VARCHAR(50) DEFAULT 'scheduled',
                 strategy_id JSON,
                 starters JSON,
@@ -25,12 +23,8 @@ exports.initTable = async () => {
         try {
             await db.query('ALTER TABLE matches ADD COLUMN strategy_id JSON AFTER location');
         } catch (err) { }
-        // Migration: Add score and status if missing
         try {
-            await db.query('ALTER TABLE matches ADD COLUMN score VARCHAR(50) DEFAULT "-" AFTER location');
-        } catch (err) { }
-        try {
-            await db.query('ALTER TABLE matches ADD COLUMN status VARCHAR(50) DEFAULT "scheduled" AFTER score');
+            await db.query('ALTER TABLE matches ADD COLUMN status VARCHAR(50) DEFAULT "scheduled"');
         } catch (err) { }
         try {
             await db.query('ALTER TABLE matches ADD COLUMN starters JSON AFTER strategy_id');
@@ -80,6 +74,18 @@ exports.initTable = async () => {
             await db.query('ALTER TABLE match_schedule ADD COLUMN external_id VARCHAR(50) AFTER id');
             await db.query('ALTER TABLE match_schedule ADD UNIQUE KEY unique_external_id (external_id)');
         } catch (err) { }
+
+        // 4. Match Intel Table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS match_intel (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                match_id VARCHAR(50) UNIQUE,
+                report TEXT,
+                player_stats JSON,
+                images JSON,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
 
         console.log('Match tables initialized');
     } catch (error) {
@@ -203,11 +209,21 @@ exports.scrapeMatches = async (req, res) => {
 exports.getCachedMatches = async (req, res) => {
     try {
         const [rows] = await db.query(`
-            SELECT * FROM match_schedule 
+            SELECT ms.*, 
+                   m.id as saved_match_id,
+                   m.starters,
+                   m.bench,
+                   mi.id as intel_id
+            FROM match_schedule ms
+            LEFT JOIN matches m ON (
+                m.opponent = IF(ms.home LIKE '%HUSA%' OR ms.home LIKE '%Hassania%', ms.away, ms.home)
+                AND DATE_FORMAT(m.date, '%d/%m/%Y') = ms.date
+            )
+            LEFT JOIN match_intel mi ON mi.match_id = ms.external_id
             ORDER BY 
-                CASE WHEN date = '00/00/0000' THEN 1 ELSE 0 END,
-                STR_TO_DATE(NULLIF(date, '00/00/0000'), '%d/%m/%Y') ASC,
-                id ASC
+                CASE WHEN ms.date = '00/00/0000' THEN 1 ELSE 0 END,
+                STR_TO_DATE(NULLIF(ms.date, '00/00/0000'), '%d/%m/%Y') ASC,
+                ms.id ASC
         `);
         res.json(rows);
     } catch (error) {
@@ -272,8 +288,8 @@ exports.saveMatchSquad = async (req, res) => {
             } else {
                 finalMatchId = uuidv4();
                 await db.query(
-                    'INSERT INTO matches (id, opponent, date, location, strategy_id, starters, bench) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                    [finalMatchId, opponent, dbDateTime, matchData.venue, strategiesSerialized, startersSerialized, benchSerialized]
+                    'INSERT INTO matches (id, opponent, date, strategy_id, starters, bench) VALUES (?, ?, ?, ?, ?, ?)',
+                    [finalMatchId, opponent, dbDateTime, strategiesSerialized, startersSerialized, benchSerialized]
                 );
             }
         } else if (finalMatchId) {
@@ -385,5 +401,58 @@ exports.getPlayerMatches = async (req, res) => {
     } catch (error) {
         console.error('Error fetching player matches:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Save Match Intel (Report, Stats, Images)
+exports.saveIntel = async (req, res) => {
+    try {
+        const { match_id, report, player_stats } = req.body;
+        // Keep existing images or start empty array
+        let images = [];
+        try {
+            if (req.body.existingImages) {
+                images = JSON.parse(req.body.existingImages);
+            }
+        } catch (e) { }
+
+        if (req.files && req.files.length > 0) {
+            req.files.forEach(file => {
+                images.push(`/uploads/${file.filename}`);
+            });
+        }
+
+        const imagesJson = JSON.stringify(images);
+        const statsStr = typeof player_stats === 'string' ? player_stats : JSON.stringify(player_stats || {});
+
+        await db.query(`
+            INSERT INTO match_intel (match_id, report, player_stats, images)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            report = VALUES(report),
+            player_stats = VALUES(player_stats),
+            images = VALUES(images)
+        `, [match_id, report || '', statsStr, imagesJson]);
+
+        res.json({ message: 'Match Intel Saved successfully' });
+    } catch (error) {
+        console.error('Error saving match intel:', error);
+        res.status(500).json({ message: 'Failed to save intel', error: error.message });
+    }
+};
+
+// Get Match Intel
+exports.getIntel = async (req, res) => {
+    try {
+        const { match_id } = req.params;
+        const [rows] = await db.query('SELECT * FROM match_intel WHERE match_id = ?', [match_id]);
+        if (rows.length > 0) {
+            res.json(rows[0]);
+        } else {
+            res.json({ report: '', player_stats: "{}", images: "[]" });
+        }
+    } catch (error) {
+        console.error('Error fetching intel:', error);
+        res.status(500).json({ message: 'Failed to fetch intel', error: error.message });
     }
 };

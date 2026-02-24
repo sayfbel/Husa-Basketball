@@ -6,7 +6,7 @@ import '../../../css/dashboard.css';
 import '../css/match.css';
 
 import Tesseract from 'tesseract.js';
-import { Search, User, Users, Shield, Activity, Send, Camera, Upload, Loader2, X } from 'lucide-react'; // Added icons
+import { Search, User, Users, Shield, Send, Activity, Camera, X, ArrowLeft, Plus, Check, Upload, Loader2 } from 'lucide-react';
 import TacticalModal from '../../../components/UI/TacticalModal';
 
 const Match = () => {
@@ -15,10 +15,12 @@ const Match = () => {
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedReportMatch, setSelectedReportMatch] = useState(null);
     const [reportContent, setReportContent] = useState("");
-    const [ocrProgress, setOcrProgress] = useState(0);
-    const [isOcrProcessing, setIsOcrProcessing] = useState(false);
-    const [ocrStatus, setOcrStatus] = useState('');
-    const ocrFileInputRef = useRef(null);
+    const [playerStats, setPlayerStats] = useState({});
+    const [viewingImage, setViewingImage] = useState(null);
+    const [dossierMode, setDossierMode] = useState('stats'); // 'stats', 'squad_select', 'starter_select'
+    const [tempSquad, setTempSquad] = useState([]);
+    const [tempStarters, setTempStarters] = useState([]);
+    const intelImageInputRef = useRef(null);
 
     // Match State
     const [matches, setMatches] = useState([]);
@@ -126,104 +128,50 @@ const Match = () => {
     };
 
     // --- OCR Logic ---
-    const parseMatchSheet = (text) => {
-        // Helper to extract single fields
-        const extractField = (regex, source = text) => {
-            const match = source.match(regex);
-            return match ? match[1].trim() : "Not found";
-        };
+    // (Functions removed per user request)
 
-        // Basic Match info patterns from request
-        const date = extractField(/DATE\s*:\s*(.*)/i);
-        const heure = extractField(/HEURE\s*:\s*(.*)/i);
-        const lieu = extractField(/LIEU\s*:\s*(.*)/i);
-
-        // Teams extraction
-        const teamA = extractField(/Equipe A\s*:\s*(.*)/i);
-        const teamB = extractField(/Equipe B\s*:\s*(.*)/i);
-
-        // Final Result extraction
-        const finalResult = text.match(/RESULTAT FINAL\s*Equipe A\s*(.*?)\s*Equipe B\s*(.*)/i);
-        const scoreA = finalResult ? finalResult[1].trim() : "N/A";
-        const scoreB = finalResult ? finalResult[2].trim() : "N/A";
-
-        // Players extraction 
-        const playersASection = text.match(/Equipe A\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Equipe B)/si);
-        const playersBSection = text.match(/Equipe B\s*:.*?Licences\s*Noms des joueurs(.*?)(?:Entraineur|Resultat)/si);
-
-        const cleanPlayers = (pTextMatch) => {
-            if (!pTextMatch || !pTextMatch[1]) return [];
-            return pTextMatch[1].split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 3 && !line.includes('---')); // Basic filter for noise
-        };
-
-        const listA = cleanPlayers(playersASection);
-        const listB = cleanPlayers(playersBSection);
-
-        // Construct the premium tactical intel report
-        let reportStr = `[ BATTLE_INTEL_EXTRACTED ]\n`;
-        reportStr += `MISSION_DATE: ${date}\n`;
-        reportStr += `UPLINK_TIME: ${heure}\n`;
-        reportStr += `ZONE: ${lieu}\n\n`;
-
-        reportStr += `[ ENGAGED_TEAMS ]\n`;
-        reportStr += `ALPHA_UNIT: ${teamA}\n`;
-        reportStr += `BRAVO_UNIT: ${teamB}\n\n`;
-
-        reportStr += `[ OPERATIONAL_OUTCOME ]\n`;
-        reportStr += `ALPHA_SCORE: ${scoreA}\n`;
-        reportStr += `BRAVO_SCORE: ${scoreB}\n\n`;
-
-        if (listA.length > 0) {
-            reportStr += `[ ALPHA_ROSTER ]\n` + listA.slice(0, 12).join('\n') + `\n\n`;
-        }
-        if (listB.length > 0) {
-            reportStr += `[ BRAVO_ROSTER ]\n` + listB.slice(0, 12).join('\n') + `\n\n`;
-        }
-
-        reportStr += `[ DATA_UPLINK_COMPLETE ]\n----------------------------\n`;
-
-        return reportStr;
-    };
-
-    const handleOcrUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        setIsOcrProcessing(true);
-        setOcrStatus('Scanning...');
-        setOcrProgress(0);
-
-        try {
-            const { data: { text } } = await Tesseract.recognize(file, 'fra+eng', {
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        setOcrProgress(Math.round(m.progress * 100));
-                    }
-                    setOcrStatus(m.status);
-                }
-            });
-
-            const parsed = parseMatchSheet(text);
-            setReportContent(prev => parsed + (prev ? '\n\n' + prev : ''));
-            showNotification("Match sheet intel extracted successfully.", "success");
-            console.log("OCR Result:", text);
-        } catch (err) {
-            showNotification("OCR scan failed. Check image clarity.", "error");
-        } finally {
-            setIsOcrProcessing(false);
-            setOcrStatus('');
-            setOcrProgress(0);
-        }
-    };
+    const [isIntelExisting, setIsIntelExisting] = useState(false);
+    const [intelImages, setIntelImages] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
 
     // --- Actions ---
 
+    const fetchMatchIntel = async (match) => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/matches/intel/${match.external_id || match.id}`);
+            if (res.data) {
+                setReportContent(res.data.report || '');
+                let parsedStats = {};
+                try { parsedStats = typeof res.data.player_stats === 'string' ? JSON.parse(res.data.player_stats) : res.data.player_stats; } catch (e) { }
+                setPlayerStats(parsedStats || {});
+
+                let pImages = [];
+                try { pImages = typeof res.data.images === 'string' ? JSON.parse(res.data.images) : res.data.images; } catch (e) { }
+                setExistingImages(pImages || []);
+
+                setIsIntelExisting(!!res.data.id);
+            }
+        } catch (err) {
+            console.error('Error fetching intel', err);
+            setReportContent('');
+            setPlayerStats({});
+            setExistingImages([]);
+            setIsIntelExisting(false);
+        }
+    };
+
     const handleSelectMatch = (match) => {
-        if (isPastMatch(match.date)) {
+        const isSaved = !!(match.saved_match_id || match.intel_id);
+        setDossierMode('stats');
+        setTempSquad([]);
+        setTempStarters([]);
+
+        if (isPastMatch(match.date) || isSaved) {
             setSelectedReportMatch(match);
-            setShowReportModal(true);
+            setIntelImages([]); // reset new images
+            fetchMatchIntel(match).then(() => {
+                setShowReportModal(true);
+            });
             return;
         }
 
@@ -240,27 +188,85 @@ const Match = () => {
         document.getElementById('squad-section')?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleSendMatchReport = async () => {
-        if (!reportContent.trim()) {
-            showNotification("Please enter report content.", "warning");
+    const handleSaveDossierSquad = async () => {
+        if (tempSquad.length < 6 || tempSquad.length > 12) {
+            showNotification("Please select between 6 and 12 players.", "warning");
             return;
         }
+        if (tempStarters.length !== 5) {
+            showNotification("Please select exactly 5 starters.", "warning");
+            return;
+        }
+
         try {
+            const res = await axios.post('http://localhost:5000/api/matches/save', {
+                matchId: selectedReportMatch.saved_match_id || null,
+                matchData: selectedReportMatch,
+                squad: tempSquad,
+                starters: tempStarters,
+                strategyIds: []
+            });
+
+            if (res.data) {
+                showNotification("Squad for match saved.", "success");
+                // Update the local match object in selectedReportMatch
+                setSelectedReportMatch(prev => ({
+                    ...prev,
+                    saved_match_id: res.data.matchId,
+                    starters: JSON.stringify(tempStarters),
+                    bench: JSON.stringify(tempSquad.filter(id => !tempStarters.includes(id)))
+                }));
+                // Refresh main matches list to show red border
+                fetchCachedMatches();
+                setDossierMode('stats');
+            }
+        } catch (err) {
+            console.error('Error saving dossier squad', err);
+            showNotification("Failed to save dossier squad.", "error");
+        }
+    };
+
+    const handleSendMatchReport = async () => {
+        if (!reportContent.trim() && intelImages.length === 0 && Object.keys(playerStats).length === 0 && existingImages.length === 0) {
+            showNotification("Please enter report content, stats, or images.", "warning");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('match_id', selectedReportMatch.external_id || selectedReportMatch.id);
+            formData.append('report', reportContent);
+            formData.append('player_stats', JSON.stringify(playerStats));
+            formData.append('existingImages', JSON.stringify(existingImages));
+
+            intelImages.forEach(file => {
+                formData.append('images', file);
+            });
+
+            await axios.post('http://localhost:5000/api/matches/intel', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            // Also send notification to president (keeping existing logic loosely)
             const opponent = selectedReportMatch.home.includes('HUSA') ? selectedReportMatch.away : selectedReportMatch.home;
             await axios.post('http://localhost:5000/api/reports/send', {
-                sender_id: 'coach_id', // Should use auth context id
+                sender_id: 'coach_id',
                 sender_name: 'Staff Coach',
                 recipient_role: 'president',
                 title: `Match Report: vs ${opponent} (${selectedReportMatch.date})`,
-                content: reportContent,
+                content: reportContent + '\n[Check Tactical DOSSIER for full intel]',
                 type: 'performance',
                 priority: 'normal'
             });
-            showNotification("Match report transmitted to President.", "success");
+
+            showNotification(isIntelExisting ? "Match Intel Updated." : "Match Intel Saved.", "success");
+            setIsIntelExisting(true);
+
+            // Close the modal on success
             setShowReportModal(false);
-            setReportContent("");
         } catch (err) {
-            showNotification("Failed to transmit report.", "error");
+            console.error('Error saving intel', err);
+            showNotification("Failed to save match intel.", "error");
         }
     };
 
@@ -399,15 +405,16 @@ const Match = () => {
                                 }
                             } catch (e) { /* ignore */ }
 
+                            const isSaved = !!(match.saved_match_id || match.intel_id);
                             return (
                                 <div
                                     key={idx}
                                     onClick={() => handleSelectMatch(match)}
-                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''} ${isPast ? 'past-match-card' : ''}`}
+                                    className={`match-card-interactive ${isActive ? 'active-match-card' : ''} ${isPast ? 'past-match-card' : ''} ${isSaved ? 'saved-match-card' : ''}`}
                                     style={{
                                         flex: '0 0 280px',
-                                        background: isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e',
-                                        border: isActive ? '2px solid #DB0A40' : (isPast ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)'),
+                                        background: isSaved ? 'rgba(219, 10, 64, 0.05)' : (isActive ? 'linear-gradient(135deg, rgba(219, 10, 64, 0.1) 0%, rgba(20,20,20,0.9) 100%)' : '#1e1e1e'),
+                                        border: isSaved ? '1px solid #DB0A40' : (isActive ? '2px solid #DB0A40' : (isPast ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)')),
                                         borderRadius: '0',
                                         padding: '1.5rem',
                                         cursor: 'pointer',
@@ -418,20 +425,21 @@ const Match = () => {
                                         justifyContent: 'space-between',
                                         gap: '1rem',
                                         boxShadow: isActive ? '0 10px 30px rgba(219, 10, 64, 0.2)' : '0 4px 6px rgba(0,0,0,0.2)',
-                                        transform: isActive ? 'translateY(-4px)' : 'none',
-                                        filter: isPast ? 'grayscale(0.7) opacity(0.6)' : 'none'
+                                        transform: (isActive && !isSaved) ? 'translateY(-4px)' : 'none',
+                                        filter: (isPast && !isSaved) ? 'grayscale(0.7) opacity(0.6)' : 'none',
+                                        opacity: isSaved ? 0.9 : 1
                                     }}
                                     onMouseEnter={(e) => {
-                                        if (!isActive) {
+                                        if (!isActive && !isSaved) {
                                             e.currentTarget.style.transform = 'translateY(-4px)';
                                             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
                                             e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
                                         }
                                     }}
                                     onMouseLeave={(e) => {
-                                        if (!isActive) {
+                                        if (!isActive && !isSaved) {
                                             e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                                            e.currentTarget.style.borderColor = isSaved ? '#DB0A40' : 'rgba(255,255,255,0.1)';
                                             e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.2)';
                                         }
                                     }}
@@ -477,10 +485,9 @@ const Match = () => {
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
-                                        <span style={{ fontSize: '0.8rem', color: isActive ? '#DB0A40' : (isPast ? '#444' : '#666'), fontWeight: '600' }}>
-                                            {isActive ? 'Currently Managing' : (isPast ? 'Match Concluded' : 'Click to Manage')}
+                                        <span style={{ fontSize: '0.8rem', color: isSaved ? '#DB0A40' : (isActive ? '#DB0A40' : (isPast ? '#444' : '#666')), fontWeight: '600' }}>
+                                            {isSaved ? 'Intel Saved / Planned' : (isActive ? 'Currently Managing' : (isPast ? 'Match Concluded' : 'Click to Manage'))}
                                         </span>
-                                        {isActive && <Shield size={16} color="#DB0A40" />}
                                     </div>
                                 </div>
                             );
@@ -969,7 +976,7 @@ const Match = () => {
                 {selectedReportMatch && (
                     <>
                         {/* Left Side: Metadata & Intel Context */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem', height: '100%', overflowY: 'auto', minHeight: 0 }} className="full-custom-scroll">
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <div style={{ width: '12px', height: '12px', background: '#DB0A40', clipPath: 'polygon(0% 0%, 100% 0%, 75% 100%, 0% 100%)' }}></div>
@@ -997,132 +1004,399 @@ const Match = () => {
                                         <Shield size={14} /> LEVEL_04_COACH
                                     </div>
                                 </div>
+                                <div style={{ opacity: 0.6 }}>
+                                    <label style={{ fontSize: '0.6rem', color: '#666', fontWeight: 'bold', display: 'block', letterSpacing: '1px', marginBottom: '4px' }}>MATCH_SCORE</label>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {(() => {
+                                            const scoreStr = selectedReportMatch.score;
+                                            if (!scoreStr || scoreStr === '-') return 'N/A';
+
+                                            let resultTag = null;
+                                            const parts = scoreStr.split('-');
+                                            if (parts.length === 2) {
+                                                const homeScore = parseInt(parts[0].trim(), 10);
+                                                const awayScore = parseInt(parts[1].trim(), 10);
+                                                if (!isNaN(homeScore) && !isNaN(awayScore)) {
+                                                    const isHome = selectedReportMatch.home.includes('HUSA') || selectedReportMatch.home.includes('Hassania');
+                                                    const husaScore = isHome ? homeScore : awayScore;
+                                                    const oppScore = isHome ? awayScore : homeScore;
+
+                                                    if (husaScore > oppScore) {
+                                                        resultTag = <span style={{ background: 'rgba(76, 209, 55, 0.2)', color: '#4cd137', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '1px' }}>VICTORY</span>;
+                                                    } else if (husaScore < oppScore) {
+                                                        resultTag = <span style={{ background: 'rgba(219, 10, 64, 0.2)', color: '#DB0A40', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '1px' }}>DEFEAT</span>;
+                                                    } else {
+                                                        resultTag = <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ccc', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '1px' }}>DRAW</span>;
+                                                    }
+                                                }
+                                            }
+
+                                            return (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    {scoreStr}
+                                                    {resultTag}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
                             </div>
 
                             <div style={{ marginTop: 'auto' }}>
-                                {/* Scan Action */}
-                                <div style={{ marginBottom: '2rem' }}>
+                                {/* Images List */}
+                                {(existingImages.length > 0 || intelImages.length > 0) && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', maxHeight: '150px', overflowY: 'auto', marginBottom: '1rem' }} className="full-custom-scroll">
+                                        {existingImages.map((imgPath, i) => (
+                                            <div key={`ext-${i}`} onClick={() => setViewingImage(`http://localhost:5000${imgPath}`)} style={{ position: 'relative', width: '100%', paddingTop: '100%', background: '#111', border: '1px solid rgba(255, 255, 255, 0.05)', overflow: 'hidden', cursor: 'pointer' }}>
+                                                {/* Cyber Corner Marks */}
+                                                <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', borderTop: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', borderTop: '2px solid #DB0A40', borderRight: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '10px', height: '10px', borderBottom: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderBottom: '2px solid #DB0A40', borderRight: '2px solid #DB0A40', zIndex: 10 }}></div>
+
+                                                <img src={`http://localhost:5000${imgPath}`} alt="Match Data" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button onClick={(e) => { e.stopPropagation(); setExistingImages(prev => prev.filter((_, idx) => idx !== i)); if (viewingImage === `http://localhost:5000${imgPath}`) setViewingImage(null); }} style={{ position: 'absolute', top: '2px', width: '15px', height: '15px', display: 'flex', right: '2px', background: '#DB0A40', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '50%', padding: '2px', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}><X size={12} /></button>
+                                            </div>
+                                        ))}
+                                        {intelImages.map((file, i) => (
+                                            <div key={`new-${i}`} onClick={() => setViewingImage(URL.createObjectURL(file))} style={{ position: 'relative', width: '100%', paddingTop: '100%', background: '#111', border: '1px solid rgba(255, 255, 255, 0.05)', overflow: 'hidden', cursor: 'pointer' }}>
+                                                {/* Cyber Corner Marks */}
+                                                <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', borderTop: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', borderTop: '2px solid #DB0A40', borderRight: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '10px', height: '10px', borderBottom: '2px solid #DB0A40', borderLeft: '2px solid #DB0A40', zIndex: 10 }}></div>
+                                                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderBottom: '2px solid #DB0A40', borderRight: '2px solid #DB0A40', zIndex: 10 }}></div>
+
+                                                <img src={URL.createObjectURL(file)} alt="Match Data" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button onClick={(e) => { e.stopPropagation(); setIntelImages(prev => prev.filter((_, idx) => idx !== i)); if (viewingImage === URL.createObjectURL(file)) setViewingImage(null); }} style={{ position: 'absolute', top: '2px', width: '15px', height: '15px', display: 'flex', right: '2px', background: '#DB0A40', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '50%', padding: '2px', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}><X size={12} /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Upload Images Action */}
+                                <div style={{ marginBottom: '1rem' }}>
                                     <input
                                         type="file"
-                                        ref={ocrFileInputRef}
-                                        onChange={handleOcrUpload}
+                                        ref={intelImageInputRef}
                                         style={{ display: 'none' }}
                                         accept="image/*"
+                                        multiple
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                const maxAllowed = 3 - (existingImages.length + intelImages.length);
+                                                if (maxAllowed <= 0) {
+                                                    showNotification("Maximum 3 images allowed.", "warning");
+                                                    return;
+                                                }
+                                                const newFiles = Array.from(e.target.files).slice(0, maxAllowed);
+                                                if (e.target.files.length > maxAllowed) {
+                                                    showNotification(`Only ${maxAllowed} more images can be added.`, "warning");
+                                                }
+                                                setIntelImages(prev => [...prev, ...newFiles]);
+                                            }
+                                        }}
                                     />
                                     <button
-                                        onClick={() => ocrFileInputRef.current.click()}
-                                        disabled={isOcrProcessing}
+                                        onClick={() => intelImageInputRef.current.click()}
                                         style={{
-                                            width: '100%',
-                                            background: 'rgba(219, 10, 64, 0.1)',
-                                            border: '1px solid #DB0A40',
-                                            color: '#fff',
-                                            padding: '1rem',
-                                            borderRadius: '0',
-                                            fontSize: '0.75rem',
-                                            fontWeight: '900',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '10px',
-                                            transition: '0.3s',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '2px'
+                                            width: '100%', background: 'rgba(219, 10, 64, 0.1)', border: '1px solid #DB0A40', color: '#fff', padding: '1rem', borderRadius: '0', fontSize: '0.75rem', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: '0.3s', textTransform: 'uppercase', letterSpacing: '2px'
                                         }}
                                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.2)'}
                                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'}
                                     >
-                                        {isOcrProcessing ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                        {isOcrProcessing ? ocrStatus : 'Scan Match Sheet'}
+                                        <Camera size={16} /> Upload match sheets ({(existingImages.length + intelImages.length)}/3)
                                     </button>
-
-                                    {isOcrProcessing && (
-                                        <div style={{ marginTop: '10px' }}>
-                                            <div style={{ height: '2px', width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '0', overflow: 'hidden' }}>
-                                                <div style={{ height: '100%', width: `${ocrProgress}%`, background: '#DB0A40', transition: 'width 0.3s' }}></div>
-                                            </div>
-                                            <div style={{ fontSize: '0.6rem', color: '#444', marginTop: '5px', textAlign: 'right', fontWeight: '900' }}>{ocrProgress}%</div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace' }}>
-                                    ENCRYPTION: AES-256-GCM<br />
-                                    STATUS: {isOcrProcessing ? 'PROCESSING...' : 'READY'}<br />
-                                    ORIGIN: HUSA_OPERATIONS
                                 </div>
                             </div>
                         </div>
 
                         {/* Right Side: Composition Area */}
-                        <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                                <div>
-                                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Compose Briefing</h2>
-                                    <p style={{ color: '#555', fontSize: '0.75rem', margin: '4px 0 0 0' }}>Provide performance analysis and tactical adjustments.</p>
+                        <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', minHeight: 0 }}>
+                            {viewingImage ? (
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px', minHeight: 0 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
+                                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#DB0A40', textTransform: 'uppercase', letterSpacing: '1px' }}>Document Viewer</h3>
+                                        <button onClick={() => setViewingImage(null)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '5px 15px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}><ArrowLeft size={14} /></button>
+                                    </div>
+                                    <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                                        <img src={viewingImage} alt="Match Document" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={() => setShowReportModal(false)}
-                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', width: '36px', height: '36px', borderRadius: '0', color: '#777', cursor: 'pointer', transition: '0.2s' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#DB0A40'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#777'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                                        <div>
+                                            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Compose Briefing</h2>
+                                            <p style={{ color: '#555', fontSize: '0.75rem', margin: '4px 0 0 0' }}>Provide performance analysis and tactical adjustments.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowReportModal(false)}
+                                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', width: '36px', height: '36px', borderRadius: '0', color: '#777', cursor: 'pointer', transition: '0.2s' }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#DB0A40'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#777'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
 
-                            <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', border: '1px solid rgba(219, 10, 64, 0.1)', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(219, 10, 64, 0.01) 1px, rgba(219, 10, 64, 0.01) 2px)', opacity: 0.5 }}></div>
-                                <textarea
-                                    value={reportContent}
-                                    onChange={(e) => setReportContent(e.target.value)}
-                                    placeholder="Begin tactical analysis input..."
-                                    style={{
-                                        flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
-                                        borderRadius: '0', padding: '1.5rem', color: '#fff', fontSize: '1rem', lineHeight: '1.6',
-                                        resize: 'none', outline: 'none', transition: 'border-color 0.3s', minHeight: '300px',
-                                        fontFamily: 'inherit'
-                                    }}
-                                    onFocus={(e) => e.target.style.borderColor = 'rgba(219, 10, 64, 0.4)'}
-                                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
-                                />
-                                <div style={{ position: 'absolute', bottom: '15px', right: '15px', opacity: 0.2, display: 'flex', gap: '10px' }}>
-                                    <Activity size={20} />
-                                    <Send size={20} />
-                                </div>
-                            </div>
+                                    <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflowY: 'auto' }} className="full-custom-scroll">
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', border: '1px solid rgba(219, 10, 64, 0.1)', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(219, 10, 64, 0.01) 1px, rgba(219, 10, 64, 0.01) 2px)', opacity: 0.5 }}></div>
 
-                            <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
-                                <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
-                                    <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
-                                    <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
-                                </div>
-                                <button
-                                    onClick={handleSendMatchReport}
-                                    style={{
-                                        background: '#DB0A40', color: '#fff', border: 'none',
-                                        padding: '1rem 3.5rem', borderRadius: '0', fontWeight: '900',
-                                        cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase',
-                                        fontSize: '0.85rem', boxShadow: '0 10px 40px rgba(219, 10, 64, 0.2)',
-                                        display: 'flex', alignItems: 'center', gap: '15px', transition: '0.3s'
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 50px rgba(219, 10, 64, 0.3)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(219, 10, 64, 0.2)'; }}
-                                >
-                                    TRANSMIT INTEL
-                                    <Send size={18} />
-                                </button>
-                            </div>
+                                        {dossierMode === 'stats' ? (
+                                            <>
+                                                {/* Players Table for Stats */}
+                                                <div style={{ width: '100%', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 10 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
+                                                        <button
+                                                            onClick={() => {
+                                                                setDossierMode('squad_select');
+                                                                let currentS = [];
+                                                                let currentB = [];
+                                                                try { currentS = typeof selectedReportMatch.starters === 'string' ? JSON.parse(selectedReportMatch.starters) : (selectedReportMatch.starters || []); } catch (e) { }
+                                                                try { currentB = typeof selectedReportMatch.bench === 'string' ? JSON.parse(selectedReportMatch.bench) : (selectedReportMatch.bench || []); } catch (e) { }
+                                                                setTempSquad([...currentS, ...currentB]);
+                                                                setTempStarters(currentS);
+                                                            }}
+                                                            style={{ background: 'transparent', border: '1px solid #DB0A40', color: '#DB0A40', padding: '4px 12px', fontSize: '0.65rem', fontWeight: '900', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                                        >MANAGE SQUAD</button>
+                                                    </div>
+                                                    <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.7rem', fontWeight: '900', color: '#666', padding: '10px 15px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                                                        <div style={{ flex: 2 }}>OPERATOR</div>
+                                                        <div style={{ flex: 1, textAlign: 'center' }}>PTS</div>
+                                                        <div style={{ flex: 1, textAlign: 'center' }}>FOL</div>
+                                                    </div>
+                                                    <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="full-custom-scroll">
+                                                        {(() => {
+                                                            let dossierSquad = [];
+                                                            if (selectedReportMatch) {
+                                                                const isCurrentlyActive = activeMatch && (activeMatch.external_id === selectedReportMatch?.external_id || activeMatch.id === selectedReportMatch?.id);
+                                                                if (isCurrentlyActive && selectedPlayers.length > 0) {
+                                                                    dossierSquad = selectedPlayers;
+                                                                } else {
+                                                                    let sIds = [];
+                                                                    let bIds = [];
+                                                                    try { sIds = typeof selectedReportMatch?.starters === 'string' ? JSON.parse(selectedReportMatch.starters) : (selectedReportMatch?.starters || []); } catch (e) { }
+                                                                    try { bIds = typeof selectedReportMatch?.bench === 'string' ? JSON.parse(selectedReportMatch.bench) : (selectedReportMatch?.bench || []); } catch (e) { }
+                                                                    dossierSquad = [...sIds, ...bIds];
+                                                                }
+                                                            }
+
+                                                            return players
+                                                                .filter(p => dossierSquad.includes(p.id))
+                                                                .sort((a, b) => dossierSquad.indexOf(a.id) - dossierSquad.indexOf(b.id))
+                                                                .map((p, index) => (
+                                                                    <div key={p.id} style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.02)', padding: '6px 15px', alignItems: 'center', borderLeft: index < 5 ? '3px solid #DB0A40' : 'none', background: index < 5 ? 'rgba(219, 10, 64, 0.03)' : 'transparent' }}>
+                                                                        <div style={{ flex: 2, fontSize: '0.8rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            <span style={{ color: '#DB0A40', fontWeight: 'bold', width: '25px' }}>#{p.jersey_number}</span>
+                                                                            <span style={{ fontWeight: '600' }}>{p.name}</span>
+                                                                        </div>
+                                                                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="0"
+                                                                                value={playerStats[p.id]?.pts || ''}
+                                                                                onChange={(e) => {
+                                                                                    const val = e.target.value;
+                                                                                    if (val === '') {
+                                                                                        setPlayerStats(prev => ({ ...prev, [p.id]: { ...prev[p.id], pts: val } }));
+                                                                                    } else if (/^\d+$/.test(val)) {
+                                                                                        const scoreStr = selectedReportMatch?.score;
+                                                                                        const parts = scoreStr && scoreStr !== '-' ? scoreStr.split('-') : [];
+                                                                                        let husaScoreLimit = Infinity;
+                                                                                        if (parts.length === 2) {
+                                                                                            const homeScore = parseInt(parts[0].trim(), 10);
+                                                                                            const awayScore = parseInt(parts[1].trim(), 10);
+                                                                                            if (!isNaN(homeScore) && !isNaN(awayScore)) {
+                                                                                                const homeName = selectedReportMatch?.home || "";
+                                                                                                const isHome = homeName.includes('HUSA') || homeName.includes('Hassania');
+                                                                                                husaScoreLimit = isHome ? homeScore : awayScore;
+                                                                                            }
+                                                                                        }
+
+                                                                                        let currentTotal = 0;
+                                                                                        Object.keys(playerStats).forEach(id => {
+                                                                                            if (id !== p.id.toString() && playerStats[id]?.pts) {
+                                                                                                currentTotal += parseInt(playerStats[id].pts, 10) || 0;
+                                                                                            }
+                                                                                        });
+
+                                                                                        const newTotal = currentTotal + parseInt(val, 10);
+                                                                                        if (newTotal > husaScoreLimit) {
+                                                                                            showNotification?.(`Total points cannot exceed the team's match score (${husaScoreLimit}).`, "warning");
+                                                                                        } else {
+                                                                                            setPlayerStats(prev => ({ ...prev, [p.id]: { ...prev[p.id], pts: val } }));
+                                                                                        }
+                                                                                    }
+                                                                                }}
+                                                                                style={{ width: '45px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', textAlign: 'center', borderRadius: '0', padding: '4px', fontSize: '0.8rem', outline: 'none' }}
+                                                                                onFocus={(e) => e.target.style.borderColor = '#DB0A40'}
+                                                                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                                                            />
+                                                                        </div>
+                                                                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="0"
+                                                                                value={playerStats[p.id]?.fol || ''}
+                                                                                onChange={(e) => {
+                                                                                    const val = e.target.value;
+                                                                                    if (val === '') {
+                                                                                        setPlayerStats(prev => ({ ...prev, [p.id]: { ...prev[p.id], fol: val } }));
+                                                                                    } else if (/^\d+$/.test(val)) {
+                                                                                        if (parseInt(val) > 5) {
+                                                                                            showNotification?.("Foul count cannot exceed 5.", "warning");
+                                                                                        } else {
+                                                                                            setPlayerStats(prev => ({ ...prev, [p.id]: { ...prev[p.id], fol: val } }));
+                                                                                        }
+                                                                                    }
+                                                                                }}
+                                                                                style={{ width: '45px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#DB0A40', textAlign: 'center', borderRadius: '0', padding: '4px', fontSize: '0.8rem', outline: 'none', fontWeight: 'bold' }}
+                                                                                onFocus={(e) => e.target.style.borderColor = '#DB0A40'}
+                                                                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                ))
+                                                        })()}
+                                                    </div>
+                                                </div>
+
+                                                <textarea
+                                                    value={reportContent}
+                                                    onChange={(e) => setReportContent(e.target.value)}
+                                                    placeholder="Begin tactical analysis input..."
+                                                    style={{
+                                                        flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)',
+                                                        borderRadius: '0', padding: '1.5rem', color: '#fff', fontSize: '1rem', lineHeight: '1.6',
+                                                        resize: 'none', outline: 'none', transition: 'border-color 0.3s', minHeight: '300px',
+                                                        fontFamily: 'inherit', zIndex: 10
+                                                    }}
+                                                    onFocus={(e) => e.target.style.borderColor = 'rgba(219, 10, 64, 0.4)'}
+                                                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+                                                />
+                                            </>
+                                        ) : dossierMode === 'squad_select' ? (
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                                    <h4 style={{ margin: 0, fontSize: '0.8rem', color: '#fff', letterSpacing: '2px' }}>SELECT OPERATORS ({tempSquad.length}/12)</h4>
+                                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                                        <button onClick={() => setDossierMode('stats')} style={{ background: 'transparent', border: '1px solid #444', color: '#777', padding: '5px 15px', fontSize: '0.6rem', fontWeight: '900', cursor: 'pointer' }}>CANCEL</button>
+                                                        <button
+                                                            onClick={() => tempSquad.length >= 6 && setDossierMode('starter_select')}
+                                                            disabled={tempSquad.length < 6}
+                                                            style={{ background: tempSquad.length >= 6 ? '#DB0A40' : '#222', border: 'none', color: '#fff', padding: '5px 15px', fontSize: '0.6rem', fontWeight: '900', cursor: tempSquad.length >= 6 ? 'pointer' : 'not-allowed' }}
+                                                        >NEXT: LINEUP</button>
+                                                    </div>
+                                                </div>
+                                                <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px', overflowY: 'auto', paddingRight: '10px' }} className="full-custom-scroll">
+                                                    {players.map(p => {
+                                                        const isSelected = tempSquad.includes(p.id);
+                                                        return (
+                                                            <div
+                                                                key={p.id}
+                                                                onClick={() => {
+                                                                    if (isSelected) setTempSquad(prev => prev.filter(id => id !== p.id));
+                                                                    else if (tempSquad.length < 12) setTempSquad(prev => [...prev, p.id]);
+                                                                }}
+                                                                style={{
+                                                                    position: 'relative', height: '180px', background: '#111', border: isSelected ? '1px solid #DB0A40' : '1px solid rgba(255,255,255,0.05)',
+                                                                    cursor: 'pointer', transition: '0.3s', overflow: 'hidden'
+                                                                }}
+                                                            >
+                                                                {p.photo_url ? (
+                                                                    <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isSelected ? 1 : 0.4 }} />
+                                                                ) : (
+                                                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}><User size={40} /></div>
+                                                                )}
+                                                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '8px', background: 'linear-gradient(to top, #000, transparent)' }}>
+                                                                    <div style={{ fontSize: '0.65rem', fontWeight: '900', color: isSelected ? '#DB0A40' : '#fff' }}>#{p.jersey_number}</div>
+                                                                    <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                                                                </div>
+                                                                {isSelected && <Check size={12} style={{ position: 'absolute', top: '8px', right: '8px', color: '#DB0A40' }} />}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                                    <h4 style={{ margin: 0, fontSize: '0.8rem', color: '#fff', letterSpacing: '2px' }}>DESIGNATE STARTING 5 ({tempStarters.length}/5)</h4>
+                                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                                        <button onClick={() => setDossierMode('squad_select')} style={{ background: 'transparent', border: '1px solid #444', color: '#777', padding: '5px 15px', fontSize: '0.6rem', fontWeight: '900', cursor: 'pointer' }}>BACK</button>
+                                                        <button
+                                                            onClick={handleSaveDossierSquad}
+                                                            disabled={tempStarters.length !== 5}
+                                                            style={{ background: tempStarters.length === 5 ? '#DB0A40' : '#222', border: 'none', color: '#fff', padding: '5px 15px', fontSize: '0.6rem', fontWeight: '900', cursor: tempStarters.length === 5 ? 'pointer' : 'not-allowed' }}
+                                                        >CONFIRM SQUAD</button>
+                                                    </div>
+                                                </div>
+                                                <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px', overflowY: 'auto' }} className="full-custom-scroll">
+                                                    {players.filter(p => tempSquad.includes(p.id)).sort((a, b) => tempSquad.indexOf(a.id) - tempSquad.indexOf(b.id)).map(p => {
+                                                        const isStarter = tempStarters.includes(p.id);
+                                                        return (
+                                                            <div
+                                                                key={p.id}
+                                                                onClick={() => {
+                                                                    if (isStarter) setTempStarters(prev => prev.filter(id => id !== p.id));
+                                                                    else if (tempStarters.length < 5) setTempStarters(prev => [...prev, p.id]);
+                                                                }}
+                                                                style={{
+                                                                    position: 'relative', height: '180px', background: '#111', border: isStarter ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.05)',
+                                                                    cursor: 'pointer', transition: '0.3s', overflow: 'hidden'
+                                                                }}
+                                                            >
+                                                                {p.photo_url ? (
+                                                                    <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isStarter ? 1 : 0.6 }} />
+                                                                ) : (
+                                                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}><User size={40} /></div>
+                                                                )}
+                                                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '8px', background: 'linear-gradient(to top, #000, transparent)' }}>
+                                                                    <div style={{ fontSize: '0.65rem', fontWeight: '900', color: isStarter ? '#DB0A40' : '#fff' }}>#{p.jersey_number} {isStarter && 'STARTER'}</div>
+                                                                    <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#fff', textTransform: 'uppercase' }}>{p.name}</div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div style={{ position: 'absolute', bottom: '15px', right: '15px', opacity: 0.2, display: 'flex', gap: '10px' }}>
+                                        <Activity size={20} />
+                                        <Send size={20} />
+                                    </div>
+
+                                    <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px' }}>
+                                        <div style={{ textAlign: 'right', display: 'none' }}> {/* hidden for cleaner ui */}
+                                            <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900' }}>TRANSMISSION_SECURE</div>
+                                            <div style={{ fontSize: '0.6rem', color: '#222' }}>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                                        </div>
+                                        <button
+                                            onClick={handleSendMatchReport}
+                                            style={{
+                                                background: '#DB0A40', color: '#fff', border: 'none',
+                                                padding: '1rem 3.5rem', borderRadius: '0', fontWeight: '900',
+                                                cursor: 'pointer', letterSpacing: '2px', textTransform: 'uppercase',
+                                                fontSize: '0.85rem', boxShadow: '0 10px 40px rgba(219, 10, 64, 0.2)',
+                                                display: 'flex', alignItems: 'center', gap: '15px', transition: '0.3s'
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 50px rgba(219, 10, 64, 0.3)'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(219, 10, 64, 0.2)'; }}
+                                        >
+                                            {isIntelExisting ? "UPDATE INTEL" : "TRANSMIT INTEL"}
+                                            <Send size={18} />
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </>
                 )}
             </TacticalModal>
-
-
         </div>
     );
 };
-
 
 export default Match;

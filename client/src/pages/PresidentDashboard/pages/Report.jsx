@@ -15,7 +15,8 @@ import {
     Activity,
     Mail,
     Bell,
-    TrendingUp
+    TrendingUp,
+    Check
 } from 'lucide-react';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';

@@ -28,12 +28,6 @@ CREATE TABLE IF NOT EXISTS matches (
     id VARCHAR(36) PRIMARY KEY,
     opponent VARCHAR(255) NOT NULL,
     date DATETIME NOT NULL,
-    result ENUM('win', 'loss', 'draw', 'scheduled') DEFAULT 'scheduled',
-    score_husa INT,
-    score_opponent INT,
-    location VARCHAR(255),
-    competition VARCHAR(255),
-    season VARCHAR(20),
     strategy_id VARCHAR(36), -- Link to a tactical system
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

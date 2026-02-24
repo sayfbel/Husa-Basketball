@@ -56,8 +56,8 @@
 
 /* Dropdown Options Container */
 .options {
-    position: absolute;
-    width: 100%;
+    position: fixed;
+    width: auto;
     background: #0f0f0f;
     border-radius: 14px;
     margin-top: 8px;

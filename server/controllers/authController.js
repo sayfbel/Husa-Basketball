@@ -42,6 +42,118 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.addUser = async (req, res) => {
+    const { username, password, role, position } = req.body;
+
+    if (!username || !password || !role) {
+        return res.status(400).json({ message: 'Missing fields' });
+    }
+
+    let photoUrl = '/assets/players/default.png';
+    if (req.file) {
+        photoUrl = '/assets/players/' + req.file.filename;
+    }
+
+    const id = `usr_${Date.now()}`;
+    try {
+        await db.query('INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)', [id, username, password, role]);
+
+        if (role === 'Player') {
+            await db.query('INSERT INTO players (id, name, position, photo_url) VALUES (?, ?, ?, ?)', [id, username, position || 'Unknown', photoUrl]);
+        } else {
+            await db.query('INSERT INTO staff (id, name, role, department, photo_url) VALUES (?, ?, ?, ?, ?)', [id, username, role, 'office', photoUrl]);
+        }
+
+        res.status(201).json({ message: 'User added successfully', id });
+    } catch (error) {
+        console.error(error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getUsers = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                u.id, 
+                u.username, 
+                u.role, 
+                COALESCE(p.photo_url, s.photo_url) as photo_url,
+                COALESCE(p.height, s.height) as height,
+                COALESCE(p.weight, s.weight) as weight,
+                COALESCE(p.age, s.age) as age,
+                COALESCE(p.bio, s.bio) as bio,
+                COALESCE(p.email, s.email) as email,
+                COALESCE(p.phone, s.phone) as phone,
+                p.jersey_number,
+                COALESCE(p.position, s.department) as position_or_dept
+            FROM users u
+            LEFT JOIN players p ON u.id = p.id
+            LEFT JOIN staff s ON u.id = s.id
+        `;
+        const [rows] = await db.query(query); // Gather expanded info
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { username, password, height, weight, age, email, phone, bio, jersey_number, position_or_dept } = req.body;
+    try {
+        if (password && password.trim() !== '') {
+            await db.query('UPDATE users SET username = ?, password = ? WHERE id = ?', [username, password, id]);
+        } else {
+            await db.query('UPDATE users SET username = ? WHERE id = ?', [username, id]);
+        }
+
+        // Get user role to know if player or staff
+        const [users] = await db.query('SELECT role FROM users WHERE id = ?', [id]);
+        if (users.length > 0) {
+            const role = users[0].role;
+            if (role === 'Player') {
+                await db.query(`
+                    UPDATE players SET 
+                        name = ?, height = ?, weight = ?, age = ?, email = ?, phone = ?, bio = ?, jersey_number = ?, position = ? 
+                    WHERE id = ?`,
+                    [username, height || null, weight || null, age || null, email || null, phone || null, bio || null, jersey_number || null, position_or_dept || 'Unknown', id]);
+            } else {
+                await db.query(`
+                    UPDATE staff SET 
+                        name = ?, height = ?, weight = ?, age = ?, email = ?, phone = ?, bio = ?, department = ? 
+                    WHERE id = ?`,
+                    [username, height || null, weight || null, age || null, email || null, phone || null, bio || null, position_or_dept || 'office', id]);
+            }
+        }
+
+        res.json({ message: 'User updated successfully' });
+    } catch (error) {
+        console.error(error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query('DELETE FROM users WHERE id = ?', [id]);
+        await db.query('DELETE FROM players WHERE id = ?', [id]);
+        await db.query('DELETE FROM staff WHERE id = ?', [id]);
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 const seedLogic = async () => {
     // --- Users Seeding ---
     const users = [
