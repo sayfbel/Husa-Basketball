@@ -11,6 +11,7 @@ import Strategy from './pages/Strategy';
 import Report from './pages/Report';
 import Match from './pages/Match';
 import Profile from './pages/Profile';
+import MatchSheetPage from './pages/MatchSheetPage';
 
 const CoachDashboard = () => {
     const { currentUser } = useAuth();
@@ -45,6 +46,7 @@ const CoachDashboard = () => {
                     <Route path="report" element={<Report />} />
                     <Route path="raport" element={<Navigate to="report" replace />} /> {/* Typo redirect */}
                     <Route path="match" element={<Match />} />
+                    <Route path="match-sheet-page" element={<MatchSheetPage />} />
                     <Route path="profile" element={<Profile />} />
                 </Routes>
             </div>

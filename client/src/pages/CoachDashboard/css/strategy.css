@@ -84,13 +84,11 @@
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .tactic-item-premium:hover {
     transform: translateY(-8px);
     border-color: rgba(219, 10, 64, 0.5);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(219, 10, 64, 0.1);
 }
 
 .tactic-header-premium {
@@ -177,26 +175,50 @@
 
 /* Premium Tactical Tokens */
 .player-token {
-    width: 32px !important;
-    height: 32px !important;
+    position: absolute !important;
+    /* width: 32px !important; */
+    /* height: 32px !important; */
     border-radius: 50% !important;
-    /* Circle on court */
     font-family: 'Orbitron', sans-serif;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-width: 2px !important;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+}
+
+.player-token:hover {
+    transform: translate(-50%, -50%) scale(1.15) !important;
+    filter: brightness(1.2);
+    z-index: 100 !important;
+}
+
+.is-dragging .player-token {
+    pointer-events: none !important;
+    transition: none !important;
+}
+
+.is-dragging .player-token:hover {
+    transform: translate(-50%, -50%) scale(1) !important;
 }
 
 .player-token.p-offense {
-    background: #DB0A40 !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 0 20px rgba(219, 10, 64, 0.4) !important;
+    background: radial-gradient(circle at 30% 30%, #ff1a53, #DB0A40) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 0 25px rgba(219, 10, 64, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.3) !important;
+    color: #fff !important;
 }
 
 .player-token.p-offense::after {
     content: '';
     position: absolute;
-    width: 44px;
-    height: 44px;
-    border: 1px solid rgba(219, 10, 64, 0.5);
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(219, 10, 64, 0.4);
     border-radius: 50%;
     top: 50%;
     left: 50%;
@@ -208,33 +230,275 @@
 @keyframes tactical-pulse {
     0% {
         transform: translate(-50%, -50%) scale(0.8);
-        opacity: 1;
+        opacity: 0.8;
     }
 
     100% {
-        transform: translate(-50%, -50%) scale(1.4);
+        transform: translate(-50%, -50%) scale(1.5);
         opacity: 0;
     }
 }
 
 .player-token.p-defense {
-    background: #222 !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #888 !important;
+    background: radial-gradient(circle at 30% 30%, #333, #111) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ddd !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8) !important;
 }
 
 .player-token.p-ball {
-    font-size: 1.8rem !important;
+    background-color: #ff8833 !important;
+    border-radius: 50% !important;
+    position: relative;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+    font-size: 0 !important;
+    transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.player-token.p-ball::before,
+.player-token.p-ball::after {
+    content: "";
+    position: absolute;
+    background-color: #fff;
+    z-index: 1;
+}
+
+.player-token.p-ball::before {
+    width: 2px;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+.player-token.p-ball::after {
+    width: 100%;
+    height: 2px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.court-and-sidebar-grid-premium {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    background: #080808;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-sizing: border-box;
+    max-width: 100%;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
 }
 
 .active-players-sidebar {
-    width: 220px;
-    border-radius: 12px;
-    padding: 1.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    width: 140px !important;
+    background: #080808;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
     overflow-y: auto;
-    margin-right: 15px;
-    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.tactical-workspace-right-unit {
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0a;
+}
+
+.active-players-list-premium {
+    padding: 1.2rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.sidebar-token-row-premium {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.sidebar-token-circle-premium {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 950;
+    font-size: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-token-circle-premium.p-offense {
+    background: #DB0A40;
+    color: #fff;
+    border: none;
+}
+
+.sidebar-token-circle-premium.p-defense {
+    background: #222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-token-circle-premium.p-ball {
+    background-color: #ff8833;
+    border-radius: 4px !important;
+    position: relative;
+    overflow: hidden;
+    border: none;
+}
+
+.remove-token-btn-premium {
+    background: #fff;
+    border: none;
+    color: #DB0A40;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-token-btn-premium:hover {
+    background: #DB0A40;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.sidebar-token-circle-premium.p-offense {
+    background: #DB0A40;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-token-circle-premium.p-defense {
+    background: #222;
+    color: #888;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-token-circle-premium.p-ball {
+    background-color: #ff8833;
+    border-radius: 18% !important;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Vertical and Horizontal Seams */
+.sidebar-token-circle-premium.p-ball::before,
+.sidebar-token-circle-premium.p-ball::after {
+    content: "";
+    position: absolute;
+    background-color: #fff;
+    z-index: 1;
+}
+
+/* Vertical Line */
+.sidebar-token-circle-premium.p-ball::before {
+    width: 1px;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+/* Horizontal Line */
+.sidebar-token-circle-premium.p-ball::after {
+    width: 100%;
+    height: 2px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+/* Shared Curved Seams for both Sidebar and Court Ball */
+.ball-seam-curves {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ball-seam-curves::before,
+.ball-seam-curves::after {
+    content: "";
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border: 1.5px solid #fff;
+    border-radius: 50%;
+    top: 50%;
+}
+
+/* Left Curve */
+.ball-seam-curves::before {
+    left: -50%;
+    transform: translateY(-50%);
+}
+
+/* Right Curve */
+.ball-seam-curves::after {
+    right: -50%;
+    transform: translateY(-50%);
+}
+
+.sidebar-token-info-premium {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.token-label-premium {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.token-status-premium {
+    font-size: 0.6rem;
+    color: #444;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.sidebar-token-row-premium:hover .token-status-premium {
+    color: #DB0A40;
+}
+
+.remove-token-btn-premium {
+    background: #fff;
+    border: none;
+    color: var(--dash-primary);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.remove-token-btn-premium:hover {
+    background: #DB0A40;
+    color: #fff;
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 0 15px rgba(219, 10, 64, 0.5);
 }
 
 .sidebar-group-title {
@@ -328,15 +592,14 @@
 /* Premium Operational Lab Styles */
 .strategy-bench-premium {
     background: #111;
-    border-radius: 50px;
-    padding: 0.6rem 1.5rem;
+    width: 100%;
+    padding: 0.8rem 2.5rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    margin: 1.5rem auto;
-    width: fit-content;
+    gap: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    justify-content: center;
 }
 
 .bench-group-premium {
@@ -388,15 +651,14 @@
 /* Premium Toolbar */
 .tactic-toolbar-premium {
     background: #111;
-    border-radius: 50px;
     padding: 0.6rem 2rem;
     display: flex;
     align-items: center;
     gap: 2rem;
-    margin: 2rem auto;
-    width: fit-content;
+    width: 100%;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    justify-content: center;
 }
 
 .tool-btn-premium {
@@ -462,18 +724,21 @@
 .sidebar-tab-premium.on-court {
     background: #DB0A40;
     color: #fff;
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     width: 100%;
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 2px;
 }
 
 .sidebar-tab-premium.vacant {
-    background: #151515;
+    background: #1a1a1a;
     color: #444;
     padding: 1rem;
     text-align: center;
-    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.7rem;
 }
 
 /* Sidebar Token Item Premium */
@@ -523,12 +788,17 @@
 
 /* Court Refinements */
 .court-painted-area {
-    fill: rgba(219, 10, 64, 0.4);
-    stroke: none;
+    fill: rgba(219, 10, 64, 0.02);
+    stroke: rgba(255, 255, 255, 0.03);
+    stroke-width: 2;
 }
 
 .court-center-circle {
-    fill: rgba(219, 10, 64, 0.6);
-    stroke: #fff;
-    stroke-width: 4;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.03);
+    stroke-width: 3;
+}
+
+.basketball-court-svg {
+    filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.5));
 }

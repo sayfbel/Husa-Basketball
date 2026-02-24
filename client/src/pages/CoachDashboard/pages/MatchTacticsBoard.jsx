@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext'; // Adjusted path
 import '../css/tacticsBoard.css';
+import '../css/strategy.css';
 import {
     Move,
     Pencil,
@@ -29,39 +30,53 @@ const MiniCourtPreview = ({ tactic }) => {
     const themeColor = '#DB0A40';
 
     return (
-        <div className="mini-court-preview" style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0.6,
-            zIndex: 0,
-            pointerEvents: 'none',
-            overflow: 'hidden'
-        }}>
+        <div className="mini-court-preview">
             <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} style={{ width: '100%', height: '100%' }}>
+                {/* Base Rect */}
                 <rect width={viewBoxW} height={viewBoxH} fill="none" stroke={themeColor} strokeWidth="3" opacity="0.3" />
+
+                {/* Court Lines */}
                 {viewBoxW === 1000 && <line x1="500" y1="0" x2="500" y2="560" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />}
                 <circle cx={viewBoxW / 2} cy={viewBoxW === 1000 ? 280 : 205} r={viewBoxW === 1000 ? 70 : 60} fill="none" stroke={themeColor} strokeWidth="3" opacity="0.3" />
+
+                {/* Tokens with Photos */}
                 {firstFrame.tokens && firstFrame.tokens.map((token, idx) => (
-                    <circle
-                        key={idx}
-                        cx={`${token.x * (viewBoxW / 100)}`}
-                        cy={`${token.y * (viewBoxH / 100)}`}
-                        r="25"
-                        fill={token.type === 'offense' ? '#DB0A40' : token.type === 'defense' ? '#111' : '#f97316'}
-                        stroke={token.type === 'defense' ? 'rgba(255,255,255,0.5)' : 'none'}
-                        strokeWidth="2"
-                    />
+                    <g key={idx}>
+                        {token.type === 'offense' || token.type === 'player' ? (
+                            <>
+                                <defs>
+                                    <pattern id={`img-match-${tactic.id}-${idx}`} patternUnits="userSpaceOnUse" width="60" height="60">
+                                        <image href={token.photo || "/placeholder-player.png"} x="0" y="0" width="60" height="60" preserveAspectRatio="xMidYMid slice" />
+                                    </pattern>
+                                </defs>
+                                <circle
+                                    cx={`${token.x * (viewBoxW / 100)}`}
+                                    cy={`${token.y * (viewBoxH / 100)}`}
+                                    r="22"
+                                    fill={token.photo ? `url(#img-match-${tactic.id}-${idx})` : "#DB0A40"}
+                                    stroke="#DB0A40"
+                                    strokeWidth="2"
+                                />
+                            </>
+                        ) : (
+                            <circle
+                                cx={`${token.x * (viewBoxW / 100)}`}
+                                cy={`${token.y * (viewBoxH / 100)}`}
+                                r="12"
+                                fill={token.type === 'ball' ? '#f97316' : '#111'}
+                                stroke="rgba(255,255,255,0.2)"
+                                strokeWidth="1"
+                            />
+                        )}
+                    </g>
+                ))}
+
+                {/* Connected Lines (Dashed Network) */}
+                {firstFrame.paths && firstFrame.paths.map((d, idx) => (
+                    <path key={idx} d={d} fill="none" stroke="#DB0A40" strokeWidth="2" strokeDasharray="5,5" opacity="0.3" />
                 ))}
             </svg>
-            <div style={{
-                position: 'absolute',
-                bottom: 0, left: 0, right: 0, height: '100%',
-                background: `linear-gradient(to bottom, rgba(26,26,26,0.2), rgba(26,26,26,0.9))`,
-                zIndex: 0
-            }} />
+            <div className="preview-gradient-overlay" />
         </div>
     );
 };
@@ -470,25 +485,26 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         <div className="intel-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0' }}>
             {/* Header */}
             {/* Header */}
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Header */}
+            <div style={{ padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(90deg, rgba(219, 10, 64, 0.05) 0%, transparent 100%)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#fff' }}>Tactical Board</h2>
-                        <p style={{ margin: '4px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Plan your plays with the active squad</p>
+                        <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '4px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Tactical Command</span>
+                        <h2 style={{ margin: 0, color: '#fff', fontSize: '1.4rem', fontWeight: '950', letterSpacing: '-0.5px' }}>OFFENSIVE SYSTEMS PROJECTION</h2>
+                        <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '1px' }}>CONFIGURE DEPLOYMENT PHASES FOR ACTIVE PERSONNEL</p>
                     </div>
                 </div>
 
                 {/* Systems Archive Strip */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Shield size={16} color="#DB0A40" /> Full Court Systems
+                            <h3 style={{ margin: 0, fontSize: '0.8rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '900', letterSpacing: '2px' }}>
+                                <Shield size={14} color="#DB0A40" /> SYSTEM ARCHIVE
                             </h3>
-                            <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#666' }}>Archive of 5v5 transition and offensive systems.</p>
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#888', fontStyle: 'italic' }}>
-                            {strategies.filter(s => s.type === 'full').length} Systems Available
+                        <div style={{ fontSize: '0.65rem', color: '#444', fontWeight: '900', letterSpacing: '1px' }}>
+                            {strategies.filter(s => s.type === 'full').length} SCHEMATICS LOADED
                         </div>
                     </div>
 
@@ -498,88 +514,52 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                 No full court systems created yet. Go to Strategy page to build your playbook.
                             </div>
                         ) : (
-                            strategies.filter(s => s.type === 'full').map(s => {
-                                const isSelected = s.id === selectedStrategyId;
-                                return (
-                                    <div
-                                        key={s.id}
-                                        onClick={() => loadStrategy(s)}
-                                        style={{
-                                            flex: '0 0 200px',
-                                            height: '120px',
-                                            position: 'relative',
-                                            background: '#222',
-                                            borderRadius: '0',
-                                            cursor: 'pointer',
-                                            overflow: 'hidden',
-                                            border: isSelected ? '2px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)',
-                                            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                                            boxShadow: isSelected ? '0 0 15px rgba(219, 10, 64, 0.3)' : '0 4px 6px rgba(0,0,0,0.2)',
-                                            transform: isSelected ? 'translateY(-2px)' : 'none'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (!isSelected) {
-                                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                                e.currentTarget.style.borderColor = '#DB0A40';
-                                                e.currentTarget.style.boxShadow = '0 10px 20px rgba(219, 10, 64, 0.15)';
-                                                e.currentTarget.querySelector('.play-overlay').style.opacity = 1;
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (!isSelected) {
-                                                e.currentTarget.style.transform = 'translateY(0)';
-                                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.2)';
-                                                e.currentTarget.querySelector('.play-overlay').style.opacity = 0;
-                                            }
-                                        }}
-                                    >
-                                        <MiniCourtPreview tactic={s} />
+                            <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px 0' }}>
+                                {strategies.filter(s => s.type === 'full').map(s => {
+                                    const isSelected = s.id === selectedStrategyId;
+                                    return (
+                                        <div
+                                            key={s.id}
+                                            className={`tactic-item-premium ${isSelected ? 'selected' : ''}`}
+                                            onClick={() => loadStrategy(s)}
+                                            style={{
+                                                flex: '0 0 260px',
+                                                border: isSelected ? '2px solid #DB0A40' : undefined,
+                                                boxShadow: isSelected ? '0 0 30px rgba(219, 10, 64, 0.3)' : undefined
+                                            }}
+                                        >
+                                            <div className="tactic-header-premium" style={{ marginBottom: '1rem' }}>
+                                                <h4 className="tactic-name-label" style={{ fontSize: '1rem' }}>{s.name}</h4>
+                                                <span className="tactic-action-hint" style={{ fontSize: '0.6rem' }}>{isSelected ? 'ACTIVE SYSTEM' : 'CLICK TO DEPLOY'}</span>
+                                            </div>
 
-                                        {/* Content Gradient */}
-                                        <div style={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            padding: '10px',
-                                            background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 80%, transparent 100%)',
-                                            zIndex: 2,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            justifyContent: 'flex-end'
-                                        }}>
-                                            <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{s.name}</div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                                                <span style={{ fontSize: '0.7rem', color: '#aaa', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '0' }}>5v5 FULL</span>
-                                                <span style={{ fontSize: '0.7rem', color: '#666' }}>{(s.data || []).length} FRAMES</span>
+                                            <MiniCourtPreview tactic={s} />
+
+                                            {/* Play Overlay Icon (Premium Style) */}
+                                            <div className="play-overlay" style={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                width: '45px',
+                                                height: '45px',
+                                                background: 'rgba(219, 10, 64, 0.95)',
+                                                borderRadius: '50%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                zIndex: 3,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)',
+                                                color: '#fff',
+                                                boxShadow: '0 0 25px rgba(219, 10, 64, 0.6)'
+                                            }}>
+                                                <FolderOpen size={20} fill="#fff" />
                                             </div>
                                         </div>
-
-                                        {/* Play Overlay Icon */}
-                                        <div className="play-overlay" style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            width: '40px',
-                                            height: '40px',
-                                            background: 'rgba(219, 10, 64, 0.9)',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            zIndex: 3,
-                                            opacity: 0,
-                                            transition: 'opacity 0.2s',
-                                            color: '#fff',
-                                            boxShadow: '0 0 15px rgba(219, 10, 64, 0.5)'
-                                        }}>
-                                            <FolderOpen size={18} fill="#fff" />
-                                        </div>
-                                    </div>
-                                );
-                            })
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -587,11 +567,12 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
             <div style={{ display: 'flex', height: '600px' }}>
                 {/* Sidebar: Summoned Squad */}
-                <div style={{ width: '250px', borderRight: '1px solid rgba(255,255,255,0.05)', background: '#111', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#aaa', textTransform: 'uppercase' }}>Summoned Squad</h3>
+                <div style={{ width: '280px', borderRight: '1px solid rgba(255,255,255,0.05)', background: '#080808', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(180deg, rgba(219, 10, 64, 0.05) 0%, transparent 100%)' }}>
+                        <span style={{ fontSize: '0.6rem', color: '#DB0A40', fontWeight: '950', letterSpacing: '3px', display: 'block', marginBottom: '5px' }}>PERSONNEL</span>
+                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: '900' }}>SUMMONED SQUAD</h3>
                     </div>
-                    <div className="full-custom-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <div className="full-custom-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                         {summonedPlayers.map(player => {
                             const onCourt = isPlayerOnCourt(player.id);
                             const isStarter = starters && starters.includes(player.id);
@@ -602,26 +583,30 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '10px',
-                                        padding: '8px',
-                                        background: onCourt ? 'rgba(76, 209, 55, 0.1)' : (isStarter ? 'rgba(252, 211, 77, 0.05)' : 'rgba(255,255,255,0.03)'),
-                                        border: isStarter ? '1px solid #fcd34d' : (onCourt ? '1px solid rgba(76, 209, 55, 0.3)' : '1px solid rgba(255,255,255,0.05)'),
+                                        gap: '12px',
+                                        padding: '12px',
+                                        background: onCourt ? 'rgba(76, 209, 55, 0.05)' : (isStarter ? 'rgba(219, 10, 64, 0.05)' : 'rgba(255,255,255,0.02)'),
+                                        border: isStarter ? '1px solid rgba(219, 10, 64, 0.3)' : (onCourt ? '1px solid rgba(76, 209, 55, 0.2)' : '1px solid rgba(255,255,255,0.05)'),
                                         borderRadius: '0',
                                         cursor: onCourt ? 'default' : 'pointer',
-                                        opacity: onCourt ? 0.6 : 1,
-                                        boxShadow: isStarter ? '0 0 5px rgba(252, 211, 77, 0.2)' : 'none'
+                                        opacity: onCourt ? 0.5 : 1,
+                                        transition: '0.3s'
                                     }}
                                 >
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#000', border: isStarter ? '1px solid #fcd34d' : 'none' }}>
+                                    <div style={{ width: '36px', height: '36px', overflow: 'hidden', background: '#000', border: isStarter ? '1px solid #DB0A40' : '1px solid rgba(255,255,255,0.1)' }}>
                                         <img src={player.photo_url || "/assets/players/default.png"} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
-                                    <div style={{ overflow: 'hidden' }}>
-                                        <div style={{ fontSize: '0.85rem', color: isStarter ? '#fcd34d' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: isStarter ? '600' : 'normal' }}>
-                                            {player.name} {isStarter && '★'}
+                                    <div style={{ overflow: 'hidden', flex: 1 }}>
+                                        <div style={{ fontSize: '0.8rem', color: isStarter ? '#DB0A40' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '900', letterSpacing: '0.5px' }}>
+                                            {player.name.toUpperCase()}
                                         </div>
-                                        <div style={{ fontSize: '0.75rem', color: '#666' }}>#{player.jersey_number}</div>
+                                        <div style={{ fontSize: '0.6rem', color: '#444', fontWeight: '900' }}>#{player.jersey_number.toString().padStart(2, '0')} // {player.position?.toUpperCase()}</div>
                                     </div>
-                                    {onCourt && <div style={{ marginLeft: 'auto', width: '8px', height: '8px', borderRadius: '50%', background: '#4cd137' }}></div>}
+                                    {onCourt ? (
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4cd137', boxShadow: '0 0 8px #4cd137' }}></div>
+                                    ) : isStarter ? (
+                                        <div style={{ fontSize: '0.7rem' }}>⭐</div>
+                                    ) : null}
                                 </div>
                             );
                         })}
@@ -684,20 +669,20 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                 <div style={{ flex: 1, position: 'relative', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
 
                     {/* Toolbar */}
-                    <div style={{ padding: '10px', background: '#151515', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px' }}>
+                    <div style={{ padding: '10px', background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                        <div className="tools-group" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)', padding: '4px' }}>
                             <button className={`tool-btn ${mode === 'move' ? 'active' : ''}`} onClick={() => setMode('move')}><Move size={18} /></button>
                             <button className={`tool-btn ${mode === 'draw' ? 'active' : ''}`} onClick={() => setMode('draw')}><Pencil size={18} /></button>
                             <button className={`tool-btn ${mode === 'erase' ? 'active' : ''}`} onClick={() => setMode('erase')} style={{ borderRadius: '0' }}><Eraser size={18} /></button>
                         </div>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                        <div className="tools-group" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)', padding: '4px', display: 'flex', alignItems: 'center' }}>
                             <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))} style={{ borderRadius: '0' }}><SkipBack size={18} /></button>
                             <button className="tool-btn" onClick={togglePlay} style={{ borderRadius: '0' }}>{isPlaying ? <Pause size={18} /> : <Play size={18} />}</button>
                             <button className="tool-btn" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))} style={{ borderRadius: '0' }}><SkipForward size={18} /></button>
-                            <span style={{ fontSize: '0.8rem', color: '#888', margin: '0 8px', fontWeight: '900' }}>{currentFrameIndex + 1}/{frames.length}</span>
+                            <span style={{ fontSize: '0.7rem', color: '#888', margin: '0 12px', fontWeight: '950', letterSpacing: '1px' }}>{String(currentFrameIndex + 1).padStart(2, '0')}/{String(frames.length).padStart(2, '0')}</span>
                             <button className="tool-btn" onClick={addFrame} style={{ borderRadius: '0' }}><Plus size={18} /></button>
                         </div>
-                        <div className="tools-group" style={{ background: '#222', borderRadius: '0', padding: '4px' }}>
+                        <div className="tools-group" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '0', border: '1px solid rgba(255,255,255,0.05)', padding: '4px' }}>
                             <button className="tool-btn" onClick={handleUndo} disabled={history.length === 0} title="Undo last action" style={{ borderRadius: '0' }}><Undo2 size={18} /></button>
                             <button className="tool-btn" onClick={handleReset} title="Reset Board (Clear all)" style={{ borderRadius: '0' }}><RotateCcw size={18} /></button>
                             <button className="tool-btn" onClick={deleteFrame} style={{ borderRadius: '0' }}><Trash2 size={18} /></button>
@@ -731,33 +716,52 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                         className="interactive-court"
                         ref={courtRef}
                         onMouseDown={handleBoardMouseDown}
-                        style={{ flex: 1, position: 'relative', cursor: mode === 'draw' ? 'crosshair' : 'default' }}
+                        style={{
+                            flex: 1,
+                            position: 'relative',
+                            cursor: mode === 'draw' ? 'crosshair' : (mode === 'erase' ? 'not-allowed' : 'default'),
+                            aspectRatio: `${viewBox.w} / ${viewBox.h}`,
+                            margin: '0 auto',
+                            maxHeight: '100%',
+                            width: '100%',
+                            background: '#0a0a0a'
+                        }}
                     >
                         {/* Drawing Layer */}
-                        <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+                        <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+                            <defs>
+                                <filter id="path-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                                <radialGradient id="token-radial" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stopColor="#DB0A40" />
+                                    <stop offset="100%" stopColor="#7a0624" />
+                                </radialGradient>
+                            </defs>
                             {currentPaths.map((d, i) => (
                                 <g key={i} onMouseEnter={(e) => handlePathHover(i, e)} onMouseDown={(e) => handlePathClick(i, e)} style={{ pointerEvents: mode === 'erase' ? 'auto' : 'none', cursor: mode === 'erase' ? 'pointer' : 'default' }}>
                                     <path d={d} stroke="transparent" strokeWidth="20" fill="none" />
-                                    <path d={d} stroke={mode === 'erase' ? '#ff4d4d' : '#fcd34d'} strokeWidth="4" fill="none" strokeLinecap="round" style={{ opacity: 0.8 }} />
+                                    <path d={d} stroke={mode === 'erase' ? '#ff4d4d' : '#DB0A40'} strokeWidth="4" fill="none" strokeLinecap="round" style={{ opacity: 0.8, filter: mode === 'erase' ? 'none' : 'url(#path-glow)' }} />
                                 </g>
                             ))}
-                            {currentPath && <path d={currentPath} stroke="#fcd34d" strokeWidth="4" fill="none" strokeLinecap="round" style={{ opacity: 0.5 }} />}
+                            {currentPath && <path d={currentPath} stroke="#DB0A40" strokeWidth="4" fill="none" strokeLinecap="round" style={{ opacity: 0.5 }} />}
                         </svg>
 
                         {/* SVG Court Background */}
-                        <svg viewBox="0 0 1000 560" style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }}>
-                            <rect width="1000" height="560" fill="#1a1a1a" />
-                            <rect x="25" y="25" width="950" height="510" fill="none" stroke="#fff" strokeWidth="5" />
-                            <line x1="500" y1="25" x2="500" y2="535" stroke="#fff" strokeWidth="5" />
-                            <circle cx="500" cy="280" r="70" fill="none" stroke="#DB0A40" strokeWidth="5" />
-                            <rect x="25" y="205" width="190" height="150" fill="rgba(219, 10, 64, 0.3)" stroke="#fff" strokeWidth="5" />
-                            <path d="M 215,205 A 75,75 0 0 1 215,355" fill="none" stroke="#fff" strokeWidth="5" />
-                            <path d="M 25,80 L 240,80 A 250,250 0 0 1 240,480 L 25,480" fill="none" stroke="#fff" strokeWidth="5" />
-                            <circle cx="75" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="5" />
-                            <rect x="785" y="205" width="190" height="150" fill="rgba(219, 10, 64, 0.3)" stroke="#fff" strokeWidth="5" />
-                            <path d="M 785,205 A 75,75 0 0 0 785,355" fill="none" stroke="#fff" strokeWidth="5" />
-                            <path d="M 975,80 L 760,80 A 250,250 0 0 0 760,480 L 975,480" fill="none" stroke="#fff" strokeWidth="5" />
-                            <circle cx="925" cy="280" r="15" fill="none" stroke="#fff" strokeWidth="5" />
+                        <svg viewBox="0 0 1000 560" style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none', position: 'absolute', top: 0, left: 0 }}>
+                            <rect width="1000" height="560" fill="#0a0a0a" />
+                            <rect x="25" y="25" width="950" height="510" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="5" />
+                            <line x1="500" y1="25" x2="500" y2="535" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <circle cx="500" cy="280" r="70" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <rect x="25" y="205" width="190" height="150" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <path d="M 215,205 A 75,75 0 0 1 215,355" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <path d="M 25,80 L 240,80 A 250,250 0 0 1 240,480 L 25,480" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <circle cx="75" cy="280" r="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                            <rect x="785" y="205" width="190" height="150" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <path d="M 785,205 A 75,75 0 0 0 785,355" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <path d="M 975,80 L 760,80 A 250,250 0 0 0 760,480 L 975,480" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                            <circle cx="925" cy="280" r="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
                         </svg>
 
                         {/* Tokens */}
@@ -768,16 +772,19 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                     position: 'absolute',
                                     top: `${token.y}%`,
                                     left: `${token.x}%`,
-                                    width: token.type === 'ball' ? '30px' : '40px',
-                                    height: token.type === 'ball' ? '30px' : '40px',
+                                    width: token.type === 'ball' ? '3.5%' : '5%',
+                                    aspectRatio: '1/1',
                                     transform: 'translate(-50%, -50%)',
                                     cursor: mode === 'move' ? (draggingId === token.id ? 'grabbing' : 'grab') : 'default',
                                     zIndex: draggingId === token.id ? 10 : 2,
                                     pointerEvents: mode === 'move' ? 'auto' : 'none',
                                     transition: draggingId === token.id ? 'none' : (isPlaying ? 'all 800ms ease' : 'all 300ms ease'),
-                                    fontSize: token.type === 'ball' ? '1.5rem' : '0',
+                                    fontSize: token.type === 'ball' ? 'calc(1vw + 1vh)' : '0',
                                     outline: (pendingSubstitute && token.type === 'player') ? '3px solid #ff3131' : 'none',
-                                    borderRadius: '50%'
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
                                 onMouseDown={(e) => handleTokenMouseDown(e, token)}
                             >
