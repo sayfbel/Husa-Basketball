@@ -1,17 +1,17 @@
-import MouddenMohamed from '../assets/images/players/MouddenMohamed.jpg';
-import EchraouqiKhalid from '../assets/images/players/EchraouqiKhalid.jpg';
-import EchCharanyMohamed from '../assets/images/players/EchCharanyMohamed.jpg';
-import LaamraniYouness from '../assets/images/players/LaamraniYouness.jpg';
-import GuaouziZoubir from '../assets/images/players/GuaouziZoubir.jpg';
-import ChouaMBarek from '../assets/images/players/ChouaMBarek.jpg';
-import ChouaIsmail from '../assets/images/players/ChouaIsmail.jpg';
-import BentabjaouteYoussef from '../assets/images/players/BentabjaouteYoussef.jpg';
-import BouchentoufRabii from '../assets/images/players/BouchentoufRabii.jpg';
+const MouddenMohamed = 'http://localhost:5000/uploads/MouddenMohamed.jpg';
+const EchraouqiKhalid = 'http://localhost:5000/uploads/EchraouqiKhalid.jpg';
+const EchCharanyMohamed = 'http://localhost:5000/uploads/EchCharanyMohamed.jpg';
+const LaamraniYouness = 'http://localhost:5000/uploads/LaamraniYouness.jpg';
+const GuaouziZoubir = 'http://localhost:5000/uploads/GuaouziZoubir.jpg';
+const ChouaMBarek = 'http://localhost:5000/uploads/ChouaMBarek.jpg';
+const ChouaIsmail = 'http://localhost:5000/uploads/ChouaIsmail.jpg';
+const BentabjaouteYoussef = 'http://localhost:5000/uploads/BentabjaouteYoussef.jpg';
+const BouchentoufRabii = 'http://localhost:5000/uploads/BouchentoufRabii.jpg';
 
 // Placeholders for those without specific images in the import list of Squad page
-import DefaultPlayer from '../assets/images/players/hd-kobe-bryant-legendary-basketball-player-transparent-png-701751712573074r22keaurhi.png';
-import Coach from '../assets/images/players/coach.jpg';
-import President from '../assets/images/players/President.jpg';
+const DefaultPlayer = 'http://localhost:5000/uploads/default.png'; // Reused standard default
+const Coach = 'http://localhost:5000/uploads/coach.jpg';
+const President = 'http://localhost:5000/uploads/President.jpg';
 
 export const users = [
     // --- Technical Staff ---

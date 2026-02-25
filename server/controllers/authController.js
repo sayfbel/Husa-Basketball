@@ -1,4 +1,8 @@
 const db = require('../config/db');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
@@ -8,8 +12,14 @@ exports.login = async (req, res) => {
     }
 
     try {
-        // Query database for user
-        const [rows] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
+        // Query database for user with their photo_url
+        const [rows] = await db.query(`
+            SELECT u.*, COALESCE(p.photo_url, s.photo_url) as photo_url
+            FROM users u
+            LEFT JOIN players p ON u.id = p.id
+            LEFT JOIN staff s ON u.id = s.id
+            WHERE u.username = ?
+        `, [username]);
 
         if (rows.length === 0) {
             console.log(`Login failed: User '${username}' not found.`);
@@ -32,8 +42,7 @@ exports.login = async (req, res) => {
             id: user.id,
             name: user.username,
             role: user.role,
-            // Add image mapping if we had it in DB, but for now frontend handles it?
-            // Actually, if we want to confirm success, we just return basic info.
+            image: user.photo_url || 'http://localhost:5000/uploads/default.png'
         });
 
     } catch (error) {
@@ -49,19 +58,51 @@ exports.addUser = async (req, res) => {
         return res.status(400).json({ message: 'Missing fields' });
     }
 
-    let photoUrl = '/assets/players/default.png';
-    if (req.file) {
-        photoUrl = '/assets/players/' + req.file.filename;
-    }
-
+    let photoUrl = req.body.existingPhotoUrl || 'http://localhost:5000/uploads/default.png';
     const id = `usr_${Date.now()}`;
+
     try {
+        if (req.file) {
+            const originalPath = req.file.path;
+            const bgRemovedFilename = `${id}_nobg.png`;
+            const uploadDir = path.join(__dirname, '../uploads');
+            const bgRemovedPath = path.join(uploadDir, bgRemovedFilename);
+
+            // Execute Python script
+            const venvPythonPath = path.join(__dirname, '../../.venv/Scripts/python.exe');
+            const scriptPath = path.join(__dirname, '../../client/src/context/remove_bg.py');
+
+            await new Promise((resolve, reject) => {
+                const command = `"${venvPythonPath}" "${scriptPath}" "${originalPath}" "${bgRemovedPath}"`;
+                exec(command, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`Python script error: ${error.message}`);
+                        return reject(error);
+                    }
+                    if (stderr) {
+                        console.error(`Python script stderr: ${stderr}`);
+                    }
+                    resolve();
+                });
+            });
+
+            // If success, use the background removed image and delete original
+            photoUrl = 'http://localhost:5000/uploads/' + bgRemovedFilename;
+            fs.unlink(originalPath, (err) => {
+                if (err) console.error("Error deleting original uploaded file:", err);
+            });
+        }
+
         await db.query('INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)', [id, username, password, role]);
 
         if (role === 'Player') {
             await db.query('INSERT INTO players (id, name, position, photo_url) VALUES (?, ?, ?, ?)', [id, username, position || 'Unknown', photoUrl]);
         } else {
-            await db.query('INSERT INTO staff (id, name, role, department, photo_url) VALUES (?, ?, ?, ?, ?)', [id, username, role, 'office', photoUrl]);
+            let department = 'office';
+            if (role === 'Coach') department = 'coaching';
+            if (role === 'Medical') department = 'medical';
+
+            await db.query('INSERT INTO staff (id, name, role, department, photo_url) VALUES (?, ?, ?, ?, ?)', [id, username, role, department, photoUrl]);
         }
 
         res.status(201).json({ message: 'User added successfully', id });
@@ -71,6 +112,43 @@ exports.addUser = async (req, res) => {
             return res.status(400).json({ message: 'Username already exists' });
         }
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.previewBgRemove = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const id = `preview_${Date.now()}`;
+        const originalPath = req.file.path;
+        const bgRemovedFilename = `${id}_nobg.png`;
+        const uploadDir = path.join(__dirname, '../uploads');
+        const bgRemovedPath = path.join(uploadDir, bgRemovedFilename);
+
+        // Execute Python script
+        const venvPythonPath = path.join(__dirname, '../../.venv/Scripts/python.exe');
+        const scriptPath = path.join(__dirname, '../../client/src/context/remove_bg.py');
+
+        await new Promise((resolve, reject) => {
+            const command = `"${venvPythonPath}" "${scriptPath}" "${originalPath}" "${bgRemovedPath}"`;
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Python script error: ${error.message}`);
+                    return reject(error);
+                }
+                resolve();
+            });
+        });
+
+        // If success, return the new image URL and delete original
+        fs.unlink(originalPath, (err) => { });
+
+        res.json({ photoUrl: `http://localhost:5000/uploads/${bgRemovedFilename}` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error processing preview' });
     }
 };
 
@@ -176,18 +254,18 @@ const seedLogic = async () => {
     // --- Players Table Seeding ---
     // Note: Assuming 'photo_url' points to static assets served from client/public or server/public
     const players = [
-        { id: 'pl5', name: "Moudden Mohamed", number: 5, pos: "Guard", img: "/assets/players/MouddenMohamed.jpg", h: "190cm", w: "85kg", age: 24, bio: "Agile playmaker with excellent vision." },
-        { id: 'pl6', name: "Echraouqi Khalid", number: 6, pos: "Forward", img: "/assets/players/EchraouqiKhalid.jpg", h: "198cm", w: "92kg", age: 26, bio: "Strong defensive presence." },
-        { id: 'pl7', name: "Ech Charany Mohamed", number: 7, pos: "Guard", img: "/assets/players/EchCharanyMohamed.jpg", h: "188cm", w: "82kg", age: 23, bio: "Sharp shooter from deep." },
-        { id: 'pl8', name: "Laamrani Youness", number: 8, pos: "Center", img: "/assets/players/LaamraniYouness.jpg", h: "205cm", w: "105kg", age: 28, bio: "Dominant in the paint." },
-        { id: 'pl9', name: "Guaouzi Zoubir", number: 9, pos: "Forward", img: "/assets/players/GuaouziZoubir.jpg", h: "196cm", w: "90kg", age: 25, bio: "Versatile wing player." },
-        { id: 'pl10', name: "Choua M'Barek", number: 10, pos: "Center", img: "/assets/players/ChouaMBarek.jpg", h: "208cm", w: "110kg", age: 29, bio: "Defensive anchor." },
-        { id: 'pl11', name: "Choua Ismail", number: 11, pos: "Forward", img: "/assets/players/ChouaIsmail.jpg", h: "200cm", w: "95kg", age: 27, bio: "Athletic finisher at the rim." },
-        { id: 'pl12', name: "Bentabjaoute Youssef", number: 12, pos: "Guard", img: "/assets/players/BentabjaouteYoussef.jpg", h: "185cm", w: "80kg", age: 22, bio: "Quick and tenacious defender." },
-        { id: 'pl13', name: "Soufiane Banyahya", number: 13, pos: "Forward", img: "/assets/players/default.png", h: "195cm", w: "88kg", age: 24, bio: "Developing talent." },
-        { id: 'pl14', name: "Mouad Chanouni", number: 14, pos: "Guard", img: "/assets/players/default.png", h: "188cm", w: "83kg", age: 23, bio: "Solid backup guard." },
-        { id: 'pl15', name: "Elbika Reda", number: 15, pos: "Forward", img: "/assets/players/default.png", h: "197cm", w: "91kg", age: 25, bio: "Physical forward." },
-        { id: 'pl16', name: "Bouchentouf Rabii", number: 16, pos: "Guard", img: "/assets/players/BouchentoufRabii.jpg", h: "192cm", w: "86kg", age: 26, bio: "Experienced leader." }
+        { id: 'pl5', name: "Moudden Mohamed", number: 5, pos: "Guard", img: "http://localhost:5000/uploads/MouddenMohamed.jpg", h: "190cm", w: "85kg", age: 24, bio: "Agile playmaker with excellent vision." },
+        { id: 'pl6', name: "Echraouqi Khalid", number: 6, pos: "Forward", img: "http://localhost:5000/uploads/EchraouqiKhalid.jpg", h: "198cm", w: "92kg", age: 26, bio: "Strong defensive presence." },
+        { id: 'pl7', name: "Ech Charany Mohamed", number: 7, pos: "Guard", img: "http://localhost:5000/uploads/EchCharanyMohamed.jpg", h: "188cm", w: "82kg", age: 23, bio: "Sharp shooter from deep." },
+        { id: 'pl8', name: "Laamrani Youness", number: 8, pos: "Center", img: "http://localhost:5000/uploads/LaamraniYouness.jpg", h: "205cm", w: "105kg", age: 28, bio: "Dominant in the paint." },
+        { id: 'pl9', name: "Guaouzi Zoubir", number: 9, pos: "Forward", img: "http://localhost:5000/uploads/GuaouziZoubir.jpg", h: "196cm", w: "90kg", age: 25, bio: "Versatile wing player." },
+        { id: 'pl10', name: "Choua M'Barek", number: 10, pos: "Center", img: "http://localhost:5000/uploads/ChouaMBarek.jpg", h: "208cm", w: "110kg", age: 29, bio: "Defensive anchor." },
+        { id: 'pl11', name: "Choua Ismail", number: 11, pos: "Forward", img: "http://localhost:5000/uploads/ChouaIsmail.jpg", h: "200cm", w: "95kg", age: 27, bio: "Athletic finisher at the rim." },
+        { id: 'pl12', name: "Bentabjaoute Youssef", number: 12, pos: "Guard", img: "http://localhost:5000/uploads/BentabjaouteYoussef.jpg", h: "185cm", w: "80kg", age: 22, bio: "Quick and tenacious defender." },
+        { id: 'pl13', name: "Soufiane Banyahya", number: 13, pos: "Forward", img: "http://localhost:5000/uploads/default.png", h: "195cm", w: "88kg", age: 24, bio: "Developing talent." },
+        { id: 'pl14', name: "Mouad Chanouni", number: 14, pos: "Guard", img: "http://localhost:5000/uploads/default.png", h: "188cm", w: "83kg", age: 23, bio: "Solid backup guard." },
+        { id: 'pl15', name: "Elbika Reda", number: 15, pos: "Forward", img: "http://localhost:5000/uploads/default.png", h: "197cm", w: "91kg", age: 25, bio: "Physical forward." },
+        { id: 'pl16', name: "Bouchentouf Rabii", number: 16, pos: "Guard", img: "http://localhost:5000/uploads/BouchentoufRabii.jpg", h: "192cm", w: "86kg", age: 26, bio: "Experienced leader." }
     ];
 
     // 1. UPDATE SCHEMA: Check if role column needs altering from ENUM to VARCHAR
@@ -273,7 +351,7 @@ const seedLogic = async () => {
             name: "Mohamed Haib",
             role: "Head Coach",
             department: "coaching",
-            img: "/assets/players/coach.jpg",
+            img: "http://localhost:5000/uploads/coach.jpg",
             height: "182cm",
             weight: "78kg",
             age: 45,
@@ -284,7 +362,7 @@ const seedLogic = async () => {
             name: "Youssef Abid",
             role: "President",
             department: "office",
-            img: "/assets/players/President.jpg",
+            img: "http://localhost:5000/uploads/President.jpg",
             height: "178cm",
             weight: "80kg",
             age: 52,

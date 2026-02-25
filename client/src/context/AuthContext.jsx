@@ -33,17 +33,9 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (response.ok) {
-                // Merge with local user data to get the image if possible
-                // We find the local user by name to get the image
-                const localUser = users.find(u => u.name.toLowerCase() === name.toLowerCase());
-
-                const userWithImage = {
-                    ...data,
-                    image: localUser ? localUser.image : null
-                };
-
-                setCurrentUser(userWithImage);
-                localStorage.setItem('husa_user', JSON.stringify(userWithImage));
+                // The server now returns the correct role and image directly.
+                setCurrentUser(data);
+                localStorage.setItem('husa_user', JSON.stringify(data));
                 return true;
             } else {
                 return false;

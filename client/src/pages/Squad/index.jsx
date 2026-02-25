@@ -4,8 +4,8 @@ import axios from 'axios';
 
 import './css/squad.css';
 
-import coachImage from '../../assets/images/players/coach.jpg';
-import presidentImage from '../../assets/images/players/President.jpg';
+const coachImage = 'http://localhost:5000/uploads/coach.jpg';
+const presidentImage = 'http://localhost:5000/uploads/President.jpg';
 
 const Squad = () => {
     const [players, setPlayers] = useState([]);

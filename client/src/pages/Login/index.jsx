@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { users } from '../../data/users';
+import axios from 'axios';
 import './Login.css';
 
 // Default silhouette (SVG Base64) to avoid network errors
@@ -16,16 +16,35 @@ const Login = () => {
     const [error, setError] = useState('');
     const [matchedUser, setMatchedUser] = useState(null);
 
+    const [dbUsers, setDbUsers] = useState([]);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/auth/users');
+                const formattedUsers = res.data.map(u => ({
+                    ...u,
+                    name: u.username, // Map DB username to name for display
+                    image: u.photo_url || DEFAULT_AVATAR
+                }));
+                setDbUsers(formattedUsers);
+            } catch (err) {
+                console.error("Could not fetch users for login", err);
+            }
+        };
+        fetchUsers();
+    }, []);
+
     // Effect to check if name matches a known user
     useEffect(() => {
-        if (!name) {
+        if (!name || dbUsers.length === 0) {
             setMatchedUser(null);
             return;
         }
         // Case-insensitive match for partial or full name
-        const found = users.find(u => u.name.toLowerCase() === name.toLowerCase());
+        const found = dbUsers.find(u => u.name.toLowerCase() === name.toLowerCase());
         setMatchedUser(found || null);
-    }, [name]);
+    }, [name, dbUsers]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -39,7 +58,7 @@ const Login = () => {
             // OR simply read from the updated lookup we just did.
 
             // Re-find the user to get the role for redirect
-            const foundUser = users.find(u => u.name.toLowerCase() === name.toLowerCase());
+            const foundUser = dbUsers.find(u => u.name.toLowerCase() === name.toLowerCase());
 
             if (foundUser) {
                 switch (foundUser.role) {

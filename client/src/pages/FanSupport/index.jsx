@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './css/fan.css';
-import RedJerseyFlyer from '../../assets/images/T-shirts/542207433_17887122501357067_4280698276740856535_n..jpg';
-import RedJerseyPhoto from '../../assets/images/T-shirts/540271147_17886699834357067_1641371197587090454_n..jpg';
-import WhiteJerseyFlyer from '../../assets/images/T-shirts/Gemini_Generated_Image_ceomz6ceomz6ceom.png';
-import WhiteJerseyPhoto from '../../assets/images/T-shirts/e37a7414-1b79-4bc6-8769-c7858fbe33b4.png';
+
 import SelectorCard from '../../components/SelectorCard/SelectorCard';
 
 import husaLogo from '../../assets/images/husa_logo.jpg';

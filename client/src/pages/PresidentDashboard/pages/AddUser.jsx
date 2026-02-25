@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { Shield, Plus, UserPlus, FileText, Check, Edit2, Trash2, X } from 'lucide-react';
+import { Shield, Plus, UserPlus, FileText, Check, Edit2, Trash2, X, Upload, Loader2 } from 'lucide-react';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import TacticalModal from '../../../components/UI/TacticalModal';
 import '../../../css/dashboard.css';
@@ -18,7 +18,32 @@ const AddUser = () => {
         position: 'Guard'
     });
     const [photoFile, setPhotoFile] = useState(null);
+    const [photoUrl, setPhotoUrl] = useState('');
+    const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setPhotoFile(file);
+        setPhotoUrl('');
+        setIsProcessingPhoto(true);
+
+        const uploadData = new FormData();
+        uploadData.append('photo', file);
+
+        try {
+            const res = await axios.post('http://localhost:5000/api/auth/preview-bg-remove', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setPhotoUrl(res.data.photoUrl);
+        } catch (error) {
+            console.error('Error in background removal:', error);
+        } finally {
+            setIsProcessingPhoto(false);
+        }
+    };
 
     // Users list and edit state
     const [users, setUsers] = useState([]);
@@ -55,7 +80,9 @@ const AddUser = () => {
             if (formData.role === 'Player') {
                 data.append('position', formData.position);
             }
-            if (photoFile) {
+            if (photoUrl) {
+                data.append('existingPhotoUrl', photoUrl);
+            } else if (photoFile) {
                 data.append('photo', photoFile);
             }
 
@@ -65,6 +92,7 @@ const AddUser = () => {
             setStatus({ type: 'success', message: 'Club user added successfully.' });
             setFormData({ username: '', password: '', role: 'Player', position: 'Guard' });
             setPhotoFile(null);
+            setPhotoUrl('');
 
             // Auto reload users list natively
             fetchUsers();
@@ -182,6 +210,7 @@ const AddUser = () => {
                                         <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: 'bold', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>FULL NAME (USERNAME)</label>
                                         <input
                                             type="text"
+                                            autoComplete="username"
                                             placeholder="Enter precise personnel name..."
                                             value={formData.username}
                                             onChange={e => setFormData({ ...formData, username: e.target.value })}
@@ -195,6 +224,7 @@ const AddUser = () => {
                                             <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: 'bold', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>SECURITY PASSWORD</label>
                                             <input
                                                 type="password"
+                                                autoComplete="new-password"
                                                 placeholder="Assign physical access code..."
                                                 value={formData.password}
                                                 onChange={e => setFormData({ ...formData, password: e.target.value })}
@@ -214,24 +244,52 @@ const AddUser = () => {
 
                                         <div className="form-group-refined" style={{ gridColumn: 'span 2' }}>
                                             <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: 'bold', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>PERSONNEL PHOTO (OPTIONAL)</label>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={e => setPhotoFile(e.target.files[0])}
-                                                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '15px', width: '100%', fontSize: '1rem' }}
-                                            />
-                                        </div>
-
-                                        {formData.role === 'Player' && (
-                                            <div className="form-group-refined" style={{ gridColumn: 'span 2' }}>
-                                                <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: 'bold', letterSpacing: '2px', display: 'block', marginBottom: '10px' }}>PLAYER POSITION</label>
-                                                <SelectorCard
-                                                    value={formData.position}
-                                                    onChange={val => setFormData({ ...formData, position: val })}
-                                                    options={positions.map(p => ({ label: p.toUpperCase(), value: p }))}
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="file"
+                                                    id="personnel-photo-upload"
+                                                    accept="image/*"
+                                                    onChange={handlePhotoChange}
+                                                    disabled={isProcessingPhoto}
+                                                    style={{ display: 'none' }}
                                                 />
+                                                <label
+                                                    htmlFor="personnel-photo-upload"
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '10px',
+                                                        background: 'rgba(0,0,0,0.3)',
+                                                        border: '1px dashed rgba(219, 10, 64, 0.5)',
+                                                        color: (photoUrl || photoFile || isProcessingPhoto) ? '#DB0A40' : '#888',
+                                                        padding: '15px',
+                                                        width: '100%',
+                                                        fontSize: '0.9rem',
+                                                        cursor: isProcessingPhoto ? 'wait' : 'pointer',
+                                                        transition: 'all 0.3s ease',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px',
+                                                        fontWeight: 'bold',
+                                                        opacity: isProcessingPhoto ? 0.7 : 1
+                                                    }}
+                                                    onMouseEnter={e => !isProcessingPhoto && (e.currentTarget.style.background = 'rgba(219, 10, 64, 0.05)')}
+                                                    onMouseLeave={e => !isProcessingPhoto && (e.currentTarget.style.background = 'rgba(0,0,0,0.3)')}
+                                                >
+                                                    {isProcessingPhoto ? (
+                                                        <>
+                                                            <Loader2 size={18} className="animate-spin" />
+                                                            REMOVING BACKGROUND...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Upload size={18} />
+                                                            {photoFile ? photoFile.name : 'CHOOSE IMAGE FILE'}
+                                                        </>
+                                                    )}
+                                                </label>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="form-actions-refined" style={{ marginTop: '30px' }}>
@@ -246,9 +304,43 @@ const AddUser = () => {
                 </div>
 
                 {/* Right Column: List of Users Network */}
-                <div className="report-feed-column" style={{ marginLeft: '1rem' }}>
+                <div className="report-feed-column full-custom-scroll" style={{ marginLeft: '1rem', maxHeight: '720px', overflowY: 'auto', paddingRight: '10px' }}>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                    <div style={{
+                        display: 'grid', padding: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px'
+                    }}>
+                        {/* LIVE PREVIEW CARD */}
+                        {(photoUrl || photoFile) && (
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    aspectRatio: '3/4',
+                                    borderRadius: '0',
+                                    overflow: 'hidden',
+                                    background: '#111',
+                                    border: '2px dashed #DB0A40',
+                                    transition: 'all 0.4s ease',
+                                    boxShadow: '0 10px 30px rgba(219, 10, 64, 0.2)'
+                                }}
+                            >
+                                <img
+                                    src={photoUrl || URL.createObjectURL(photoFile)}
+                                    alt="Preview"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <div style={{
+                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                    background: 'linear-gradient(to top, rgba(219,10,64,0.9), transparent)',
+                                    display: 'flex', flexDirection: 'column',
+                                    justifyContent: 'flex-end', padding: '15px',
+                                }}>
+                                    <span style={{ fontSize: '0.6rem', background: '#DB0A40', color: '#fff', padding: '2px 6px', width: 'fit-content', marginBottom: '5px', fontWeight: 'bold' }}>PREVIEW</span>
+                                    <span style={{ fontSize: '0.7rem', color: '#fff', letterSpacing: '2px', fontWeight: 'bold' }}>{formData.role?.toUpperCase()}</span>
+                                    <h4 style={{ margin: '5px 0 0 0', color: '#fff', fontSize: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{formData.username || 'NEW USER'}</h4>
+                                </div>
+                            </div>
+                        )}
+
                         {users.map(user => (
                             <div
                                 key={user.id}
@@ -257,26 +349,28 @@ const AddUser = () => {
                                     position: 'relative',
                                     aspectRatio: '3/4',
                                     cursor: 'pointer',
-                                    borderRadius: '8px',
+                                    borderRadius: '0', /* No border radius for sharp fashion look like Squad */
                                     overflow: 'hidden',
-                                    background: '#1a1a1a',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    transition: 'transform 0.2s ease'
+                                    background: '#111',
+                                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                                    transition: 'all 0.4s ease'
                                 }}
                                 onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'scale(1.02)';
+                                    e.currentTarget.style.borderColor = '#DB0A40';
+                                    e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.5)';
                                     e.currentTarget.children[1].style.opacity = 1;
                                 }}
                                 onMouseLeave={e => {
-                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                                    e.currentTarget.style.boxShadow = 'none';
                                     e.currentTarget.children[1].style.opacity = 0;
                                 }}
                             >
                                 <img
-                                    src={user.photo_url || '/assets/players/default.png'}
+                                    src={user.photo_url || 'http://localhost:5000/uploads/default.png'}
                                     alt={user.username}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    onError={(e) => { e.target.src = '/assets/players/default.png'; }}
+                                    onError={(e) => { e.target.src = 'http://localhost:5000/uploads/default.png'; }}
                                 />
                                 {/* Hover Overlay */}
                                 <div style={{
@@ -371,6 +465,7 @@ const AddUser = () => {
                                     <label style={{ display: 'block', color: '#888', marginBottom: '8px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Full Name (Username)</label>
                                     <input
                                         type="text"
+                                        autoComplete="username"
                                         value={editFormData.username}
                                         onChange={e => setEditFormData({ ...editFormData, username: e.target.value })}
                                         required
@@ -385,6 +480,7 @@ const AddUser = () => {
                                     <label style={{ display: 'block', color: '#888', marginBottom: '8px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>New Password (Optional)</label>
                                     <input
                                         type="password"
+                                        autoComplete="new-password"
                                         value={editFormData.password}
                                         onChange={e => setEditFormData({ ...editFormData, password: e.target.value })}
                                         placeholder="Leave blank to keep unchanged..."

@@ -56,15 +56,16 @@
 
 /* Dropdown Options Container */
 .options {
-    position: fixed;
-    width: auto;
+    position: absolute;
+    width: 100%;
+    max-height: 400px;
     background: #0f0f0f;
     border-radius: 14px;
     margin-top: 8px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     display: none;
     /* Hidden by default */
-    overflow: hidden;
+    overflow-y: auto;
     z-index: 10;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     /* Added subtle shadow for depth */
@@ -104,4 +105,23 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Custom Scrollbar for Options Dropdown */
+.options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.options::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.options::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.options::-webkit-scrollbar-thumb:hover {
+    background: rgba(219, 10, 64, 0.5);
+    /* Matches dashboard primary */
 }

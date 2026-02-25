@@ -75,7 +75,6 @@ exports.initTable = async () => {
             await db.query('ALTER TABLE match_schedule ADD UNIQUE KEY unique_external_id (external_id)');
         } catch (err) { }
 
-<<<<<<< HEAD
         // 4. Match Intel Table
         await db.query(`
             CREATE TABLE IF NOT EXISTS match_intel (
@@ -87,8 +86,6 @@ exports.initTable = async () => {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
-=======
->>>>>>> b0cd6d729bb4fd4f79fcf23481aaf5f0ec81be87
 
         console.log('Match tables initialized');
     } catch (error) {
@@ -414,7 +411,6 @@ exports.getPlayerMatches = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
 // Save Match Intel (Report, Stats, Images)
 exports.saveIntel = async (req, res) => {
     try {
@@ -467,5 +463,3 @@ exports.getIntel = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch intel', error: error.message });
     }
 };
-=======
->>>>>>> b0cd6d729bb4fd4f79fcf23481aaf5f0ec81be87

@@ -19,6 +19,7 @@ import {
     Shield
 } from 'lucide-react';
 import { useNotification } from '../../../components/Notification/Notification.jsx';
+import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 
 const Profile = () => {
     const { currentUser } = useAuth();
@@ -139,7 +140,7 @@ const Profile = () => {
 
             <div className="dashboard-grid" style={{ alignItems: 'flex-start' }}>
                 {/* Identity Card */}
-                <div className="intel-card" style={{ gridColumn: 'span 3', display: 'flex', flexDirection: 'column', padding: '3rem' }}>
+                <div className="intel-card" style={{ gridColumn: 'span 3', display: 'flex', flexDirection: 'column', padding: '3rem', overflow: 'visible' }}>
                     <div style={{ display: 'flex', gap: '50px', alignItems: 'flex-start' }}>
                         {/* Left Side: Photo & Quick Stats */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '280px', flexShrink: 0 }}>
@@ -229,11 +230,10 @@ const Profile = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div>
                                             <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>PRIMARY POSITION</label>
-                                            <input
-                                                type="text"
+                                            <SelectorCard
+                                                options={['Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center', 'Guard', 'Forward']}
                                                 value={playerData.position}
-                                                onChange={(e) => setPlayerData({ ...playerData, position: e.target.value })}
-                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '0' }}
+                                                onChange={(val) => setPlayerData({ ...playerData, position: val })}
                                             />
                                         </div>
                                         <div>

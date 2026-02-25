@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../../client/public/assets/players');
+const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -30,6 +30,9 @@ router.get('/seed', authController.seedUsers);
 
 // POST /api/auth/add-user
 router.post('/add-user', upload.single('photo'), authController.addUser);
+
+// POST /api/auth/preview-bg-remove
+router.post('/preview-bg-remove', upload.single('photo'), authController.previewBgRemove);
 
 // GET /api/auth/users
 router.get('/users', authController.getUsers);
