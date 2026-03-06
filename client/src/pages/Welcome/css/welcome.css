@@ -1,7 +1,7 @@
 /* welcome.css */
 .welcome-page {
     position: relative;
-    padding: 6rem 0;
+    padding: 6rem 0 0 0;
     overflow: hidden;
     background-color: var(--secondary-color);
     min-height: 100vh;

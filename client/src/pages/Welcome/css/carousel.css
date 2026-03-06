@@ -180,21 +180,13 @@
     .carousel-container {
         padding: 0;
         /* Remove container padding */
-        margin: 2rem auto;
+        margin: 1rem auto;
     }
 
     .carousel-slide {
         margin: 0 auto;
-        /* Center single slides if they stack, though flex handles track */
-        /* Force centering in the view port if logic allows */
-        /* The existing flex logic should work if the track is centered or if slides are wide enough */
-        flex: 0 0 90%;
-        /* Make slightly wider */
-        left: 5%;
-        /* Offset to center the 90% width (100-90)/2 = 5% */
-        /* Note: 'left' works because they are relative positioned in a flex container? No, flex items ignore 'left' unless absolute. */
-        /* Better approach for centering in a flex track depending on implementation: */
-        /* If track translates, we just need the slide width. */
+        flex: 0 0 92%;
+        height: 350px;
     }
 
     .carousel-track {

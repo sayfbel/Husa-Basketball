@@ -95,7 +95,7 @@ const InstaCarousel = () => {
 
     // Robust Pixel-Based Centering
     const effectiveWidth = dimensions.width;
-    const rawSlideWidth = effectiveWidth * (dimensions.isMobile ? 0.85 : 0.60);
+    const rawSlideWidth = effectiveWidth * (dimensions.isMobile ? 0.92 : 0.60);
     const slideWidthPx = Math.min(rawSlideWidth, 600);
     const centerOffsetPx = (effectiveWidth - slideWidthPx) / 2;
     const translateX = centerOffsetPx - (currentIndex * slideWidthPx);

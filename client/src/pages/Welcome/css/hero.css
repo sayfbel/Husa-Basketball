@@ -20,6 +20,7 @@
     margin-bottom: 1rem;
     background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.5) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-transform: uppercase;
 }
@@ -41,9 +42,27 @@
 }
 
 @media (max-width: 768px) {
+    .hero-wrapper {
+        padding: 6rem 1rem 2rem 1rem;
+        justify-content: flex-start;
+        min-height: auto;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;
+    }
+
     .hero-buttons {
         flex-direction: column;
         width: 100%;
         max-width: 300px;
+        margin-top: 2rem;
     }
 }

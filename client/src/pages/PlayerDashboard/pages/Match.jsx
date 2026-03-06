@@ -327,7 +327,7 @@ const Match = () => {
                                         </div>
                                         <h2 className="hero-opponent">VS {nextMatch.opponent}</h2>
                                         <div className="hero-meta">
-                                            <span><MapPin size={14} /> {nextMatch.location}</span>
+                                            <span><MapPin size={14} /> {nextMatch.location || 'Location TBD'}</span>
                                             <span><Clock size={14} /> {formatTime(nextMatch.date)}</span>
                                         </div>
                                     </div>
@@ -353,7 +353,7 @@ const Match = () => {
                                             </div>
                                             <div className="card-info-v2">
                                                 <h4>{match.opponent}</h4>
-                                                <p>{match.location.split(',')[0]}</p>
+                                                <p>{match.location ? match.location.split(',')[0] : 'Location TBD'}</p>
                                             </div>
                                             {match.score && match.score !== '-' && (
                                                 <div className="card-score-v2">{match.score}</div>

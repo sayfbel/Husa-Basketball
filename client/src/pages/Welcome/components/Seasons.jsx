@@ -111,31 +111,19 @@ const Seasons = () => {
                     {/* 2024-2025 Card */}
                     <div className="season-card">
                         <div className="season-header">
-                            <span className="season-year">2024-2025</span>
+                            <span className="season-year" style={{ fontSize: '2rem' }}>2024-2025</span>
                             <span className="season-badge" style={{ background: 'rgba(227, 24, 55, 0.2)', color: '#E31837' }}>Current Season</span>
                         </div>
-                        <div className="stats-grid">
+                        <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                             <div className="stat-item">
-                                <h4>League Rank</h4>
+                                <h4>Rank</h4>
                                 <div className="stat-value">1st</div>
-                                <div className="stat-trend trend-up">
-                                    <span className="material-icons-outlined" style={{ fontSize: '14px' }}>arrow_upward</span> Group 4
-                                </div>
+                                <div className="stat-trend">Group 4</div>
                             </div>
                             <div className="stat-item">
                                 <h4>Record</h4>
                                 <div className="stat-value">11-3</div>
                                 <div className="stat-trend trend-up">25 Pts</div>
-                            </div>
-                            <div className="stat-item">
-                                <h4>Points Scored</h4>
-                                <div className="stat-value">905</div>
-                                <div className="stat-trend trend-up">+109 Diff</div>
-                            </div>
-                            <div className="stat-item">
-                                <h4>Points Per Game</h4>
-                                <div className="stat-value">64.6</div>
-                                <div className="stat-trend">High Offense</div>
                             </div>
                         </div>
                     </div>
