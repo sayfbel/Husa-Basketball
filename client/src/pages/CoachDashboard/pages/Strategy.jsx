@@ -59,13 +59,33 @@ const MiniCourtPreview = ({ tactic }) => {
                     <>
                         <line x1="500" y1="0" x2="500" y2="560" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
                         <circle cx="500" cy="280" r="70" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <rect x="0" y="205" width="190" height="150" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <rect x="810" y="205" width="190" height="150" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <g stroke="#DB0A40" strokeWidth="3" fill="none" opacity="0.15">
+                            <line x1="190" y1="205" x2="190" y2="355" />
+                            <path d="M 190,205 A 75,75 0 0 1 190,355" />
+                            <line x1="810" y1="205" x2="810" y2="355" />
+                            <path d="M 810,205 A 75,75 0 0 0 810,355" />
+                        </g>
                         <path d="M 0 450 Q 300 280 0 110" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
                         <path d="M 1000 450 Q 700 280 1000 110" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+
+                        {/* Rims for Mini Preview */}
+                        <g stroke="#DB0A40" strokeWidth="3" fill="none" opacity="0.2">
+                            <line x1="25" y1="250" x2="25" y2="310" />
+                            <circle cx="45" cy="280" r="10" />
+                            <line x1="975" y1="250" x2="975" y2="310" />
+                            <circle cx="955" cy="280" r="10" />
+                        </g>
                     </>
                 ) : (
                     <>
                         <path d="M 0 350 Q 250 205 0 60" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
                         <rect x="0" y="150" width="160" height="100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
+                        <g stroke="#DB0A40" strokeWidth="3" fill="none" opacity="0.2">
+                            <line x1="15" y1="180" x2="15" y2="220" />
+                            <circle cx="35" cy="200" r="8" />
+                        </g>
                     </>
                 )}
 
@@ -259,7 +279,7 @@ const Strategy = () => {
 
             {/* Workspaces */}
             <TacticalWorkspace
-                title="Design Lab"
+                title="TACTICAL PROJECTION BOARD"
                 type="full"
                 showNotification={showNotification}
                 showConfirm={showConfirm}
@@ -300,7 +320,7 @@ const Strategy = () => {
             </div>
 
             <TacticalWorkspace
-                title="Half Court Drill"
+                title="TACTICAL PROJECTION BOARD [HALF]"
                 type="half"
                 showNotification={showNotification}
                 showConfirm={showConfirm}

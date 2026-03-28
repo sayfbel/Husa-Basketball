@@ -30,7 +30,7 @@ const TacticalModal = ({ isOpen, onClose, children, style = {} }) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #DB0A40, transparent)', opacity: 0.5 }}></div>
 
                 {/* Content Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 30%) 1fr', flex: 1, height: '100%', overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', flex: 1, height: '100%', overflow: 'hidden', gap: 0 }}>
                     {children}
                 </div>
             </div>

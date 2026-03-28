@@ -32,7 +32,7 @@ app.use('/api/staff', require('./routes/staffRoutes'));
 app.use('/api/rankings', require('./routes/rankingRoutes'));
 app.use('/api/ocr', require('./routes/ocrRoutes'));
 
-// app.use('/api/news', require('./routes/news'));
+app.use('/api/news', require('./routes/newsRoutes'));
 
 // Auto-seed users on startup
 const authController = require('./controllers/authController');
@@ -44,6 +44,7 @@ const reservationController = require('./controllers/reservationController');
 const storeReservationController = require('./controllers/storeReservationController');
 const reportController = require('./controllers/reportController');
 const rankingController = require('./controllers/rankingController');
+const newsController = require('./controllers/newsController');
 const storeController = require('./controllers/storeController');
 
 app.use('/api/strategies', require('./routes/strategyRoutes'));
@@ -63,6 +64,7 @@ app.listen(PORT, async () => {
         await reportController.initTable();
         await rankingController.initTable();
         await rankingController.scrapeAndSave(); // Initial scrape if empty
+        await newsController.initTable(); // Initialize News Table
 
     } catch (err) {
 
