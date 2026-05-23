@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import TacticalWorkspace from './TacticalWorkspace.jsx';
 import '../../../css/dashboard.css';
 import '../css/strategy.css';

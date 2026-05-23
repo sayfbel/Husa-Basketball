@@ -33,6 +33,11 @@ const storeController = {
             console.log('Store Products table initialized');
             await storeController.seedProducts();
         } catch (error) {
+            if (error.errno === 1932) {
+                console.error('Recovering store_products table from engine error...');
+                try { await db.query('DROP TABLE IF EXISTS store_products'); } catch (e) {}
+                return await storeController.initTable();
+            }
             console.error('Error initializing store_products table:', error);
         }
     },
@@ -48,7 +53,7 @@ const storeController = {
                         price: 150.00,
                         description: 'Official promotional kit for HUSA Basketball fans. Red Home Color.',
                         category: 'Kit',
-                        image_url: JSON.stringify(['/assets/store/542207433_17887122501357067_4280698276740856535_n..jpg']),
+                        image_url: JSON.stringify(['http://localhost:5000/uploads/shop/images-1771372767981-193798124.jpg']),
                         in_stock: true
                     },
                     {
@@ -57,7 +62,7 @@ const storeController = {
                         price: 150.00,
                         description: 'Official promotional kit for HUSA Basketball fans. White Away Color.',
                         category: 'Kit',
-                        image_url: JSON.stringify(['/assets/store/Gemini_Generated_Image_ceomz6ceomz6ceom.png']),
+                        image_url: JSON.stringify(['http://localhost:5000/uploads/shop/images-1771372775891-14020844.png']),
                         in_stock: true
                     },
                     {
@@ -66,7 +71,7 @@ const storeController = {
                         price: 250.00,
                         description: 'Authentic match kit worn by HUSA players. Red Home Color.',
                         category: 'Kit',
-                        image_url: JSON.stringify(['/assets/store/540271147_17886699834357067_1641371197587090454_n..jpg']),
+                        image_url: JSON.stringify(['http://localhost:5000/uploads/shop/images-1771372748821-139423611.jpg']),
                         in_stock: true
                     },
                     {
@@ -75,7 +80,7 @@ const storeController = {
                         price: 250.00,
                         description: 'Authentic match kit worn by HUSA players. White Away Color.',
                         category: 'Kit',
-                        image_url: JSON.stringify(['/assets/store/e37a7414-1b79-4bc6-8769-c7858fbe33b4.png']),
+                        image_url: JSON.stringify(['http://localhost:5000/uploads/shop/images-1771372757772-435214219.png']),
                         in_stock: true
                     }
                 ];
@@ -118,7 +123,7 @@ const storeController = {
         if (req.body.image_order) {
             try {
                 const order = JSON.parse(req.body.image_order);
-                const uploadedFiles = req.files ? req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`) : [];
+                const uploadedFiles = req.files ? req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/shop/${file.filename}`) : [];
                 let fileIndex = 0;
 
                 imageUrls = order.map(token => {
@@ -134,12 +139,12 @@ const storeController = {
             } catch (e) {
                 console.error("Error parsing image_order", e);
                 // Fallback
-                if (req.files) imageUrls = req.files.map(f => `${req.protocol}://${req.get('host')}/uploads/${f.filename}`);
+                if (req.files) imageUrls = req.files.map(f => `${req.protocol}://${req.get('host')}/uploads/shop/${f.filename}`);
             }
         } else {
             // Legacy/Fallback behavior
             if (req.files && req.files.length > 0) {
-                imageUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`);
+                imageUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/shop/${file.filename}`);
             } else if (req.body.image_url) {
                 imageUrls = [req.body.image_url];
             }
@@ -173,7 +178,7 @@ const storeController = {
             // New Manifest Logic
             try {
                 const order = JSON.parse(req.body.image_order);
-                const uploadedFiles = req.files ? req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`) : [];
+                const uploadedFiles = req.files ? req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/shop/${file.filename}`) : [];
                 let fileIndex = 0;
 
                 imageUrls = order.map(token => {
@@ -191,7 +196,7 @@ const storeController = {
             }
         } else if (req.files && req.files.length > 0) {
             // Legacy overwrite logic
-            imageUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`);
+            imageUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/shop/${file.filename}`);
         } else if (req.body.image_url) {
             // Manual URL override logic
             try {

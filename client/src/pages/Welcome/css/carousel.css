@@ -220,7 +220,7 @@
     padding: 2rem;
 }
 
-.news-header {
+.news-card-content .news-header {
     margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
@@ -232,10 +232,11 @@
     transition: all 0.5s ease 0.1s;
 }
 
-.active-slide .news-header {
+.active-slide .news-card-content .news-header {
     transform: translateY(0);
     opacity: 1;
 }
+
 
 .news-tag {
     background: var(--primary-color);

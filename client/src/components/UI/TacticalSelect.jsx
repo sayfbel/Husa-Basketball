@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-const TacticalSelect = ({ name, value, onChange, options, placeholder = "SELECT OPTION" }) => {
+const TacticalSelect = ({ name, value, onChange, options, placeholder = "SELECT OPTION", direction = "down" }) => {
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef(null);
 
@@ -58,10 +58,12 @@ const TacticalSelect = ({ name, value, onChange, options, placeholder = "SELECT 
 
             {isOpen && (
                 <div className="tactical-dropdown animate-fade-in" style={{
-                    position: 'absolute', top: '100%', left: 0, width: '100%',
-                    background: '#080808', border: '1px solid rgba(255,255,255,0.1)', borderTop: 'none',
+                    position: 'absolute', 
+                    ...(direction === 'up' ? { bottom: '100%', borderBottom: 'none' } : { top: '100%', borderTop: 'none' }),
+                    left: 0, width: '100%',
+                    background: '#080808', border: '1px solid rgba(255,255,255,0.1)',
                     maxHeight: '250px', overflowY: 'auto', zIndex: 100,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.8)'
+                    boxShadow: direction === 'up' ? '0 -10px 30px rgba(0,0,0,0.8)' : '0 10px 30px rgba(0,0,0,0.8)'
                 }}>
                     {options.map((option) => (
                         <div

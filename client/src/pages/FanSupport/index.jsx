@@ -32,9 +32,9 @@ const FanSupport = () => {
         const fetchData = async () => {
             try {
                 const [matchRes, rankRes, storeRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/matches/schedule'),
-                    axios.get('http://localhost:5000/api/rankings'),
-                    axios.get('http://localhost:5000/api/store')
+                    axios.get('http://127.0.0.1:5000/api/matches/schedule'),
+                    axios.get('http://127.0.0.1:5000/api/rankings'),
+                    axios.get('http://127.0.0.1:5000/api/store')
                 ]);
 
                 setMatches(matchRes.data || []);
@@ -128,7 +128,7 @@ const FanSupport = () => {
             color: formData.color
         };
 
-        axios.post('http://localhost:5000/api/store-reservations', orderData)
+        axios.post('http://127.0.0.1:5000/api/store-reservations', orderData)
             .then(res => {
                 setIsModalOpen(false);
                 // Reset form

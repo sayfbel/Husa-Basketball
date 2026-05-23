@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import {
     Send,
     User,

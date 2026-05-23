@@ -4,18 +4,17 @@ import '../../css/dashboard.css'; // Shared premium style
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 
 // Import Sub-Pages
-// Import Sub-Pages
 import Overview from './pages/Overview';
 import Profile from './pages/Profile';
 import Match from './pages/Match';
 import Report from './pages/Report';
 import NewMembers from './pages/NewMembers';
-import StoreManager from './pages/StoreManager';
 import AddUser from './pages/AddUser';
+import Tshirts from './pages/Tshirts';
 
 
 const PresidentDashboard = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, logout } = useAuth();
 
     return (
         <div className="dashboard-container container animate-fade-in">
@@ -25,7 +24,6 @@ const PresidentDashboard = () => {
                         <h1>Welcome, President {currentUser?.name?.split(' ')[0]}</h1>
                         <p className="subtitle">Club oversight and executive operations center.</p>
                     </div>
-                    <div className="role-tag president-tag animate-slide-right">Club President</div>
                 </div>
 
                 {/* Navigation Menu */}
@@ -38,10 +36,10 @@ const PresidentDashboard = () => {
                         Overview
                     </NavLink>
                     <NavLink
-                        to="/dashboard/president/store"
+                        to="/dashboard/president/tshirts"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Store
+                        T-Shirts
                     </NavLink>
                     <NavLink
                         to="/dashboard/president/profile"
@@ -83,8 +81,8 @@ const PresidentDashboard = () => {
                     <Route path="match" element={<Match />} />
                     <Route path="report" element={<Report />} />
                     <Route path="new-members" element={<NewMembers />} />
-                    <Route path="store" element={<StoreManager />} />
                     <Route path="add-user" element={<AddUser />} />
+                    <Route path="tshirts" element={<Tshirts />} />
                     {/* Placeholder routes for future expansion */}
                     <Route path="financials" element={<div className="glass-card p-4">Financial Oversight Module Coming Soon</div>} />
                 </Routes>

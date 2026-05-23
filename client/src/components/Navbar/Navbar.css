@@ -408,3 +408,266 @@
         height: 32px;
     }
 }
+
+/* ==========================================================================
+   Account Profile Dropdown Styles
+   ========================================================================== */
+.account-dropdown-wrapper {
+    position: relative;
+}
+
+.account-link {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-transform: none !important; /* Preserves first name casing */
+    padding: 0.3rem 0 !important;
+    border-radius: 0 !important; /* Sharp square corners */
+    background: transparent !important;
+    border: none !important;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.account-link:hover {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    opacity: 0.85;
+}
+
+.account-link::after {
+    display: none !important; /* Disable default dot indicator */
+    content: none !important;
+}
+
+.account-avatar-container {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 0 !important; /* Sharp square corners */
+    padding: 2px;
+    background: linear-gradient(135deg, var(--primary-color), #ff4d6d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.account-link:hover .account-avatar-container {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(227, 24, 55, 0.5);
+}
+
+.account-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0 !important; /* Sharp square corners */
+    background: #111;
+    border: 1.5px solid #111;
+}
+
+.account-status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 9px;
+    height: 9px;
+    border-radius: 0 !important; /* Sharp square corners */
+    background: #00e676; /* Vibrant online green */
+    border: 1.5px solid #111;
+    box-shadow: 0 0 6px #00e676;
+}
+
+.account-name-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
+}
+
+.account-chevron {
+    font-size: 1.1rem !important;
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.account-link:hover .account-chevron {
+    color: white;
+}
+
+.account-dropdown-wrapper:hover .account-chevron {
+    transform: rotate(180deg);
+}
+
+/* Account Dropdown Card */
+.account-dropdown-card {
+    min-width: 250px !important;
+    padding: 1.2rem !important;
+    transform: translateX(-50%) translateY(15px) !important;
+    border-radius: 0 !important; /* Sharp square corners */
+}
+
+.account-dropdown-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0.2rem 0.5rem 0.5rem 0.5rem;
+}
+
+.account-dropdown-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.2px;
+}
+
+.account-role-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 0 !important; /* Sharp square corners */
+}
+
+.player-badge {
+    background: rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.coach-badge {
+    background: rgba(255, 87, 34, 0.1);
+    color: #FF5722;
+    border: 1px solid rgba(255, 87, 34, 0.2);
+}
+
+.president-badge {
+    background: rgba(255, 215, 0, 0.1);
+    color: #FFD700;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.socialmedia-badge {
+    background: rgba(186, 104, 200, 0.1);
+    color: #BA68C8;
+    border: 1px solid rgba(186, 104, 200, 0.2);
+}
+
+.account-dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0.8rem 0;
+    width: 100%;
+}
+
+.account-dropdown-card a {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 10px 12px !important;
+    border-radius: 0 !important; /* Sharp square corners */
+    transition: all 0.2s ease !important;
+}
+
+.account-dropdown-card a span {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.2s ease;
+}
+
+.account-dropdown-card a:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--primary-color) !important;
+    transform: translateX(4px) !important;
+}
+
+.account-dropdown-card a:hover span {
+    color: var(--primary-color);
+}
+
+.account-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: rgba(227, 24, 55, 0.08);
+    border: 1px solid rgba(227, 24, 55, 0.15);
+    color: #ff4d6d;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 0 !important; /* Sharp square corners */
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.25s ease;
+}
+
+.account-logout-btn span {
+    font-size: 1.15rem;
+}
+
+.account-logout-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(227, 24, 55, 0.35);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Account Profile Dropdown Mobile Adjustments
+   ========================================================================== */
+@media (max-width: 768px) {
+    .account-dropdown-wrapper {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .account-link {
+        width: 80% !important;
+        justify-content: center;
+        padding: 0.6rem 1.2rem !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .account-dropdown-card {
+        position: static !important;
+        width: 80% !important;
+        transform: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        box-shadow: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+        border-radius: 0 !important; /* Sharp square corners */
+        margin-top: 10px;
+        padding: 1rem !important;
+    }
+
+    .account-dropdown-header {
+        align-items: center;
+        text-align: center;
+    }
+
+    .account-role-badge {
+        align-self: center;
+    }
+
+    .account-dropdown-card a {
+        justify-content: center;
+    }
+
+    .account-logout-btn {
+        justify-content: center;
+    }
+}

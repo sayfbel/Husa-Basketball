@@ -4,6 +4,14 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Global crash prevention handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception thrown:', err);
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -33,6 +41,7 @@ app.use('/api/rankings', require('./routes/rankingRoutes'));
 app.use('/api/ocr', require('./routes/ocrRoutes'));
 
 app.use('/api/news', require('./routes/newsRoutes'));
+app.use('/api/tshirts', require('./routes/tshirtRoutes'));
 
 // Auto-seed users on startup
 const authController = require('./controllers/authController');
@@ -46,6 +55,7 @@ const reportController = require('./controllers/reportController');
 const rankingController = require('./controllers/rankingController');
 const newsController = require('./controllers/newsController');
 const storeController = require('./controllers/storeController');
+const tshirtController = require('./controllers/tshirtController');
 
 app.use('/api/strategies', require('./routes/strategyRoutes'));
 app.use('/api/store', require('./routes/storeRoutes'));
@@ -53,6 +63,7 @@ app.use('/api/store', require('./routes/storeRoutes'));
 app.listen(PORT, async () => {
     // console.log(`Server running on port ${PORT}`);
     try {
+        await authController.initTable();
         await authController.seedUsers();
         await strategyController.initTable();
         await tryoutController.initTable();
@@ -65,6 +76,7 @@ app.listen(PORT, async () => {
         await rankingController.initTable();
         await rankingController.scrapeAndSave(); // Initial scrape if empty
         await newsController.initTable(); // Initialize News Table
+        await tshirtController.initTable(); // Initialize Tshirts Table
 
     } catch (err) {
 

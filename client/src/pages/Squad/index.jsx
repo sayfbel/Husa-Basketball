@@ -4,8 +4,7 @@ import axios from 'axios';
 
 import './css/squad.css';
 
-const coachImage = 'http://localhost:5000/uploads/coach.jpg';
-const presidentImage = 'http://localhost:5000/uploads/President.jpg';
+
 
 const Squad = () => {
     const [players, setPlayers] = useState([]);
@@ -26,7 +25,7 @@ const Squad = () => {
                 const formattedStaff = staffRes.data.map(member => ({
                     ...member,
                     number: member.id === 'st1' ? 'HC' : (member.id === 'st2' ? 'PR' : 'ST'),
-                    image: member.id === 'st1' ? coachImage : (member.id === 'st2' ? presidentImage : member.photo_url),
+                    image: member.photo_url,
                     role: member.role || 'Staff'
                 }));
                 setStaff(formattedStaff);

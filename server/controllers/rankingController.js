@@ -22,6 +22,11 @@ const initTable = async () => {
             )
         `);
     } catch (err) {
+        if (err.errno === 1932) {
+            console.error('Recovering rankings table from engine error...');
+            try { await db.query('DROP TABLE IF EXISTS rankings'); } catch (e) {}
+            return await initTable();
+        }
         console.error('Error initializing rankings table:', err);
     }
 };
@@ -38,9 +43,9 @@ const scrapeAndSave = async () => {
 
         $('table').each((i, el) => {
             const $table = $(el);
-            const text = $table.text();
+            const text = $table.text().toUpperCase();
 
-            if (text.includes('HUSA')) {
+            if (text.includes('HUSA') || text.includes('HASSANIA')) {
                 const rows = [];
                 $table.find('tr').each((j, row) => {
                     const $cols = $(row).find('th, td');
@@ -90,7 +95,7 @@ const scrapeAndSave = async () => {
             return true;
         }
     } catch (error) {
-        console.error('Scraping error:', error);
+        console.error('Scraping error:', error.message);
         return false;
     }
 };
@@ -100,13 +105,19 @@ setInterval(scrapeAndSave, 24 * 60 * 60 * 1000);
 
 const getRankings = async (req, res) => {
     try {
+        // Ensure table exists
+        await initTable();
+
         // Try to get from database first
         let [rows] = await db.query('SELECT * FROM rankings ORDER BY pts DESC, pos ASC');
 
         // If DB is empty, trigger an immediate scrape
         if (rows.length === 0) {
-            await scrapeAndSave();
-            [rows] = await db.query('SELECT * FROM rankings ORDER BY pts DESC, pos ASC');
+            console.log('Rankings table empty, triggering scrape...');
+            const success = await scrapeAndSave();
+            if (success) {
+                [rows] = await db.query('SELECT * FROM rankings ORDER BY pts DESC, pos ASC');
+            }
         }
 
         if (rows.length === 0) {
@@ -115,8 +126,12 @@ const getRankings = async (req, res) => {
 
         res.json(rows);
     } catch (error) {
-        console.error('Database/API error:', error);
-        res.status(500).json({ message: 'Error retrieving rankings' });
+        console.error('Database/API error in getRankings:', error);
+        res.status(500).json({ 
+            message: 'Error retrieving rankings', 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 

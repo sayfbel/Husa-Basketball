@@ -14,7 +14,7 @@ import Profile from './pages/Profile';
 import MatchSheetPage from './pages/MatchSheetPage';
 
 const CoachDashboard = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, logout } = useAuth();
 
     return (
         <div className="dashboard-container container">
@@ -23,7 +23,6 @@ const CoachDashboard = () => {
                     <div className="dashboard-header-info">
                         <h1>Welcome, Coach {currentUser?.name}</h1>
                     </div>
-                    <p className="role-tag coach-tag">Team Strategy</p>
                 </div>
 
                 {/* Navigation Menu */}

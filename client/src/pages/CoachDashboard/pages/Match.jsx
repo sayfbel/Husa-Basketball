@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import MatchTacticsBoard from './MatchTacticsBoard';
 import '../../../css/dashboard.css';
 import '../css/match.css';
@@ -188,6 +188,132 @@ const Match = () => {
         }
     };
 
+    // --- Vision OCR Logic ---
+    const [isVisionOcrProcessing, setIsVisionOcrProcessing] = useState(false);
+    const [unknownPlayers, setUnknownPlayers] = useState([]);
+    const [currentUnknownIndex, setCurrentUnknownIndex] = useState(0);
+    const [showMappingModal, setShowMappingModal] = useState(false);
+    const [mappedPlayerId, setMappedPlayerId] = useState("");
+
+    const handleVisionOcrScan = async () => {
+        if (intelImages.length === 0) {
+            showNotification("Please upload at least one match sheet first.", "warning");
+            return;
+        }
+
+        const lastFile = intelImages[intelImages.length - 1];
+        setIsVisionOcrProcessing(true);
+        showNotification("Initiating Google Vision Handwriting OCR...", "info");
+
+        try {
+            const formData = new FormData();
+            formData.append('image', lastFile);
+
+            const res = await axios.post('http://localhost:5000/api/ocr/vision', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            console.log("=== VISION OCR RAW RESULT ===", res.data);
+
+            const { players: ocrPlayers, score: ocrScore, isMock } = res.data;
+
+            if (isMock) {
+                showNotification("Running with fallback Mock OCR (Vision Credentials not configured).", "info");
+            } else {
+                showNotification("Google Vision OCR parsed document successfully.", "success");
+            }
+
+            const normalize = (n) => n.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            const resolvedStats = { ...playerStats };
+            const unmapped = [];
+
+            ocrPlayers.forEach(ocrPlayer => {
+                const normOcr = normalize(ocrPlayer.name);
+                let bestMatch = null;
+                let maxScore = 0;
+
+                players.forEach(p => {
+                    const normP = normalize(p.name);
+                    if (normP === normOcr) {
+                        bestMatch = p;
+                        maxScore = 1;
+                    } else if (normP.includes(normOcr) || normOcr.includes(normP)) {
+                        if (maxScore < 0.8) {
+                            bestMatch = p;
+                            maxScore = 0.8;
+                        }
+                    }
+                });
+
+                if (bestMatch) {
+                    resolvedStats[bestMatch.id] = { pts: ocrPlayer.pts.toString(), fol: ocrPlayer.fol.toString() };
+                    setSelectedPlayers(prev => {
+                        if (!prev.includes(bestMatch.id)) {
+                            return [...prev, bestMatch.id];
+                        }
+                        return prev;
+                    });
+                } else {
+                    unmapped.push(ocrPlayer);
+                }
+            });
+
+            setPlayerStats(resolvedStats);
+
+            if (ocrScore && ocrScore !== '-') {
+                setSelectedReportMatch(prev => ({
+                    ...prev,
+                    score: ocrScore
+                }));
+            }
+
+            if (unmapped.length > 0) {
+                setUnknownPlayers(unmapped);
+                setCurrentUnknownIndex(0);
+                setMappedPlayerId("");
+                setShowMappingModal(true);
+            } else {
+                showNotification("All players successfully recognized and stats populated!", "success");
+            }
+
+        } catch (err) {
+            console.error("Vision OCR Error:", err);
+            showNotification(err.response?.data?.message || "Failed to scan sheet using Vision API.", "error");
+        } finally {
+            setIsVisionOcrProcessing(false);
+        }
+    };
+
+    const confirmMapping = () => {
+        const unknown = unknownPlayers[currentUnknownIndex];
+        if (mappedPlayerId) {
+            setSelectedPlayers(prev => {
+                if (!prev.includes(mappedPlayerId)) {
+                    return [...prev, mappedPlayerId];
+                }
+                return prev;
+            });
+            setPlayerStats(prev => ({
+                ...prev,
+                [mappedPlayerId]: { pts: unknown.pts.toString(), fol: unknown.fol.toString() }
+            }));
+            showNotification(`Mapped '${unknown.name}' to roster player successfully.`, "success");
+        } else {
+            showNotification(`Skipped mapping for '${unknown.name}'.`, "info");
+        }
+
+        const nextIndex = currentUnknownIndex + 1;
+        if (nextIndex < unknownPlayers.length) {
+            setCurrentUnknownIndex(nextIndex);
+            setMappedPlayerId("");
+        } else {
+            setShowMappingModal(false);
+            setUnknownPlayers([]);
+            showNotification("All unknown players processed. Stats populated!", "success");
+        }
+    };
+
     // --- Actions ---
 
     const fetchMatchIntel = async (match) => {
@@ -292,6 +418,9 @@ const Match = () => {
             formData.append('report', reportContent);
             formData.append('player_stats', JSON.stringify(playerStats));
             formData.append('existingImages', JSON.stringify(existingImages));
+            if (selectedReportMatch.score) {
+                formData.append('score', selectedReportMatch.score);
+            }
 
             intelImages.forEach(file => {
                 formData.append('images', file);
@@ -315,6 +444,9 @@ const Match = () => {
 
             showNotification(isIntelExisting ? "Match Intel Updated." : "Match Intel Saved.", "success");
             setIsIntelExisting(true);
+            
+            // Refresh matches cache to show the updated score in schedule
+            fetchCachedMatches();
 
             // Close the modal on success
             setShowReportModal(false);
@@ -382,6 +514,14 @@ const Match = () => {
         }
     };
 
+    const toggleStrategyBriefing = (strategyId) => {
+        setSelectedBriefingStrategies(prev => 
+            prev.includes(strategyId) 
+                ? prev.filter(id => id !== strategyId)
+                : [...prev, strategyId]
+        );
+    };
+
     const handleSaveMatchSetup = async () => {
         if (!activeMatch) return;
 
@@ -397,6 +537,16 @@ const Match = () => {
 
             const res = await axios.post('http://localhost:5000/api/matches/save', payload);
             showNotification("Match setup saved successfully!", "success");
+            
+            // Reset deployment flow
+            setActiveMatch(null);
+            setSelectedPlayers([]);
+            setStarters([null, null, null, null, null]);
+            setIsSquadConfirmed(false);
+            setActivePosition(0);
+            setSelectedBriefingStrategies([]);
+            fetchCachedMatches(); // Refresh matches list
+            
         } catch (err) {
             showNotification("Failed to save match setup.", "error");
         } finally {
@@ -1090,6 +1240,45 @@ const Match = () => {
                                 </button>
                             </div>
 
+                            {/* Google Vision OCR Trigger */}
+                            {(existingImages.length + intelImages.length) > 0 && (
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <button
+                                        onClick={handleVisionOcrScan}
+                                        disabled={isVisionOcrProcessing}
+                                        style={{
+                                            width: '100%',
+                                            background: isVisionOcrProcessing ? 'rgba(255,255,255,0.05)' : 'rgba(219, 10, 64, 0.9)',
+                                            border: '1px solid #DB0A40',
+                                            color: '#fff',
+                                            padding: '1rem',
+                                            borderRadius: '0',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '900',
+                                            cursor: isVisionOcrProcessing ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            transition: '0.3s',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '2px',
+                                            boxShadow: '0 4px 15px rgba(219, 10, 64, 0.2)'
+                                        }}
+                                    >
+                                        {isVisionOcrProcessing ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" /> SCANNING WITH VISION API...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Activity size={16} /> RUN HANDWRITING OCR
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
                             <div style={{ fontSize: '0.55rem', color: '#444', letterSpacing: '2px', fontFamily: 'monospace', marginTop: '1rem' }}>
                                 ENCRYPTION: AES-256-GCM<br />
                                 STATUS: READY<br />
@@ -1386,6 +1575,88 @@ const Match = () => {
                     </div>
                 ]}
             </TacticalModal>
+
+            {showMappingModal && unknownPlayers.length > 0 && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                    background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)'
+                }}>
+                    <div style={{
+                        width: '500px', background: '#0a0a0a', border: '1px solid #DB0A40',
+                        padding: '2.5rem', position: 'relative', display: 'flex', flexDirection: 'column', gap: '2rem'
+                    }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '15px', height: '15px', borderTop: '3px solid #DB0A40', borderLeft: '3px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', top: 0, right: 0, width: '15px', height: '15px', borderTop: '3px solid #DB0A40', borderRight: '3px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '15px', height: '15px', borderBottom: '3px solid #DB0A40', borderLeft: '3px solid #DB0A40' }}></div>
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '15px', height: '15px', borderBottom: '3px solid #DB0A40', borderRight: '3px solid #DB0A40' }}></div>
+
+                        <div>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#DB0A40', letterSpacing: '4px', textTransform: 'uppercase' }}>RESOLUTION INTERFACE // OCR</span>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: '950', color: '#fff', margin: '5px 0 0 0', letterSpacing: '-0.5px' }}>RESOLVE UNRECOGNIZED PLAYER</h2>
+                        </div>
+
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#555', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase' }}>Extracted Name</div>
+                            <div style={{ fontSize: '1.2rem', color: '#fff', fontWeight: '900', margin: '5px 0 15px 0' }}>
+                                {unknownPlayers[currentUnknownIndex]?.name}
+                            </div>
+                            <div style={{ display: 'flex', gap: '2rem' }}>
+                                <div>
+                                    <span style={{ fontSize: '0.6rem', color: '#555', display: 'block', textTransform: 'uppercase' }}>Extracted PTS</span>
+                                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold' }}>{unknownPlayers[currentUnknownIndex]?.pts}</span>
+                                </div>
+                                <div>
+                                    <span style={{ fontSize: '0.6rem', color: '#555', display: 'block', textTransform: 'uppercase' }}>Extracted Fouls</span>
+                                    <span style={{ color: '#DB0A40', fontSize: '1rem', fontWeight: 'bold' }}>{unknownPlayers[currentUnknownIndex]?.fol}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#888', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Map to Roster Player:</label>
+                            <select
+                                value={mappedPlayerId}
+                                onChange={(e) => setMappedPlayerId(e.target.value)}
+                                style={{
+                                    width: '100%', background: '#111', border: '1px solid rgba(255,255,255,0.1)',
+                                    color: '#fff', padding: '12px', fontSize: '0.85rem', outline: 'none', borderRadius: '0'
+                                }}
+                            >
+                                <option value="">-- Select Player to Map / Skip --</option>
+                                {players.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                        #{p.jersey_number} - {p.name} ({p.position})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#444', fontWeight: 'bold' }}>
+                                {currentUnknownIndex + 1} / {unknownPlayers.length} UNRESOLVED
+                            </span>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={() => {
+                                        setMappedPlayerId("");
+                                        confirmMapping();
+                                    }}
+                                    style={{ padding: '10px 20px', fontSize: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#aaa', cursor: 'pointer' }}
+                                >
+                                    SKIP
+                                </button>
+                                <button
+                                    onClick={confirmMapping}
+                                    style={{ padding: '10px 25px', fontSize: '0.75rem', background: '#DB0A40', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    CONFIRM MAPPING
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

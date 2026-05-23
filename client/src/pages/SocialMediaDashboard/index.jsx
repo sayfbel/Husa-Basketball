@@ -1,61 +1,53 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import '../../css/dashboard.css'; // Shared premium style
-import './css/playerDashboard.css'; // Player specific style
-import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 
 // Import Sub-Pages
 import Overview from './pages/Overview';
+import StoreManager from '../PresidentDashboard/pages/StoreManager';
+import NewsManager from './pages/NewsManager';
 import Profile from './pages/Profile';
-import Match from './pages/Match';
-import Report from './pages/Report';
-import Tactics from './pages/Tactics';
 
-const PlayerDashboard = () => {
+const SocialMediaDashboard = () => {
     const { currentUser, logout } = useAuth();
 
     return (
-        <div className="dashboard-container player-dashboard container animate-fade-in">
+        <div className="dashboard-container container animate-fade-in">
             <div className="dashboard-header">
                 <div className="dashboard-header-top">
                     <div className="dashboard-header-info">
                         <h1>Welcome, {currentUser?.name?.split(' ')[0]}</h1>
-                        <p className="subtitle">Track your performance and receive tactical briefings.</p>
+                        <p className="subtitle">Club media operations and inventory management terminal.</p>
                     </div>
                 </div>
 
                 {/* Navigation Menu */}
                 <nav className="dashboard-nav">
                     <NavLink
-                        to="/dashboard/player"
+                        to="/dashboard/socialmedia"
                         end
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
                         Overview
                     </NavLink>
                     <NavLink
-                        to="/dashboard/player/profile"
+                        to="/dashboard/socialmedia/store"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Profile
+                        Store Catalog
                     </NavLink>
                     <NavLink
-                        to="/dashboard/player/match"
+                        to="/dashboard/socialmedia/news"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Match
+                        News Bulletins
                     </NavLink>
                     <NavLink
-                        to="/dashboard/player/report"
+                        to="/dashboard/socialmedia/profile"
                         className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
                     >
-                        Reports
-                    </NavLink>
-                    <NavLink
-                        to="/dashboard/player/tactics"
-                        className={({ isActive }) => isActive ? "dash-link active" : "dash-link"}
-                    >
-                        Tactics
+                        Profile Dossier
                     </NavLink>
                 </nav>
             </div>
@@ -63,16 +55,13 @@ const PlayerDashboard = () => {
             <div className="dashboard-content" style={{ marginTop: '2rem' }}>
                 <Routes>
                     <Route path="/" element={<Overview />} />
+                    <Route path="store" element={<StoreManager />} />
+                    <Route path="news" element={<NewsManager />} />
                     <Route path="profile" element={<Profile />} />
-                    <Route path="match" element={<Match />} />
-                    <Route path="report" element={<Report />} />
-                    <Route path="rapore" element={<Navigate to="report" replace />} />
-                    <Route path="tactics" element={<Tactics />} />
-                    {/* Handle potential typos or alternative names */}
                 </Routes>
             </div>
         </div>
     );
 };
 
-export default PlayerDashboard;
+export default SocialMediaDashboard;

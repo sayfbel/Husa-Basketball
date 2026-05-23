@@ -3,6 +3,67 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+const exports_initTable = async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id VARCHAR(36) PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'Player', 
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS players (
+                id VARCHAR(36) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                position VARCHAR(50) NOT NULL,
+                jersey_number INT,
+                height VARCHAR(10),
+                weight VARCHAR(10),
+                age INT,
+                photo_url VARCHAR(255),
+                bio TEXT,
+                email VARCHAR(255),
+                phone VARCHAR(50),
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS staff (
+                id VARCHAR(36) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                role VARCHAR(100) NOT NULL,
+                department ENUM('coaching', 'medical', 'office') NOT NULL,
+                photo_url VARCHAR(255),
+                height VARCHAR(50),
+                weight VARCHAR(50),
+                age INT,
+                email VARCHAR(255),
+                phone VARCHAR(50),
+                bio TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    } catch (err) {
+        if (err.errno === 1932) {
+            console.error('Critical Database Engine Error (1932). Attempting recovery...');
+            // This is a last-resort recovery: try dropping the corrupted table metadata
+            const tables = ['users', 'players', 'staff'];
+            for (const table of tables) {
+               try { await db.query(`DROP TABLE IF EXISTS ${table}`); } catch (e) {}
+            }
+            // Try initializing again
+            return await exports_initTable();
+        }
+        console.error('Error initializing auth tables:', err);
+    }
+};
+
+exports.initTable = exports_initTable;
+
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
@@ -42,7 +103,7 @@ exports.login = async (req, res) => {
             id: user.id,
             name: user.username,
             role: user.role,
-            image: user.photo_url || 'http://localhost:5000/uploads/default.png'
+            image: user.photo_url || 'http://localhost:5000/uploads/players/default.png'
         });
 
     } catch (error) {
@@ -58,7 +119,7 @@ exports.addUser = async (req, res) => {
         return res.status(400).json({ message: 'Missing fields' });
     }
 
-    let photoUrl = req.body.existingPhotoUrl || 'http://localhost:5000/uploads/default.png';
+    let photoUrl = req.body.existingPhotoUrl || 'http://localhost:5000/uploads/players/default.png';
     const id = `usr_${Date.now()}`;
 
     try {
@@ -87,7 +148,7 @@ exports.addUser = async (req, res) => {
             });
 
             // If success, use the background removed image and delete original
-            photoUrl = 'http://localhost:5000/uploads/' + bgRemovedFilename;
+            photoUrl = 'http://localhost:5000/uploads/players/' + bgRemovedFilename;
             fs.unlink(originalPath, (err) => {
                 if (err) console.error("Error deleting original uploaded file:", err);
             });
@@ -145,7 +206,7 @@ exports.previewBgRemove = async (req, res) => {
         // If success, return the new image URL and delete original
         fs.unlink(originalPath, (err) => { });
 
-        res.json({ photoUrl: `http://localhost:5000/uploads/${bgRemovedFilename}` });
+        res.json({ photoUrl: `http://localhost:5000/uploads/players/${bgRemovedFilename}` });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error processing preview' });
@@ -195,6 +256,18 @@ exports.updateUser = async (req, res) => {
         if (users.length > 0) {
             const role = users[0].role;
             if (role === 'Player') {
+                if (jersey_number) {
+                    const [existing] = await db.query(
+                        'SELECT id, name FROM players WHERE jersey_number = ? AND id != ?',
+                        [jersey_number, id]
+                    );
+                    if (existing.length > 0) {
+                        return res.status(400).json({ 
+                            message: `Jersey number ${jersey_number} is already occupied by ${existing[0].name}` 
+                        });
+                    }
+                }
+
                 await db.query(`
                     UPDATE players SET 
                         name = ?, height = ?, weight = ?, age = ?, email = ?, phone = ?, bio = ?, jersey_number = ?, position = ? 
@@ -237,6 +310,7 @@ const seedLogic = async () => {
     const users = [
         { id: 'st1', name: "Mohamed Haib", role: "Coach", code: "HCMohamedHaib" },
         { id: 'st2', name: "Youssef Abid", role: "President", code: "PRYoussefAbid" },
+        { id: 'st3', name: "Social Media", role: "SocialMedia", code: "SMSocialMedia" },
         { id: 'pl5', name: "Moudden Mohamed", role: "Player", code: "05MouddenMohamed" },
         { id: 'pl6', name: "Echraouqi Khalid", role: "Player", code: "06EchraouqiKhalid" },
         { id: 'pl7', name: "Ech Charany Mohamed", role: "Player", code: "07EchCharanyMohamed" },
@@ -254,18 +328,18 @@ const seedLogic = async () => {
     // --- Players Table Seeding ---
     // Note: Assuming 'photo_url' points to static assets served from client/public or server/public
     const players = [
-        { id: 'pl5', name: "Moudden Mohamed", number: 5, pos: "Guard", img: "http://localhost:5000/uploads/MouddenMohamed.jpg", h: "190cm", w: "85kg", age: 24, bio: "Agile playmaker with excellent vision." },
-        { id: 'pl6', name: "Echraouqi Khalid", number: 6, pos: "Forward", img: "http://localhost:5000/uploads/EchraouqiKhalid.jpg", h: "198cm", w: "92kg", age: 26, bio: "Strong defensive presence." },
-        { id: 'pl7', name: "Ech Charany Mohamed", number: 7, pos: "Guard", img: "http://localhost:5000/uploads/EchCharanyMohamed.jpg", h: "188cm", w: "82kg", age: 23, bio: "Sharp shooter from deep." },
-        { id: 'pl8', name: "Laamrani Youness", number: 8, pos: "Center", img: "http://localhost:5000/uploads/LaamraniYouness.jpg", h: "205cm", w: "105kg", age: 28, bio: "Dominant in the paint." },
-        { id: 'pl9', name: "Guaouzi Zoubir", number: 9, pos: "Forward", img: "http://localhost:5000/uploads/GuaouziZoubir.jpg", h: "196cm", w: "90kg", age: 25, bio: "Versatile wing player." },
-        { id: 'pl10', name: "Choua M'Barek", number: 10, pos: "Center", img: "http://localhost:5000/uploads/ChouaMBarek.jpg", h: "208cm", w: "110kg", age: 29, bio: "Defensive anchor." },
-        { id: 'pl11', name: "Choua Ismail", number: 11, pos: "Forward", img: "http://localhost:5000/uploads/ChouaIsmail.jpg", h: "200cm", w: "95kg", age: 27, bio: "Athletic finisher at the rim." },
-        { id: 'pl12', name: "Bentabjaoute Youssef", number: 12, pos: "Guard", img: "http://localhost:5000/uploads/BentabjaouteYoussef.jpg", h: "185cm", w: "80kg", age: 22, bio: "Quick and tenacious defender." },
-        { id: 'pl13', name: "Soufiane Banyahya", number: 13, pos: "Forward", img: "http://localhost:5000/uploads/default.png", h: "195cm", w: "88kg", age: 24, bio: "Developing talent." },
-        { id: 'pl14', name: "Mouad Chanouni", number: 14, pos: "Guard", img: "http://localhost:5000/uploads/default.png", h: "188cm", w: "83kg", age: 23, bio: "Solid backup guard." },
-        { id: 'pl15', name: "Elbika Reda", number: 15, pos: "Forward", img: "http://localhost:5000/uploads/default.png", h: "197cm", w: "91kg", age: 25, bio: "Physical forward." },
-        { id: 'pl16', name: "Bouchentouf Rabii", number: 16, pos: "Guard", img: "http://localhost:5000/uploads/BouchentoufRabii.jpg", h: "192cm", w: "86kg", age: 26, bio: "Experienced leader." }
+        { id: 'pl5', name: "Moudden Mohamed", number: 5, pos: "Guard", img: "http://localhost:5000/uploads/players/MouddenMohamed.jpg", h: "190cm", w: "85kg", age: 24, bio: "Agile playmaker with excellent vision." },
+        { id: 'pl6', name: "Echraouqi Khalid", number: 6, pos: "Forward", img: "http://localhost:5000/uploads/players/EchraouqiKhalid.jpg", h: "198cm", w: "92kg", age: 26, bio: "Strong defensive presence." },
+        { id: 'pl7', name: "Ech Charany Mohamed", number: 7, pos: "Guard", img: "http://localhost:5000/uploads/players/EchCharanyMohamed.jpg", h: "188cm", w: "82kg", age: 23, bio: "Sharp shooter from deep." },
+        { id: 'pl8', name: "Laamrani Youness", number: 8, pos: "Center", img: "http://localhost:5000/uploads/players/LaamraniYouness.jpg", h: "205cm", w: "105kg", age: 28, bio: "Dominant in the paint." },
+        { id: 'pl9', name: "Guaouzi Zoubir", number: 9, pos: "Forward", img: "http://localhost:5000/uploads/players/GuaouziZoubir.jpg", h: "196cm", w: "90kg", age: 25, bio: "Versatile wing player." },
+        { id: 'pl10', name: "Choua M'Barek", number: 10, pos: "Center", img: "http://localhost:5000/uploads/players/ChouaMBarek.jpg", h: "208cm", w: "110kg", age: 29, bio: "Defensive anchor." },
+        { id: 'pl11', name: "Choua Ismail", number: 11, pos: "Forward", img: "http://localhost:5000/uploads/players/ChouaIsmail.jpg", h: "200cm", w: "95kg", age: 27, bio: "Athletic finisher at the rim." },
+        { id: 'pl12', name: "Bentabjaoute Youssef", number: 12, pos: "Guard", img: "http://localhost:5000/uploads/players/BentabjaouteYoussef.jpg", h: "185cm", w: "80kg", age: 22, bio: "Quick and tenacious defender." },
+        { id: 'pl13', name: "Soufiane Banyahya", number: 13, pos: "Forward", img: "http://localhost:5000/uploads/players/default.png", h: "195cm", w: "88kg", age: 24, bio: "Developing talent." },
+        { id: 'pl14', name: "Mouad Chanouni", number: 14, pos: "Guard", img: "http://localhost:5000/uploads/players/default.png", h: "188cm", w: "83kg", age: 23, bio: "Solid backup guard." },
+        { id: 'pl15', name: "Elbika Reda", number: 15, pos: "Forward", img: "http://localhost:5000/uploads/players/default.png", h: "197cm", w: "91kg", age: 25, bio: "Physical forward." },
+        { id: 'pl16', name: "Bouchentouf Rabii", number: 16, pos: "Guard", img: "http://localhost:5000/uploads/players/BouchentoufRabii.jpg", h: "192cm", w: "86kg", age: 26, bio: "Experienced leader." }
     ];
 
     // 1. UPDATE SCHEMA: Check if role column needs altering from ENUM to VARCHAR
@@ -351,7 +425,7 @@ const seedLogic = async () => {
             name: "Mohamed Haib",
             role: "Head Coach",
             department: "coaching",
-            img: "http://localhost:5000/uploads/coach.jpg",
+            img: "http://localhost:5000/uploads/players/coach.jpg",
             height: "182cm",
             weight: "78kg",
             age: 45,
@@ -362,11 +436,22 @@ const seedLogic = async () => {
             name: "Youssef Abid",
             role: "President",
             department: "office",
-            img: "http://localhost:5000/uploads/President.jpg",
+            img: "http://localhost:5000/uploads/players/President.jpg",
             height: "178cm",
             weight: "80kg",
             age: 52,
             bio: "Strategic leadership and organizational management. Dedicated to elevating HUSA Basketball to the national elite."
+        },
+        {
+            id: 'st3',
+            name: "Social Media",
+            role: "Social Media Management",
+            department: "office",
+            img: "http://localhost:5000/uploads/players/default.png",
+            height: "175cm",
+            weight: "70kg",
+            age: 30,
+            bio: "Official Social Media Manager. Handles store inventory and news bulletins."
         }
     ];
 

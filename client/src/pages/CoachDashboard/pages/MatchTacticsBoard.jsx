@@ -129,6 +129,41 @@ const MiniCourtPreview = ({ tactic }) => {
     );
 };
 
+const particlesDots = Array.from({ length: 60 }).map((_, i) => ({
+    id: i,
+    cx: `${Math.random() * 100}%`,
+    cy: `${Math.random() * 100}%`,
+    r: Math.random() * 1.5 + 0.5,
+    duration: Math.random() * 15 + 10,
+    delay: Math.random() * -20
+}));
+
+const ParticlesOverlay = () => (
+    <svg style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {particlesDots.map(dot => (
+            <circle
+                key={dot.id}
+                cx={dot.cx}
+                cy={dot.cy}
+                r={dot.r}
+                fill="rgba(255, 255, 255, 0.2)"
+                style={{
+                    animation: `float-particles ${dot.duration}s infinite linear`,
+                    animationDelay: `${dot.delay}s`
+                }}
+            />
+        ))}
+        <style>{`
+            @keyframes float-particles {
+                0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+                10% { opacity: 0.8; }
+                90% { opacity: 0.8; }
+                100% { transform: translateY(-60px) translateX(20px); opacity: 0; }
+            }
+        `}</style>
+    </svg>
+);
+
 const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotification, fetchStrategies, onStrategyLoaded }) => {
 
     const [frames, setFrames] = useState([{ tokens: [], paths: [] }]);
@@ -139,6 +174,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
     const [selectedStrategyId, setSelectedStrategyId] = useState(null);
     const [pendingSubstitute, setPendingSubstitute] = useState(null);
     const [currentPath, setCurrentPath] = useState('');
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
     const courtRef = useRef(null);
     const playInterval = useRef(null);
@@ -303,12 +339,12 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         if (isPlaying) {
             playInterval.current = setInterval(() => {
                 setCurrentFrameIndex(prev => (prev + 1) % frames.length);
-            }, 1000);
+            }, 1000 / playbackSpeed);
         } else {
             clearInterval(playInterval.current);
         }
         return () => clearInterval(playInterval.current);
-    }, [isPlaying, frames.length]);
+    }, [isPlaying, frames.length, playbackSpeed]);
 
     const addFrame = () => {
         pushToHistory();
@@ -354,11 +390,13 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
         }
     };
 
-    const handlePathClick = (index, e) => {
+    const handlePathInteraction = (index, e) => {
         if (mode === 'erase') {
-            e.stopPropagation();
-            pushToHistory();
-            updateCurrentFrame(null, currentPaths.filter((_, i) => i !== index));
+            if (e.type === 'mousedown' || (e.type === 'mouseenter' && e.buttons === 1)) {
+                e.stopPropagation();
+                pushToHistory();
+                updateCurrentFrame(null, currentPaths.filter((_, i) => i !== index));
+            }
         }
     };
 
@@ -403,7 +441,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
 
             <div className="court-and-sidebar-grid-premium" style={{ display: 'flex', position: 'relative', overflow: 'hidden', background: '#080808' }}>
                 {/* PERSONNEL SideBar (Image Only as requested) */}
-                <aside className="active-players-sidebar full-custom-scroll" style={{ 
+                <aside className="active-players-sidebar" style={{ 
                     width: '100px', 
                     background: '#050505', 
                     borderRight: '1px solid rgba(219, 10, 64, 0.3)', 
@@ -415,10 +453,11 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                     left: 0, 
                     zIndex: 10,
                     boxShadow: '10px 0 30px rgba(0,0,0,0.5)',
-                    overflowX: 'hidden'
+                    overflow: 'hidden'
                 }}>
                     <div style={{ 
                         height: '60px',
+                        flexShrink: 0,
                         padding: '0 0.5rem', 
                         borderBottom: '1px solid rgba(255,255,255,0.03)', 
                         background: 'linear-gradient(180deg, rgba(219, 10, 64, 0.1) 0%, transparent 100%)',
@@ -620,7 +659,8 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             overflow: 'hidden'
                         }}
                     >
-                        <svg viewBox="0 0 1000 560" style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                        <ParticlesOverlay />
+                        <svg viewBox="0 0 1000 560" style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}>
                             <image href={husaLogo} x="420" y="205" width="160" height="150" opacity="0.03" style={{ filter: 'grayscale(1)' }} />
                             <g stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" fill="none">
                                 <rect x="25" y="25" width="950" height="510" />
@@ -652,6 +692,22 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                             </g>
                         </svg>
 
+                        {/* Drawing Layer */}
+                        <svg viewBox="0 0 1000 560" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+                            <defs>
+                                <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#DB0A40" />
+                                </marker>
+                            </defs>
+                            {currentPaths.map((d, i) => (
+                                <g key={i} onMouseDown={(e) => handlePathInteraction(i, e)} onMouseEnter={(e) => handlePathInteraction(i, e)} style={{ pointerEvents: mode === 'erase' ? 'auto' : 'none', cursor: mode === 'erase' ? 'pointer' : 'default' }}>
+                                    <path d={d} stroke="transparent" strokeWidth="20" fill="none" />
+                                    <path d={d} stroke={mode === 'erase' ? '#ff4d4d' : '#DB0A40'} strokeWidth="4" fill="none" strokeLinecap="round" style={{ markerEnd: 'url(#arrowhead)' }} />
+                                </g>
+                            ))}
+                            {currentPath && <path d={currentPath} stroke="#DB0A40" strokeWidth="4" fill="none" strokeLinecap="round" style={{ opacity: 0.5 }} />}
+                        </svg>
+
                         {/* Tokens */}
                         {currentTokens.map(token => {
                             const isBeingDragged = draggingId === token.id;
@@ -670,7 +726,7 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                                         zIndex: isBeingDragged ? 100 : 10,
                                         pointerEvents: mode === 'move' ? 'auto' : 'none',
                                         transform: 'translate(-50%, -50%)',
-                                        transition: isBeingDragged ? 'none' : (isPlaying ? 'all 1000ms linear' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'),
+                                        transition: isBeingDragged ? 'none' : (isPlaying ? `all ${1000 / playbackSpeed}ms linear` : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'),
                                         boxShadow: isBeingDragged ? '0 15px 40px rgba(0,0,0,0.5)' : 'none'
                                     }}
                                     onMouseDown={(e) => handleTokenMouseDown(e, token)}
@@ -735,6 +791,9 @@ const MatchTacticsBoard = ({ summonedPlayers, starters, strategies, showNotifica
                     <button className="tool-btn-premium" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}><SkipBack size={20} /></button>
                     <span style={{ color: '#fff', fontSize: '0.8rem', fontWeight: '900', minWidth: '40px', textAlign: 'center' }}>{currentFrameIndex + 1} / {frames.length}</span>
                     <button className="tool-btn-premium" onClick={togglePlay} >{isPlaying ? <Pause size={20} /> : <Play size={20} />}</button>
+                    <button className="tool-btn-premium" onClick={() => {
+                        setPlaybackSpeed(prev => prev === 1 ? 1.5 : (prev === 1.5 ? 2 : 1));
+                    }} style={{ fontSize: '0.8rem', fontWeight: '900', minWidth: '36px' }}>x{playbackSpeed}</button>
                     <button className="tool-btn-premium" onClick={addFrame}><Plus size={20} /></button>
                     <button className="tool-btn-premium" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}><SkipForward size={20} /></button>
                 </div>

@@ -441,6 +441,13 @@ exports.saveIntel = async (req, res) => {
             images = VALUES(images)
         `, [match_id, report || '', statsStr, imagesJson]);
 
+        if (req.body.score && req.body.score !== '-') {
+            await db.query(
+                'UPDATE match_schedule SET score = ? WHERE external_id = ?',
+                [req.body.score, match_id]
+            );
+        }
+
         res.json({ message: 'Match Intel Saved successfully' });
     } catch (error) {
         console.error('Error saving match intel:', error);

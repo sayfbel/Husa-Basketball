@@ -18,7 +18,7 @@ import {
     TrendingUp,
     Check
 } from 'lucide-react';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import '../css/Reports.css';
 

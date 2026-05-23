@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
+import { useNotification } from '../../../components/Notification/Notification';
 import { Shield, Plus, UserPlus, FileText, Check, Edit2, Trash2, X, Upload, Loader2 } from 'lucide-react';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import TacticalModal from '../../../components/UI/TacticalModal';
@@ -9,6 +10,7 @@ import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
 
 const AddUser = () => {
     const { currentUser } = useAuth();
+    const { showNotification, showConfirm } = useNotification();
 
     // Add user state
     const [formData, setFormData] = useState({
@@ -53,8 +55,9 @@ const AddUser = () => {
         phone: '', email: '', bio: '', jersey_number: '', position_or_dept: ''
     });
     const [showModal, setShowModal] = useState(false);
+    const [availableTshirts, setAvailableTshirts] = useState([]);
 
-    const roles = ['Player', 'Coach', 'President', 'Medical', 'Office'];
+    const roles = ['Player', 'Coach', 'President', 'Medical', 'Office', 'SocialMedia'];
     const positions = ['Guard', 'Forward', 'Center'];
 
     useEffect(() => {
@@ -102,7 +105,7 @@ const AddUser = () => {
         }
     };
 
-    const openEditModal = (user) => {
+    const openEditModal = async (user) => {
         setEditingUser(user);
         setEditFormData({
             username: user.username,
@@ -113,9 +116,18 @@ const AddUser = () => {
             phone: user.phone || '',
             email: user.email || '',
             bio: user.bio || '',
-            jersey_number: user.jersey_number || '',
+            jersey_number: user.jersey_number !== null && user.jersey_number !== undefined ? user.jersey_number : '',
             position_or_dept: user.position_or_dept || ''
         }); // password left empty intentionally
+        
+        if (user.role === 'Player') {
+            try {
+                const res = await axios.get('http://localhost:5000/api/tshirts/available');
+                setAvailableTshirts(res.data);
+            } catch (err) {
+                console.error("Error fetching available tshirts:", err);
+            }
+        }
         setShowModal(true);
     };
 
@@ -130,7 +142,7 @@ const AddUser = () => {
             setEditingUser(null);
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Failed to update user.');
+            showNotification(err.response?.data?.message || 'Failed to update user.', 'error');
         }
     };
 
@@ -138,18 +150,22 @@ const AddUser = () => {
         if (e) {
             e.stopPropagation();
         }
-        if (window.confirm('Are you sure you want to delete this user? This will also remove their player/staff profile permanently.')) {
-            try {
-                await axios.delete(`http://localhost:5000/api/auth/users/${id}`);
-                fetchUsers();
-                if (editingUser?.id === id) {
-                    setShowModal(false);
+        showConfirm(
+            'Are you sure you want to delete this user? This will also remove their player/staff profile permanently.',
+            async () => {
+                try {
+                    await axios.delete(`http://localhost:5000/api/auth/users/${id}`);
+                    showNotification('User deleted successfully', 'success');
+                    fetchUsers();
+                    if (editingUser?.id === id) {
+                        setShowModal(false);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showNotification(err.response?.data?.message || 'Failed to delete user.', 'error');
                 }
-            } catch (err) {
-                console.error(err);
-                alert('Failed to delete user.');
             }
-        }
+        );
     };
 
     return (
@@ -522,8 +538,19 @@ const AddUser = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '15px' }}>
                                 {editingUser?.role === 'Player' && (
                                     <div>
-                                        <label style={{ display: 'block', color: '#888', marginBottom: '4px', fontSize: '0.7rem' }}>JERSEY NO.</label>
-                                        <input type="number" value={editFormData.jersey_number} onChange={e => setEditFormData({ ...editFormData, jersey_number: e.target.value })} style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '8px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>JERSEY NO.</label>
+                                        <SelectorCard
+                                            options={[...new Set([
+                                                ...(editFormData.jersey_number !== '' && editFormData.jersey_number !== null && editFormData.jersey_number !== undefined ? [parseInt(editFormData.jersey_number)] : []),
+                                                ...availableTshirts.map(item => item.number)
+                                            ])].filter(num => !isNaN(num) && num !== null).sort((a, b) => a - b).map(num => ({
+                                                value: num,
+                                                label: `#${num} ${parseInt(editFormData.jersey_number) === num ? '(Current)' : ''}`
+                                            }))}
+                                            value={editFormData.jersey_number !== '' && editFormData.jersey_number !== null && editFormData.jersey_number !== undefined ? parseInt(editFormData.jersey_number) : ''}
+                                            onChange={(val) => setEditFormData({ ...editFormData, jersey_number: val })}
+                                            placeholder="Select Number"
+                                        />
                                     </div>
                                 )}
                                 <div style={{ gridColumn: editingUser?.role === 'Player' ? 'auto' : 'span 2' }}>

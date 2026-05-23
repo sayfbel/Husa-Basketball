@@ -13,6 +13,7 @@ import FanSupport from '../pages/FanSupport';
 import PlayerDashboard from '../pages/PlayerDashboard';
 import CoachDashboard from '../pages/CoachDashboard';
 import PresidentDashboard from '../pages/PresidentDashboard';
+import SocialMediaDashboard from '../pages/SocialMediaDashboard';
 import Login from '../pages/Login';
 import Rules from '../pages/Rules';
 import Thanks from '../pages/Thanks';
@@ -45,6 +46,10 @@ const AppRoutes = () => {
 
             <Route element={<ProtectedRoute allowedRoles={['President']} />}>
                 <Route path="/dashboard/president/*" element={<PresidentDashboard />} />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={['SocialMedia']} />}>
+                <Route path="/dashboard/socialmedia/*" element={<SocialMediaDashboard />} />
             </Route>
         </Routes>
     );

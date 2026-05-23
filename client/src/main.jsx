@@ -7,7 +7,7 @@ import App from './App.jsx'
 import './css/variables.css'
 import './css/global.css'
 
-import { NotificationProvider } from './components/Notification/Notification.jsx'
+import { NotificationProvider } from './components/Notification/Notification'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>

@@ -18,7 +18,7 @@ import {
     Briefcase,
     Shield
 } from 'lucide-react';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 
 const Profile = () => {
@@ -26,6 +26,7 @@ const Profile = () => {
     const { showNotification } = useNotification?.() || { showNotification: (msg) => console.log(msg) };
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [availableTshirts, setAvailableTshirts] = useState([]);
     const [playerData, setPlayerData] = useState({
         name: '',
         position: '',
@@ -38,6 +39,21 @@ const Profile = () => {
         photo_url: '',
         age: ''
     });
+
+    const fetchAvailableTshirts = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/tshirts/available');
+            setAvailableTshirts(res.data);
+        } catch (err) {
+            console.error("Error fetching available tshirts:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (isEditing) {
+            fetchAvailableTshirts();
+        }
+    }, [isEditing]);
 
     useEffect(() => {
         if (currentUser?.id) {
@@ -52,7 +68,7 @@ const Profile = () => {
             setPlayerData({
                 name: data.name || currentUser.name,
                 position: data.position || 'Guard',
-                jersey_number: data.jersey_number || '05',
+                jersey_number: data.jersey_number !== null && data.jersey_number !== undefined ? data.jersey_number : '',
                 bio: data.bio || 'Professional basketball player for HUSA Basketball. Committed to the team\'s victory.',
                 height: data.height || '192cm',
                 weight: data.weight || '86kg',
@@ -238,11 +254,17 @@ const Profile = () => {
                                         </div>
                                         <div>
                                             <label style={{ fontSize: '0.66rem', color: '#666', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>JERSEY NUMBER</label>
-                                            <input
-                                                type="text"
-                                                value={playerData.jersey_number}
-                                                onChange={(e) => setPlayerData({ ...playerData, jersey_number: e.target.value })}
-                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '0', textAlign: 'center' }}
+                                            <SelectorCard
+                                                options={[...new Set([
+                                                    ...(playerData.jersey_number !== '' && playerData.jersey_number !== null && playerData.jersey_number !== undefined ? [parseInt(playerData.jersey_number)] : []),
+                                                    ...availableTshirts.map(item => item.number)
+                                                ])].filter(num => !isNaN(num) && num !== null).sort((a, b) => a - b).map(num => ({
+                                                    value: num,
+                                                    label: `#${num} ${parseInt(playerData.jersey_number) === num ? '(Current)' : ''}`
+                                                }))}
+                                                value={playerData.jersey_number !== '' && playerData.jersey_number !== null && playerData.jersey_number !== undefined ? parseInt(playerData.jersey_number) : ''}
+                                                onChange={(val) => setPlayerData({ ...playerData, jersey_number: val })}
+                                                placeholder="Select Number"
                                             />
                                         </div>
                                     </div>

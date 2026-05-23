@@ -71,6 +71,9 @@ const Login = () => {
                     case 'President':
                         navigate('/dashboard/president');
                         break;
+                    case 'SocialMedia':
+                        navigate('/dashboard/socialmedia');
+                        break;
                     default:
                         navigate('/dashboard/player'); // Fallback
                 }

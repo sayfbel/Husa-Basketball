@@ -19,7 +19,7 @@ import {
     BookOpen,
     Shield
 } from 'lucide-react';
-import { useNotification } from '../../../components/Notification/Notification.jsx';
+import { useNotification } from '../../../components/Notification/Notification';
 import '../../../css/dashboard.css';
 
 import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';

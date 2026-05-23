@@ -81,8 +81,8 @@ const News = () => {
     };
 
     // Filter news
-    const presidentialNews = news.filter(n => n.is_presidential);
-    const regularNews = news.filter(n => !n.is_presidential);
+    const officialVoices = news.filter(n => ['president', 'coach', 'player'].includes(n.author_type) || n.is_presidential);
+    const regularNews = news.filter(n => !['president', 'coach', 'player'].includes(n.author_type) && !n.is_presidential);
     const importantNews = regularNews.find(n => n.is_important) || regularNews[0];
     const otherRegularNews = regularNews.filter(n => n.id !== (importantNews?.id));
 
@@ -92,138 +92,112 @@ const News = () => {
         <div className="news-page animate-fade-in">
             <div className="news-bg-glow"></div>
             <div className="news-container">
-                {/* Masthead */}
+                {/* Tactical Cyber Header */}
+                <h1 className="news-title">HUSA Bulletins</h1>
+                <div className="news-intro">
+                    <p>
+                        Welcome to the Hassania Union Sport d'Agadir (HUSA) Basketball Operations Feed. 
+                        Stay informed with real-time match reports, official club announcements, tactical roster updates, and editorial briefings straight from the command center. 
+                        Every publication keeps our coaching staff, players, and dedicated supporters synchronized with our relentless drive toward basketball excellence.
+                    </p>
+                </div>
+
+
                 <header className="news-header">
-                    <h1 className="news-masthead">Husa Basketball</h1>
                     <div className="news-subheader">
-                        <span>Édition Spéciale</span>
+                        <span>Bulletin Officiel</span>
                         <span>AGADIR, {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        <span>Vol. 1 - N° 23</span>
+                        <span>Tactical Dossier v1.0</span>
                     </div>
                 </header>
 
-                {/* President Admin Form */}
-                {currentUser?.role === 'President' && (
-                    <div style={{ marginBottom: '2rem' }}>
-                        <button 
-                            className="btn-publish" 
-                            onClick={() => setIsAdding(!isAdding)}
-                            style={{ width: '100%', marginBottom: '1rem' }}
-                        >
-                            {isAdding ? 'Annuler' : 'Ajouter une Nouvelle Publication'}
-                        </button>
-                        
-                        {isAdding && (
-                            <form className="news-admin-form" onSubmit={handleAddNews}>
-                                <h2>Nouvelle Publication</h2>
-                                <div className="form-group">
-                                    <label>Titre</label>
-                                    <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-                                </div>
-                                <div className="form-group">
-                                    <label>URL de l'image (Optionnel)</label>
-                                    <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                                </div>
-                                <div className="form-group">
-                                    <label>Contenu</label>
-                                    <textarea value={content} onChange={(e) => setContent(e.target.value)} rows="6" required />
-                                </div>
-                                <div className="form-group" style={{ display: 'flex', gap: '20px' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <input type="checkbox" checked={isImportant} onChange={(e) => setIsImportant(e.target.checked)} />
-                                        Important / À la une
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <input type="checkbox" checked={isPresidential} onChange={(e) => setIsPresidential(e.target.checked)} />
-                                        Éditorial du Président
-                                    </label>
-                                </div>
-                                <button type="submit" className="btn-publish">Publier dans le Journal</button>
-                            </form>
-                        )}
-                    </div>
-                )}
+
+                {/* President Control Publisher Form Removed */}
 
                 <div className="news-layout">
-                    {/* Main Section */}
+                    {/* Main Bulletins Section */}
                     <div className="news-main">
-                        {/* Featured (Important) News */}
+                        {/* Featured (Important) Bulletin */}
                         {importantNews && (
-                            <div className="article-card featured">
-                                {importantNews.is_important && <span className="importance-tag">À LA UNE</span>}
-                                {currentUser?.role === 'President' && !importantNews.id.toString().startsWith('match-') && (
-                                    <button onClick={() => handleDeleteNews(importantNews.id)} style={{ float: 'right', color: 'red', border: 'none', background: 'transparent', cursor: 'pointer' }}>Supprimer</button>
+                            <div className="article-card featured animate-fade-in">
+                                {Boolean(importantNews.is_important) && <span className="importance-tag">À la une</span>}
+                                {currentUser?.role === 'SocialMedia' && !importantNews.id.toString().startsWith('match-') && (
+                                    <button 
+                                        onClick={() => handleDeleteNews(importantNews.id)} 
+                                        style={{ float: 'right', color: 'var(--primary-color)', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}
+                                    >
+                                        [ Supprimer ]
+                                    </button>
                                 )}
-                                <h1 className="article-headline" style={{ fontSize: '3.5rem' }}>{importantNews.title}</h1>
-                                <div className="article-meta">Publié le {formatDate(importantNews.created_at)}</div>
-                                {importantNews.image_url && <img src={importantNews.image_url} alt="Main" className="article-image" style={{ maxHeight: '500px' }} />}
+                                <h1 className="article-headline" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>{importantNews.title}</h1>
+                                <div className="article-meta">Enregistré le {formatDate(importantNews.created_at)}</div>
+                                {importantNews.image_url && <img src={importantNews.image_url} alt="Featured Brief" className="article-image" />}
                                 <div className="news-column">
                                     <p className="article-content">{importantNews.content}</p>
                                 </div>
                             </div>
                         )}
 
-                        {/* Regular News */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        {/* Regular Bulletins Feed */}
+                        <div className="regular-news-grid">
                             {otherRegularNews.map(item => (
-                                <div key={item.id} className="article-card">
-                                    {currentUser?.role === 'President' && !item.id.toString().startsWith('match-') && (
-                                        <button onClick={() => handleDeleteNews(item.id)} style={{ float: 'right', color: 'red', border: 'none', background: 'transparent', cursor: 'pointer' }}>Supprimer</button>
+                                <div key={item.id} className="article-card animate-fade-in">
+                                    {currentUser?.role === 'SocialMedia' && !item.id.toString().startsWith('match-') && (
+                                        <button 
+                                            onClick={() => handleDeleteNews(item.id)} 
+                                            style={{ float: 'right', color: 'var(--primary-color)', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}
+                                        >
+                                            [ Supprimer ]
+                                        </button>
                                     )}
                                     <h2 className="article-headline" style={{ fontSize: '1.8rem' }}>{item.title}</h2>
                                     <div className="article-meta">{formatDate(item.created_at)}</div>
-                                    {item.image_url && <img src={item.image_url} alt="News" className="article-image" />}
+                                    {item.image_url && <img src={item.image_url} alt="Briefing" className="article-image" />}
                                     <p className="article-content">{item.content.substring(0, 200)}...</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Sidebar / Presidential Column */}
+                    {/* Sidebar Dossiers / Presidential Column */}
                     <aside className="news-sidebar">
-                        <div className="president-section">
-                            <img src="http://localhost:5000/uploads/President.jpg" alt="President" className="president-image" />
-                            {presidentialNews.length > 0 ? (
+                        <div className="president-section animate-fade-in">
                                 <div className="president-editorial">
-                                    <h3 style={{ textTransform: 'uppercase', marginBottom: '0.5rem', fontFamily: 'Poppins' }}>Le mot du Président</h3>
-                                    {presidentialNews.map(pNews => (
-                                        <div key={pNews.id} style={{ marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
-                                            <h4 style={{ fontSize: '1.2rem', margin: '0.5rem 0' }}>{pNews.title}</h4>
-                                            <p style={{ fontSize: '0.95rem', fontStyle: 'italic', lineHeight: '1.5' }}>
-                                                "{pNews.content.substring(0, 500)}..."
-                                            </p>
-                                            {currentUser?.role === 'President' && <button onClick={() => handleDeleteNews(pNews.id)} style={{ fontSize: '0.8rem', color: 'red', border: 'none', background: 'transparent', cursor: 'pointer' }}>Supprimer</button>}
-                                        </div>
-                                    ))}
-                                    <div className="president-signature">
-                                        Youssef Abid<br />
-                                        <span>Président de HUSA Basketball</span>
-                                    </div>
+                                    {officialVoices.length > 0 && <h3 style={{ fontSize: '0.9rem', color: '#666', textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '1.5rem', fontWeight: 600 }}>OFFICIAL HUSA VOICES</h3>}
+                                    {officialVoices.map(voice => {
+                                        let themeRGB = '255, 77, 109'; // Default President (Red)
+                                        if (voice.author_type === 'coach') themeRGB = '77, 148, 255'; // Coach (Blue)
+                                        if (voice.author_type === 'player') themeRGB = '255, 204, 0'; // Player (Yellow)
+
+                                        return (
+                                            <div key={voice.id} style={{ marginBottom: '1.8rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '1.5rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                                                    {(voice.author_type === 'president' || Boolean(voice.is_presidential)) && <span style={{ background: 'rgba(255, 77, 109, 0.1)', color: '#ff4d6d', border: '1px solid rgba(255, 77, 109, 0.3)', padding: '2px 8px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>THE PRÉSIDENT SAY</span>}
+                                                    {voice.author_type === 'coach' && <span style={{ background: 'rgba(77, 148, 255, 0.1)', color: '#4d94ff', border: '1px solid rgba(77, 148, 255, 0.3)', padding: '2px 8px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>COACH'S CORNER</span>}
+                                                    {voice.author_type === 'player' && <span style={{ background: 'rgba(255, 204, 0, 0.1)', color: '#ffcc00', border: '1px solid rgba(255, 204, 0, 0.3)', padding: '2px 8px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>PLAYERS VOICE</span>}
+                                                </div>
+                                                {voice.image_url && (
+                                                    <div className="voice-breakout-container" style={{ 
+                                                        border: `1px solid rgba(${themeRGB}, 0.2)`, 
+                                                        background: `linear-gradient(to top, rgba(${themeRGB}, 0.1), transparent)` 
+                                                    }}>
+                                                        <img src={voice.image_url} alt={voice.title} className="voice-breakout-image" />
+                                                    </div>
+                                                )}
+                                                <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '8px' }}>{voice.title}</h4>
+                                                <p style={{ color: '#aaa', fontStyle: 'italic', lineHeight: '1.6' }}>"{voice.content}"</p>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            ) : (
-                                <div className="president-editorial">
-                                    <h3 style={{ textTransform: 'uppercase', marginBottom: '0.5rem', fontFamily: 'Poppins' }}>Le mot du Président</h3>
-                                    <p style={{ fontSize: '0.95rem', fontStyle: 'italic' }}>
-                                        "Bienvenue à tous les supporters de HUSA Basketball. Notre vision pour cette année est de porter l'équipe vers de nouveaux sommets..."
-                                    </p>
-                                    <div className="president-signature">
-                                        Youssef Abid<br />
-                                        <span>Président de HUSA Basketball</span>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* Next Match Sidebar Info */}
                         {(() => {
-                            // Find future matches and pick the one with the earliest date >= today
                             const now = new Date();
                             const upcomingMatch = news
                                 .filter(item => item.id.toString().startsWith('match-'))
                                 .map(item => {
-                                    // Parse content to get some extra info if needed, 
-                                    // or just use the title/date if we had them.
-                                    // But we have the title "Dominateur à Domicile : HUSA reçoit OCK"
                                     const matchDate = new Date(item.created_at);
                                     return { ...item, matchDate };
                                 })
@@ -233,14 +207,16 @@ const News = () => {
                             if (!upcomingMatch) return null;
 
                             return (
-                                <div style={{ marginTop: '2rem', border: '1px solid #111', padding: '1rem' }}>
-                                    <h3 style={{ fontFamily: 'Poppins', borderBottom: '2px solid #111', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Match Prochain</h3>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <p style={{ fontWeight: 'bold' }}>{upcomingMatch.title.split(': ')[1] || upcomingMatch.title}</p>
-                                        <p style={{ fontSize: '0.9rem' }}>
-                                            {formatDate(upcomingMatch.created_at)}
-                                        </p>
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 'bold' }}>DISPONIBLE EN BILLETTERIE</p>
+                                <div className="next-match-card animate-fade-in">
+                                    <h3>Match Prochain</h3>
+                                    <div className="next-match-title">
+                                        {upcomingMatch.title.split(': ')[1] || upcomingMatch.title}
+                                    </div>
+                                    <div className="next-match-date">
+                                        {formatDate(upcomingMatch.created_at)}
+                                    </div>
+                                    <div className="next-match-badge">
+                                        Disponible en Billetterie
                                     </div>
                                 </div>
                             );

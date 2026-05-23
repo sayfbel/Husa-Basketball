@@ -51,3 +51,29 @@ body {
 .animate-fade-in {
     animation: fadeIn 0.8s ease forwards;
 }
+
+/* Custom Scrollbar Styles for Tactical Theme */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+    border-left: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #DB0A40;
+}
+
+/* Firefox scrollbar support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) #0a0a0a;
+}

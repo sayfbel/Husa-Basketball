@@ -10,8 +10,8 @@ const BouchentoufRabii = 'http://localhost:5000/uploads/BouchentoufRabii.jpg';
 
 // Placeholders for those without specific images in the import list of Squad page
 const DefaultPlayer = 'http://localhost:5000/uploads/default.png'; // Reused standard default
-const Coach = 'http://localhost:5000/uploads/coach.jpg';
-const President = 'http://localhost:5000/uploads/President.jpg';
+const Coach = 'http://localhost:5000/uploads/players/coach.jpg';
+const President = 'http://localhost:5000/uploads/players/President.jpg';
 
 export const users = [
     // --- Technical Staff ---
@@ -28,6 +28,13 @@ export const users = [
         role: "President",
         code: "PRYoussefAbid",
         image: President
+    },
+    {
+        id: 'st3',
+        name: "Social Media",
+        role: "SocialMedia",
+        code: "SMSocialMedia",
+        image: DefaultPlayer
     },
 
     // --- Players ---

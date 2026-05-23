@@ -11,6 +11,41 @@ import husaLogo from '../../../assets/images/colabs/husa_logo.jpg';
 import { useCourtDrag } from '../hooks/useCourtDrag';
 import '../css/strategy.css';
 
+const particlesDots = Array.from({ length: 60 }).map((_, i) => ({
+    id: i,
+    cx: `${Math.random() * 100}%`,
+    cy: `${Math.random() * 100}%`,
+    r: Math.random() * 1.5 + 0.5,
+    duration: Math.random() * 15 + 10,
+    delay: Math.random() * -20
+}));
+
+const ParticlesOverlay = () => (
+    <svg style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {particlesDots.map(dot => (
+            <circle
+                key={dot.id}
+                cx={dot.cx}
+                cy={dot.cy}
+                r={dot.r}
+                fill="rgba(255, 255, 255, 0.2)"
+                style={{
+                    animation: `float-particles ${dot.duration}s infinite linear`,
+                    animationDelay: `${dot.delay}s`
+                }}
+            />
+        ))}
+        <style>{`
+            @keyframes float-particles {
+                0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+                10% { opacity: 0.8; }
+                90% { opacity: 0.8; }
+                100% { transform: translateY(-60px) translateX(20px); opacity: 0; }
+            }
+        `}</style>
+    </svg>
+);
+
 const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm, savedTactics, fetchTactics }) => {
     const { currentUser } = useAuth();
     const [mode, setMode] = useState('move'); // 'move' | 'draw' | 'erase'
@@ -21,6 +56,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
     const [tacticName, setTacticName] = useState(title || '');
     const [isSaving, setIsSaving] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
     const [showSaveModal, setShowSaveModal] = useState(false);
 
@@ -125,12 +161,12 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
         if (isPlaying) {
             playInterval.current = setInterval(() => {
                 setCurrentFrameIndex(prev => (prev + 1) % frames.length);
-            }, 1000);
+            }, 1000 / playbackSpeed);
         } else {
             clearInterval(playInterval.current);
         }
         return () => clearInterval(playInterval.current);
-    }, [isPlaying, frames.length]);
+    }, [isPlaying, frames.length, playbackSpeed]);
 
     // Listen for load events from Registry
     useEffect(() => {
@@ -193,11 +229,13 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
         }
     };
 
-    const handlePathClick = (index, e) => {
+    const handlePathInteraction = (index, e) => {
         if (mode === 'erase') {
-            e.stopPropagation();
-            pushToHistory();
-            updateCurrentFrame(null, currentPaths.filter((_, i) => i !== index));
+            if (e.type === 'mousedown' || (e.type === 'mouseenter' && e.buttons === 1)) {
+                e.stopPropagation();
+                pushToHistory();
+                updateCurrentFrame(null, currentPaths.filter((_, i) => i !== index));
+            }
         }
     };
 
@@ -232,7 +270,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                 <div className="court-and-sidebar-grid-premium" style={{ display: 'flex', position: 'relative', overflow: 'hidden', background: '#080808' }}>
                 
                 {/* PERSONNEL SideBar */}
-                <aside className="active-players-sidebar full-custom-scroll" style={{ 
+                <aside className="active-players-sidebar" style={{ 
                     width: '100px', 
                     background: '#050505', 
                     borderRight: '1px solid rgba(219, 10, 64, 0.3)', 
@@ -244,10 +282,11 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                     left: 0, 
                     zIndex: 10,
                     boxShadow: '10px 0 30px rgba(0,0,0,0.5)',
-                    overflowX: 'hidden'
+                    overflow: 'hidden'
                 }}>
                     <div style={{ 
                         height: '60px',
+                        flexShrink: 0,
                         padding: '0 0.5rem', 
                         borderBottom: '1px solid rgba(255,255,255,0.03)', 
                         background: 'linear-gradient(180deg, rgba(219, 10, 64, 0.1) 0%, transparent 100%)',
@@ -261,13 +300,13 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                         <span style={{ fontSize: '0.55rem', color: '#fff', fontWeight: '950', letterSpacing: '2px', textAlign: 'center', opacity: 0.8 }}>UNITS</span>
                     </div>
 
-                    <div className="active-players-list-premium">
+                    <div className="active-players-list-premium full-custom-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1.2rem 0' }}>
                         {currentTokens.map((token) => (
                             <div 
                                 key={token.id} 
                                 className="sidebar-token-row-premium"
                                 onContextMenu={(e) => { e.preventDefault(); removeToken(token.id); }}
-                                style={{ cursor: 'context-menu' }}
+                                style={{ cursor: 'context-menu', justifyContent: 'center' }}
                                 title="Right click to remove"
                             >
                                 <div className={`sidebar-token-circle-premium ${token.type === 'offense' ? 'p-offense' : token.type === 'defense' ? 'p-defense' : 'p-ball'}`} style={{ borderRadius: '50%' }}>
@@ -369,7 +408,8 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                             aspectRatio: `${viewBox.w} / ${viewBox.h}`
                         }}
                     >
-                        <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                        <ParticlesOverlay />
+                        <svg viewBox={`0 0 ${viewBox.w} ${viewBox.h}`} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}>
                             <image href={husaLogo} x={viewBox.w/2 - 80} y={viewBox.h/2 - 75} width="160" height="150" opacity="0.03" style={{ filter: 'grayscale(1)' }} />
                             <g stroke="rgba(255, 255, 255, 0.03)" strokeWidth="1.5" fill="none">
                                 {type === 'full' ? (
@@ -431,7 +471,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                 </marker>
                             </defs>
                             {currentPaths.map((d, i) => (
-                                <g key={i} onMouseDown={(e) => handlePathClick(i, e)} style={{ pointerEvents: mode === 'erase' ? 'auto' : 'none', cursor: mode === 'erase' ? 'pointer' : 'default' }}>
+                                <g key={i} onMouseDown={(e) => handlePathInteraction(i, e)} onMouseEnter={(e) => handlePathInteraction(i, e)} style={{ pointerEvents: mode === 'erase' ? 'auto' : 'none', cursor: mode === 'erase' ? 'pointer' : 'default' }}>
                                     <path d={d} stroke="transparent" strokeWidth="20" fill="none" />
                                     <path d={d} stroke={mode === 'erase' ? '#ff4d4d' : '#DB0A40'} strokeWidth="4" fill="none" strokeLinecap="round" style={{ markerEnd: 'url(#arrowhead)' }} />
                                 </g>
@@ -456,7 +496,7 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                                         zIndex: isBeingDragged ? 100 : 10,
                                         pointerEvents: mode === 'move' ? 'auto' : 'none',
                                         transform: 'translate(-50%, -50%)',
-                                        transition: isBeingDragged ? 'none' : (isPlaying ? 'all 1000ms linear' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)')
+                                        transition: isBeingDragged ? 'none' : (isPlaying ? `all ${1000 / playbackSpeed}ms linear` : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)')
                                     }}
                                     onMouseDown={(e) => onTokenMouseDown(e, token)}
                                 >
@@ -512,6 +552,9 @@ const TacticalWorkspace = ({ title, type = 'full', showNotification, showConfirm
                             <button className="tool-btn-premium" onClick={() => setCurrentFrameIndex(Math.max(0, currentFrameIndex - 1))}><SkipBack size={20} /></button>
                             <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '800', minWidth: '40px', textAlign: 'center' }}>{currentFrameIndex + 1} / {frames.length}</span>
                             <button className="tool-btn-premium" onClick={togglePlay} >{isPlaying ? <Pause size={20} /> : <Play size={20} />}</button>
+                            <button className="tool-btn-premium" onClick={() => {
+                                setPlaybackSpeed(prev => prev === 1 ? 1.5 : (prev === 1.5 ? 2 : 1));
+                            }} style={{ fontSize: '0.8rem', fontWeight: '900', minWidth: '36px' }}>x{playbackSpeed}</button>
                             <button className="tool-btn-premium" onClick={addFrame}><Plus size={20} /></button>
                             <button className="tool-btn-premium" onClick={deleteFrame} disabled={frames.length <= 1}><Trash2 size={20} /></button>
                             <button className="tool-btn-premium" onClick={() => setCurrentFrameIndex(Math.min(frames.length - 1, currentFrameIndex + 1))}><SkipForward size={20} /></button>

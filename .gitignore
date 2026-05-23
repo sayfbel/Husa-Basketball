@@ -4,4 +4,8 @@ dist
 build
 .DS_Store
 coverage
-.vscode
+
+/tmp
+/tmp_query.js
+/server/insert_test_match.js
+/server/uploads

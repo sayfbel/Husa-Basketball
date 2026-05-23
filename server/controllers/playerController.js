@@ -25,6 +25,18 @@ exports.getPlayerProfile = async (req, res) => {
 exports.updatePlayerProfile = async (req, res) => {
     const { id, name, height, weight, bio, position, jersey_number, email, phone, age } = req.body;
     try {
+        if (jersey_number) {
+            const [existing] = await db.query(
+                'SELECT id, name FROM players WHERE jersey_number = ? AND id != ?',
+                [jersey_number, id]
+            );
+            if (existing.length > 0) {
+                return res.status(400).json({ 
+                    message: `Jersey number ${jersey_number} is already occupied by ${existing[0].name}` 
+                });
+            }
+        }
+
         await db.query(`
             UPDATE players 
             SET name = ?, height = ?, weight = ?, bio = ?, position = ?, jersey_number = ?, email = ?, phone = ?, age = ?

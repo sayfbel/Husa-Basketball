@@ -1,33 +1,42 @@
-/* Notification Styles */
+/* ==========================================================================
+   HUSA BASKETBALL PREMIUM CYBER-TACTICAL NOTIFICATIONS SYSTEM
+   ========================================================================== */
 
+/* Toast Notification Styles */
 .notification-toast {
     position: fixed;
-    top: 2rem;
-    right: 2rem;
+    top: 2.5rem;
+    right: 2.5rem;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background: rgba(20, 20, 20, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+    gap: 16px;
+    padding: 16px 24px 20px 24px;
+    border-radius: 0px; /* Monolithic sharp design */
+    background: rgba(14, 14, 18, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
     z-index: 10001;
-    min-width: 300px;
+    min-width: 320px;
+    max-width: 420px;
     color: #fff;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .notification-toast.success {
-    border-left: 4px solid #10b981;
+    border-left: 3px solid #00E676;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 230, 118, 0.15);
 }
 
 .notification-toast.error {
-    border-left: 4px solid #DB0A40;
+    border-left: 3px solid #DB0A40;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 15px rgba(219, 10, 64, 0.15);
 }
 
 .notification-toast.info {
-    border-left: 4px solid #3b82f6;
+    border-left: 3px solid #00B0FF;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 176, 255, 0.15);
 }
 
 .notification-icon {
@@ -37,7 +46,7 @@
 }
 
 .notification-toast.success .notification-icon {
-    color: #10b981;
+    color: #00E676;
 }
 
 .notification-toast.error .notification-icon {
@@ -45,13 +54,16 @@
 }
 
 .notification-toast.info .notification-icon {
-    color: #3b82f6;
+    color: #00B0FF;
 }
 
 .notification-content {
     flex: 1;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.5px;
+    color: #e2e8f0;
 }
 
 .notification-close {
@@ -63,23 +75,56 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .notification-close:hover {
     color: #fff;
+    transform: rotate(90deg);
 }
 
-/* Confirm Dialog Styles */
+/* Auto-Shrinking Progress Bar */
+.notification-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    transform-origin: left;
+    animation: shrinkProgress linear forwards;
+}
 
+.notification-toast.success .notification-progress {
+    background: #00E676;
+}
+
+.notification-toast.error .notification-progress {
+    background: #DB0A40;
+}
+
+.notification-toast.info .notification-progress {
+    background: #00B0FF;
+}
+
+@keyframes shrinkProgress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+
+/* Confirm Dialog Styles */
 .confirm-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(4, 4, 6, 0.92);
+    backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,88 +132,221 @@
 }
 
 .confirm-modal {
-    background: #111;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2.5rem;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 450px;
-    text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    background: #0d0d10;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 2.2rem;
+    border-radius: 0; /* Strict cyber architecture */
+    width: 90%;
+    max-width: 480px;
+    position: relative;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9), 0 0 30px rgba(219, 10, 64, 0.1);
+    overflow: hidden;
 }
 
-.confirm-icon {
-    margin-bottom: 1.5rem;
+/* Holographic Corner Brackets */
+.confirm-bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #DB0A40;
+    border-style: solid;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.confirm-bracket.tl {
+    top: 12px;
+    left: 12px;
+    border-width: 2px 0 0 2px;
+}
+
+.confirm-bracket.tr {
+    top: 12px;
+    right: 12px;
+    border-width: 2px 2px 0 0;
+}
+
+.confirm-bracket.bl {
+    bottom: 12px;
+    left: 12px;
+    border-width: 0 0 2px 2px;
+}
+
+.confirm-bracket.br {
+    bottom: 12px;
+    right: 12px;
+    border-width: 0 2px 2px 0;
+}
+
+/* Top Tactical Authorization Bar */
+.confirm-top-bar {
     display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding-bottom: 8px;
+}
+
+.tactical-pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #DB0A40;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #DB0A40;
+    animation: simplePulse 1.5s infinite ease-in-out;
+}
+
+.confirm-security-label {
+    font-size: 0.65rem;
+    color: #666;
+    letter-spacing: 2px;
+    font-weight: 800;
+    font-family: monospace;
+}
+
+/* Warning Header Section */
+.confirm-header-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.confirm-icon-box {
+    background: rgba(219, 10, 64, 0.06);
+    border: 1px solid rgba(219, 10, 64, 0.2);
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    clip-path: polygon(15% 0%, 85% 0%, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0% 85%, 0% 15%);
+}
+
+.pulsing-warning-icon {
+    color: #DB0A40;
+    animation: iconPulse 2s infinite ease-in-out;
 }
 
 .confirm-modal h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: #fff;
-    margin-bottom: 1rem;
+    margin: 0;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    font-weight: 900;
 }
 
-.confirm-modal p {
+/* Alert Warning Card */
+.confirm-message-card {
+    background: rgba(18, 18, 22, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    padding: 1.2rem 1.2rem 1.2rem 1.6rem;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+}
+
+.message-side-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #DB0A40;
+    box-shadow: 0 0 10px #DB0A40;
+}
+
+.confirm-message-card p {
     color: #aaa;
-    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
     line-height: 1.6;
+    text-align: left;
 }
 
+/* Database Specific Meta Label */
+.confirm-db-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 51, 51, 0.04);
+    border: 1px solid rgba(255, 51, 51, 0.08);
+    padding: 8px 12px;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.confirm-db-meta span {
+    font-size: 0.65rem;
+    color: #ff5555;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-family: monospace;
+    line-height: 1.3;
+}
+
+/* Action Control Buttons */
 .confirm-actions {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
+    gap: 1.2rem;
+    width: 100%;
 }
 
 .confirm-btn {
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-weight: 600;
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 0; /* Cyber sharp shape */
+    font-weight: 800;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    font-size: 0.75rem;
+    outline: none;
 }
 
 .confirm-btn.cancel {
     background: transparent;
-    border: 1px solid #333;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: #888;
 }
 
 .confirm-btn.cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.3);
     color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .confirm-btn.proceed {
     background: #DB0A40;
     border: 1px solid #DB0A40;
     color: #fff;
+    box-shadow: 0 5px 15px rgba(219, 10, 64, 0.2);
 }
 
 .confirm-btn.proceed:hover {
-    background: #b90835;
+    background: #ff0c4b;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(219, 10, 64, 0.3);
+    box-shadow: 0 8px 25px rgba(219, 10, 64, 0.5);
 }
 
-/* Animations */
 
+/* Animations */
 .animate-slide-in {
-    animation: slideIn 0.3s ease-out forwards;
+    animation: slideIn 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
 }
 
 @keyframes slideIn {
     from {
-        transform: translateX(100%);
+        transform: translateX(120%);
         opacity: 0;
     }
-
     to {
         transform: translateX(0);
         opacity: 1;
@@ -176,31 +354,51 @@
 }
 
 .animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
+    animation: fadeIn 0.25s ease-out forwards;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
     }
-
     to {
         opacity: 1;
     }
 }
 
 .animate-scale-up {
-    animation: scaleUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    animation: scaleUp 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
 }
 
 @keyframes scaleUp {
     from {
-        transform: scale(0.9);
+        transform: scale(0.92) translateY(10px);
         opacity: 0;
     }
-
     to {
-        transform: scale(1);
+        transform: scale(1) translateY(0);
         opacity: 1;
+    }
+}
+
+@keyframes simplePulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 rgba(219, 10, 64, 0));
+    }
+    50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 8px rgba(219, 10, 64, 0.6));
     }
 }
