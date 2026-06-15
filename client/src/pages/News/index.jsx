@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../components/Notification/Notification';
 import './css/news.css';
 
 const News = () => {
     const { currentUser } = useAuth();
+    const { showConfirm, showNotification } = useNotification();
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
@@ -61,18 +63,24 @@ const News = () => {
         }
     };
 
-    const handleDeleteNews = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this news?')) return;
-        try {
-            const response = await fetch(`http://localhost:5000/api/news/${id}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                fetchNews();
+    const handleDeleteNews = (id) => {
+        showConfirm(
+            'Are you sure you want to delete this news?',
+            async () => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/news/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        fetchNews();
+                        showNotification('News deleted successfully', 'success');
+                    }
+                } catch (error) {
+                    console.error('Error deleting news:', error);
+                    showNotification('Error deleting news', 'error');
+                }
             }
-        } catch (error) {
-            console.error('Error deleting news:', error);
-        }
+        );
     };
 
     const formatDate = (dateString) => {
@@ -121,7 +129,7 @@ const News = () => {
                         {importantNews && (
                             <div className="article-card featured animate-fade-in">
                                 {Boolean(importantNews.is_important) && <span className="importance-tag">À la une</span>}
-                                {currentUser?.role === 'SocialMedia' && !importantNews.id.toString().startsWith('match-') && (
+                                {currentUser?.role === 'SocialMedia' && (
                                     <button 
                                         onClick={() => handleDeleteNews(importantNews.id)} 
                                         style={{ float: 'right', color: 'var(--primary-color)', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}
@@ -142,7 +150,7 @@ const News = () => {
                         <div className="regular-news-grid">
                             {otherRegularNews.map(item => (
                                 <div key={item.id} className="article-card animate-fade-in">
-                                    {currentUser?.role === 'SocialMedia' && !item.id.toString().startsWith('match-') && (
+                                    {currentUser?.role === 'SocialMedia' && (
                                         <button 
                                             onClick={() => handleDeleteNews(item.id)} 
                                             style={{ float: 'right', color: 'var(--primary-color)', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}

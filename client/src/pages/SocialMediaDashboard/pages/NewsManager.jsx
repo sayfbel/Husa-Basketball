@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotification } from '../../../components/Notification/Notification';
-import { Plus, Trash2, Edit2, Calendar, FileText, Check, AlertTriangle, Eye, EyeOff, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Calendar, FileText, Check, AlertTriangle, Eye, EyeOff, X, RefreshCw } from 'lucide-react';
 import '../../../css/dashboard.css';
 import '../../PresidentDashboard/css/Overview.css';
 import TacticalModal from '../../../components/UI/TacticalModal';
@@ -542,9 +542,37 @@ const NewsManager = () => {
 
             {/* Match Bulletins Feed Table */}
             <div style={{ marginTop: '3rem' }}>
-                <h2 style={{ fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={18} color="var(--accent)" /> Match Bulletins ({matchUpdates.length})
-                </h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar size={18} color="var(--accent)" /> Match Bulletins ({matchUpdates.length})
+                    </h2>
+                    <button
+                        onClick={() => {
+                            showNotification("Refreshing match operations...", "info");
+                            fetchNews();
+                        }}
+                        style={{
+                            background: 'rgba(219, 10, 64, 0.1)',
+                            border: '1px solid var(--accent)',
+                            color: 'var(--accent)',
+                            padding: '8px 16px',
+                            borderRadius: '4px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textTransform: 'uppercase',
+                            fontSize: '0.75rem',
+                            letterSpacing: '1px',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.color = '#fff'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(219, 10, 64, 0.1)'; e.currentTarget.style.color = 'var(--accent)'; }}
+                    >
+                        <RefreshCw size={14} /> REFRESH DATA
+                    </button>
+                </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {matchUpdates.length > 0 ? (
@@ -562,6 +590,7 @@ const NewsManager = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                             <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#fff' }}>{article.title}</span>
                                             <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '2px 8px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>AUTO MATCH</span>
+                                            {article.is_auto_generated && <span style={{ background: 'rgba(10, 219, 140, 0.1)', color: '#0adb8c', border: '1px solid rgba(10, 219, 140, 0.3)', padding: '2px 8px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>AUTO IMAGE</span>}
                                         </div>
                                         <span style={{ fontSize: '0.75rem', color: '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Calendar size={12} /> {formatDate(article.created_at)}
@@ -580,6 +609,15 @@ const NewsManager = () => {
                                         title="Edit Match Bulletin"
                                     >
                                         <Edit2 size={18} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDeleteNews(article.id)}
+                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = '#DB0A40'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.2)'}
+                                        title="Delete Match Bulletin"
+                                    >
+                                        <Trash2 size={18} />
                                     </button>
                                 </div>
                             </div>

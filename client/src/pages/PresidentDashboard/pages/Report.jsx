@@ -222,7 +222,7 @@ const Report = () => {
                         <div className="intel-card animate-slide-up" style={{ padding: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div className="briefing-banner report-bg" style={{ background: 'linear-gradient(90deg, #1a1a1a 0%, #0a0a0a 100%)', padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{ background: '#DB0A40', padding: '15px', borderRadius: '4px' }}>
+                                    <div style={{ background: '#DB0A40', padding: '15px', borderRadius: '0' }}>
                                         <Shield size={32} color="#fff" />
                                     </div>
                                     <div>
@@ -296,7 +296,7 @@ const Report = () => {
                         <div className="intel-card animate-slide-up" style={{ padding: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div className="briefing-banner report-bg" style={{ background: 'linear-gradient(90deg, #1a1a1a 0%, #0a0a0a 100%)', padding: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{ width: '60px', height: '60px', background: '#DB0A40', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>
+                                    <div style={{ width: '60px', height: '60px', background: '#DB0A40', borderRadius: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>
                                         {selectedReport.sender_name.charAt(0)}
                                     </div>
                                     <div>
@@ -314,12 +314,12 @@ const Report = () => {
                                     <span style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '2px' }}>{formatDate(selectedReport.created_at)}</span>
                                 </div>
 
-                                <div className="report-content-area" style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '4px', marginBottom: '2.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="report-content-area" style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '0', marginBottom: '2.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div className="content-text" style={{ color: '#aaa', lineHeight: '1.8', fontSize: '1rem' }}>{selectedReport.content}</div>
                                 </div>
 
                                 {selectedReport.response ? (
-                                    <div className="msg-coach-response" style={{ background: 'rgba(76, 209, 55, 0.05)', border: '1px solid rgba(76, 209, 55, 0.1)', padding: '2rem', borderRadius: '4px' }}>
+                                    <div className="msg-coach-response" style={{ background: 'rgba(76, 209, 55, 0.05)', border: '1px solid rgba(76, 209, 55, 0.1)', padding: '2rem', borderRadius: '0' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#4cd137', marginBottom: '10px' }}>
                                             <Activity size={16} />
                                             <h5 style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px' }}>OFFICIAL RESPONSE</h5>
@@ -327,13 +327,13 @@ const Report = () => {
                                         <p style={{ margin: 0, color: '#eee', fontSize: '0.95rem', lineHeight: '1.6' }}>{selectedReport.response}</p>
                                     </div>
                                 ) : selectedReport.recipient_role === 'president' && (
-                                    <div className="msg-coach-response" style={{ background: 'rgba(219, 10, 64, 0.05)', border: '1px dashed #DB0A40', padding: '2rem', borderRadius: '4px' }}>
+                                    <div className="msg-coach-response" style={{ background: 'rgba(219, 10, 64, 0.05)', border: '1px dashed #DB0A40', padding: '2rem', borderRadius: '0' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#DB0A40', marginBottom: '15px' }}>
                                             <Shield size={16} />
                                             <h5 style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px' }}>EXECUTIVE RESPONSE REQUIRED</h5>
                                         </div>
                                         <textarea
-                                            style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#eee', padding: '15px', borderRadius: '4px', resize: 'none', minHeight: '120px' }}
+                                            style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#eee', padding: '15px', borderRadius: '0', resize: 'none', minHeight: '120px' }}
                                             placeholder="Record official executive response..."
                                             value={executiveResponse}
                                             onChange={(e) => setExecutiveResponse(e.target.value)}
@@ -348,7 +348,7 @@ const Report = () => {
                         </div>
                     ) : (
                         <div className="intel-card briefing-empty-v2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                            <div style={{ width: '80px', height: '80px', borderRadius: '0', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                                 <FileText size={40} color="#333" />
                             </div>
                             <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', letterSpacing: '1px' }}>EXECUTIVE INTEL CENTER</h3>

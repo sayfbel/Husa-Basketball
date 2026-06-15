@@ -247,8 +247,8 @@ const Profile = () => {
                                             <input
                                                 type="text"
                                                 value={staffData.department}
-                                                onChange={(e) => setStaffData({ ...staffData, department: e.target.value })}
-                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '0' }}
+                                                readOnly
+                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#888', padding: '12px', borderRadius: '0', cursor: 'not-allowed' }}
                                             />
                                         </div>
                                     </div>

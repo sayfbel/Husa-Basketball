@@ -52,11 +52,15 @@ exports.initTable = async () => {
 
 exports.getAllNews = async (req, res) => {
     try {
+        const { generateMatchImage } = require('../utils/imageGenerator');
+        const fs = require('fs');
+        const path = require('path');
+
         const [news] = await db.query('SELECT * FROM news ORDER BY created_at DESC');
-        const [matches] = await db.query('SELECT * FROM match_schedule');
+        const [matches] = await db.query('SELECT * FROM match_schedule WHERE is_news_deleted = 0');
 
         // Transform matches into news format
-        const matchNews = matches.map(m => {
+        const matchNewsPromises = matches.map(async m => {
             const isHusaHome = m.home.includes('HUSA') || m.home.includes('Hassania');
             const opponent = isHusaHome ? m.away : m.home;
             const matchTitle = isHusaHome ? `Dominateur à Domicile : HUSA reçoit ${opponent}` : `En Déplacement : HUSA défie ${opponent}`;
@@ -76,17 +80,35 @@ exports.getAllNews = async (req, res) => {
                 matchDate = new Date(`${year}-${month}-${day}T${m.time || '00:00'}:00`);
             }
 
+            let finalImageUrl = m.news_image_url;
+            if (!finalImageUrl) {
+                const autoFileName = `auto_match_${m.id}.png`;
+                const expectedPath = path.join(__dirname, '../uploads/news', autoFileName);
+                if (!fs.existsSync(expectedPath)) {
+                    // Generate it once
+                    const generatedPath = await generateMatchImage(m.id, m.home, m.away, m.date, m.score);
+                    if (generatedPath) {
+                        finalImageUrl = `http://localhost:5000${generatedPath}`;
+                    }
+                } else {
+                    finalImageUrl = `http://localhost:5000/uploads/news/${autoFileName}`;
+                }
+            }
+
             return {
                 id: `match-${m.id}`,
                 title: m.news_title || matchTitle,
                 content: m.news_content || fullDefaultContent,
-                image_url: m.news_image_url || 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1200',
+                image_url: finalImageUrl || 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1200',
                 is_important: false,
                 is_presidential: false,
                 author_id: 'system',
+                is_auto_generated: !m.news_image_url,
                 created_at: m.updated_at || matchDate
             };
         });
+
+        const matchNews = await Promise.all(matchNewsPromises);
 
         const combined = [...news, ...matchNews].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         res.json(combined);
@@ -128,7 +150,12 @@ exports.addNews = async (req, res) => {
 exports.deleteNews = async (req, res) => {
     const { id } = req.params;
     try {
-        await db.query('DELETE FROM news WHERE id = ?', [id]);
+        if (id.startsWith('match-')) {
+            const matchId = id.replace('match-', '');
+            await db.query('UPDATE match_schedule SET is_news_deleted = 1 WHERE id = ?', [matchId]);
+        } else {
+            await db.query('DELETE FROM news WHERE id = ?', [id]);
+        }
         res.json({ message: 'News deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting news' });

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import { useNotification } from '../../../components/Notification/Notification';
-import { Shield, Plus, UserPlus, FileText, Check, Edit2, Trash2, X, Upload, Loader2 } from 'lucide-react';
+import { Shield, Plus, UserPlus, FileText, Check, Edit2, Trash2, X, Upload, Loader2, User } from 'lucide-react';
 import SelectorCard from '../../../components/SelectorCard/SelectorCard';
 import TacticalModal from '../../../components/UI/TacticalModal';
 import '../../../css/dashboard.css';
@@ -374,20 +374,32 @@ const AddUser = () => {
                                 onMouseEnter={e => {
                                     e.currentTarget.style.borderColor = '#DB0A40';
                                     e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.5)';
-                                    e.currentTarget.children[1].style.opacity = 1;
+                                    e.currentTarget.lastElementChild.style.opacity = 1;
                                 }}
                                 onMouseLeave={e => {
                                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
                                     e.currentTarget.style.boxShadow = 'none';
-                                    e.currentTarget.children[1].style.opacity = 0;
+                                    e.currentTarget.lastElementChild.style.opacity = 0;
                                 }}
                             >
-                                <img
-                                    src={user.photo_url || 'http://localhost:5000/uploads/default.png'}
-                                    alt={user.username}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    onError={(e) => { e.target.src = 'http://localhost:5000/uploads/default.png'; }}
-                                />
+                                {user.photo_url && user.photo_url !== 'http://localhost:5000/uploads/default.png' ? (
+                                    <img
+                                        src={user.photo_url}
+                                        alt={user.username}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                    />
+                                ) : null}
+                                <div style={{ 
+                                    display: (user.photo_url && user.photo_url !== 'http://localhost:5000/uploads/default.png') ? 'none' : 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    width: '100%', 
+                                    height: '100%', 
+                                    background: '#1a1a1a' 
+                                }}>
+                                    <User size={48} color="#444" />
+                                </div>
                                 {/* Hover Overlay */}
                                 <div style={{
                                     position: 'absolute',
